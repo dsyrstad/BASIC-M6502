@@ -1,6 +1,7 @@
 import '../memory/memory.dart';
 import '../memory/variables.dart';
 import '../memory/program_storage.dart';
+import '../runtime/stack.dart';
 import 'tokenizer.dart';
 import 'expression_evaluator.dart';
 
@@ -14,6 +15,7 @@ class Interpreter {
   final VariableStorage variables;
   final ExpressionEvaluator expressionEvaluator;
   final ProgramStorage programStorage;
+  final RuntimeStack runtimeStack;
 
   /// Current execution state
   ExecutionState _state = ExecutionState.immediate;
@@ -36,7 +38,7 @@ class Interpreter {
   /// Direct mode flag
   bool get isInDirectMode => _state == ExecutionState.immediate;
 
-  Interpreter(this.memory, this.tokenizer, this.variables, this.expressionEvaluator, this.programStorage);
+  Interpreter(this.memory, this.tokenizer, this.variables, this.expressionEvaluator, this.programStorage, this.runtimeStack);
 
   /// Main interpreter loop (NEWSTT equivalent)
   void mainLoop() {
@@ -287,6 +289,12 @@ class Interpreter {
       case Tokenizer.ifToken:
         _executeIf();
         break;
+      case Tokenizer.forToken:
+        _executeFor();
+        break;
+      case Tokenizer.nextToken:
+        _executeNext();
+        break;
       default:
         throw InterpreterException('SYNTAX ERROR - Unknown statement: ${tokenizer.getTokenName(token)}');
     }
@@ -348,14 +356,79 @@ class Interpreter {
     _textPointer = _currentLine.length;
   }
 
-  /// Execute PRINT statement (basic version)
+  /// Execute PRINT statement
   void _executePrint() {
-    // TODO: Implement full PRINT with expressions
-    // For now, just print remaining text as literal
-    final remaining = _getRemainingLine();
-    final text = tokenizer.detokenize(remaining);
-    print(text);
-    _textPointer = _currentLine.length; // Move to end of line
+    // Handle PRINT with expressions
+    _skipSpaces();
+
+    // Check if there's anything to print
+    if (_textPointer >= _currentLine.length || _getCurrentChar() == 0) {
+      // Empty PRINT - just print newline
+      print('');
+      return;
+    }
+
+    // Evaluate and print expressions
+    bool needNewline = true;
+    while (_textPointer < _currentLine.length) {
+      final currentChar = _getCurrentChar();
+
+      if (currentChar == 0 || currentChar == 58) { // null or colon (end of statement)
+        break;
+      }
+
+      // Check for print separators
+      if (currentChar == 44) { // comma - tab to next zone
+        print(''); // For now, just newline (TODO: implement tab zones)
+        _advanceTextPointer();
+        _skipSpaces();
+        needNewline = false;
+        continue;
+      } else if (currentChar == 59) { // semicolon - no spacing
+        _advanceTextPointer();
+        _skipSpaces();
+        needNewline = false;
+        continue;
+      }
+
+      // Evaluate expression
+      try {
+        final result = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+        _textPointer = result.endPosition;
+
+        // Print the result
+        if (result.value is NumericValue) {
+          final numValue = (result.value as NumericValue).value;
+          if (numValue == numValue.truncate().toDouble() && numValue.abs() < 1e15) {
+            // Print integers without decimal point
+            print(numValue.truncate().toString());
+          } else {
+            // Print floating point
+            print(numValue.toString());
+          }
+        } else if (result.value is StringValue) {
+          final strValue = (result.value as StringValue).value;
+          print(strValue);
+        } else {
+          print(result.value.toString());
+        }
+
+        needNewline = true;
+        _skipSpaces();
+      } catch (e) {
+        // If expression evaluation fails, try to print as literal
+        final remaining = _getRemainingLine();
+        final text = tokenizer.detokenize(remaining);
+        print(text);
+        _textPointer = _currentLine.length;
+        break;
+      }
+    }
+
+    // Print final newline if needed
+    if (needNewline) {
+      // Already printed with print() calls above
+    }
   }
 
   /// Execute RUN statement
@@ -382,6 +455,9 @@ class Interpreter {
     // Switch to program mode and start execution
     _state = ExecutionState.program;
     _jumpToLine(firstLine);
+
+    // Continue execution until program completes
+    runProgram();
   }
 
   /// Execute LIST statement
@@ -521,6 +597,204 @@ class Interpreter {
     }
   }
 
+  /// Execute FOR statement
+  void _executeFor() {
+    // Parse: FOR variable = start TO end [STEP step]
+
+    // Parse the loop variable name
+    final variableName = _parseVariableName();
+
+    // Skip spaces and check for equals sign
+    _skipSpaces();
+    if (_getCurrentChar() != Tokenizer.equalToken) {
+      throw InterpreterException('SYNTAX ERROR - Missing = in FOR statement');
+    }
+    _advanceTextPointer(); // Skip equals sign
+
+    // Evaluate the start value
+    final startResult = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+    _textPointer = startResult.endPosition;
+
+    if (startResult.value is! NumericValue) {
+      throw InterpreterException('TYPE MISMATCH - FOR start value must be numeric');
+    }
+    final startValue = (startResult.value as NumericValue).value;
+
+    // Skip spaces and check for TO token
+    _skipSpaces();
+    if (_getCurrentChar() != Tokenizer.toToken) {
+      throw InterpreterException('SYNTAX ERROR - Missing TO in FOR statement');
+    }
+    _advanceTextPointer(); // Skip TO token
+
+    // Evaluate the end value
+    final endResult = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+    _textPointer = endResult.endPosition;
+
+    if (endResult.value is! NumericValue) {
+      throw InterpreterException('TYPE MISMATCH - FOR end value must be numeric');
+    }
+    final endValue = (endResult.value as NumericValue).value;
+
+    // Check for optional STEP clause
+    double stepValue = 1.0; // Default step
+    _skipSpaces();
+    if (_textPointer < _currentLine.length && _getCurrentChar() == Tokenizer.stepToken) {
+      _advanceTextPointer(); // Skip STEP token
+
+      final stepResult = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+      _textPointer = stepResult.endPosition;
+
+      if (stepResult.value is! NumericValue) {
+        throw InterpreterException('TYPE MISMATCH - FOR step value must be numeric');
+      }
+      stepValue = (stepResult.value as NumericValue).value;
+
+      if (stepValue == 0.0) {
+        throw InterpreterException('ILLEGAL QUANTITY ERROR - STEP cannot be zero');
+      }
+    }
+
+    // Set the loop variable to the start value
+    variables.setVariable(variableName, NumericValue(startValue));
+
+    // Check if loop should execute at least once
+    bool shouldExecute;
+    if (stepValue > 0) {
+      shouldExecute = startValue <= endValue;
+    } else {
+      shouldExecute = startValue >= endValue;
+    }
+
+    if (!shouldExecute) {
+      // Skip to matching NEXT statement
+      _skipToMatchingNext(variableName);
+      return;
+    }
+
+    // Push FOR loop onto stack
+    runtimeStack.pushForLoop(variableName, stepValue, endValue, _currentLineNumber, _textPointer);
+  }
+
+  /// Execute NEXT statement
+  void _executeNext() {
+    // Parse: NEXT [variable]
+
+    String? variableName;
+    _skipSpaces();
+
+    // Check if variable name is specified
+    if (_textPointer < _currentLine.length && _isLetter(_getCurrentChar())) {
+      variableName = _parseVariableName();
+    }
+
+    // Find the matching FOR loop on the stack
+    ForLoopEntry? forEntry;
+
+    if (variableName != null) {
+      // Pop the specific FOR loop
+      forEntry = runtimeStack.popForLoop(variableName);
+      if (forEntry == null) {
+        throw InterpreterException('NEXT WITHOUT FOR - No matching FOR statement for variable $variableName');
+      }
+    } else {
+      // Pop the most recent FOR loop
+      // Search from top of stack for any FOR loop
+      final activeVars = runtimeStack.getActiveForVariables();
+      if (activeVars.isEmpty) {
+        throw InterpreterException('NEXT WITHOUT FOR - No active FOR loops');
+      }
+
+      // Use the most recent FOR loop variable
+      variableName = activeVars.last;
+      forEntry = runtimeStack.popForLoop(variableName);
+    }
+
+    if (forEntry == null) {
+      throw InterpreterException('NEXT WITHOUT FOR - No matching FOR statement');
+    }
+
+    // Get current value of loop variable
+    final currentVar = variables.getVariable(variableName);
+    if (currentVar is! NumericValue) {
+      throw InterpreterException('TYPE MISMATCH - Loop variable must be numeric');
+    }
+
+    // Increment the loop variable by step
+    final newValue = currentVar.value + forEntry.stepValue;
+    variables.setVariable(variableName, NumericValue(newValue));
+
+    // Check if loop should continue
+    bool continueLoop;
+    if (forEntry.stepValue > 0) {
+      continueLoop = newValue <= forEntry.limitValue;
+    } else {
+      continueLoop = newValue >= forEntry.limitValue;
+    }
+
+    if (continueLoop) {
+      // Continue loop - push FOR entry back onto stack and jump back to FOR line
+      runtimeStack.pushForLoop(
+        forEntry.variableName,
+        forEntry.stepValue,
+        forEntry.limitValue,
+        forEntry.lineNumber,
+        forEntry.textPointer,
+      );
+
+      // Jump back to the line after the FOR statement
+      _jumpToLine(forEntry.lineNumber);
+      _textPointer = forEntry.textPointer;
+    }
+    // If not continuing, just fall through to next statement
+  }
+
+  /// Skip to matching NEXT statement for a given variable
+  void _skipToMatchingNext(String variableName) {
+    int forNestLevel = 1;
+
+    while (true) {
+      // Advance to next statement/line
+      _advanceToNextLine();
+
+      if (_currentLineNumber == -1) {
+        throw InterpreterException('FOR WITHOUT NEXT - Missing NEXT statement for variable $variableName');
+      }
+
+      // Look for FOR and NEXT tokens in current line
+      _textPointer = 0;
+      while (_textPointer < _currentLine.length) {
+        final token = _getCurrentChar();
+
+        if (token == Tokenizer.forToken) {
+          forNestLevel++;
+        } else if (token == Tokenizer.nextToken) {
+          forNestLevel--;
+          if (forNestLevel == 0) {
+            // Found matching NEXT - position after it
+            _advanceTextPointer(); // Skip NEXT token
+            _skipSpaces();
+
+            // Check if it specifies our variable
+            if (_textPointer < _currentLine.length && _isLetter(_getCurrentChar())) {
+              final nextVar = _parseVariableName();
+              if (nextVar == variableName) {
+                return; // Found exact match
+              }
+            } else {
+              return; // NEXT without variable matches any FOR
+            }
+
+            // Not our variable, but still counts as a NEXT
+            forNestLevel++;
+          }
+        }
+
+        _advanceTextPointer();
+      }
+    }
+  }
+
   /// Handle runtime errors
   void _handleError(dynamic error) {
     if (error is InterpreterException) {
@@ -560,6 +834,27 @@ class Interpreter {
 
   /// Check if interpreter is running
   bool get isRunning => _state != ExecutionState.stopped;
+
+  /// Execute program until completion
+  void runProgram() {
+    int maxSteps = 10000; // Prevent infinite loops
+    int stepCount = 0;
+
+    while (_state == ExecutionState.program && stepCount < maxSteps) {
+      try {
+        _executeNextStatement();
+        stepCount++;
+      } catch (e) {
+        _handleError(e);
+        break;
+      }
+    }
+
+    if (stepCount >= maxSteps) {
+      print('Program stopped - maximum steps reached (possible infinite loop)');
+      _state = ExecutionState.immediate;
+    }
+  }
 }
 
 /// Execution state of the interpreter

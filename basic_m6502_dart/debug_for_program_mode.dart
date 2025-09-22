@@ -18,28 +18,23 @@ void main() {
   // Initialize variable storage
   variables.initialize(0x2000);
 
-  print('Testing LET A = 42...');
+  print('Testing FOR/NEXT in program mode...\n');
+
+  // Test 1: Simple FOR loop
+  print('=== Test 1: Simple FOR loop ===');
   try {
-    interpreter.executeLine('LET A = 42');
-    final value = variables.getVariable('A');
-    print('A = $value');
+    interpreter.executeLine('10 FOR I = 1 TO 3');
+    interpreter.executeLine('20 PRINT I');
+    interpreter.executeLine('30 NEXT I');
+    interpreter.executeLine('40 PRINT "DONE"');
+
+    print('Program stored:');
+    interpreter.executeLine('LIST');
+
+    print('\nRunning program...');
+    // Don't use RUN in mainLoop, manually start execution
+    interpreter.executeLine('RUN');
   } catch (e) {
     print('Error: $e');
-  }
-
-  print('\nTesting C = 100...');
-  try {
-    interpreter.executeLine('C = 100');
-    final value = variables.getVariable('C');
-    print('C = $value');
-  } catch (e) {
-    print('Error: $e');
-  }
-
-  print('\nTokenizing "C = 100":');
-  final tokens = tokenizer.tokenizeLine('C = 100');
-  print('Tokens: $tokens');
-  for (int i = 0; i < tokens.length; i++) {
-    print('  [$i]: ${tokens[i]} (${String.fromCharCode(tokens[i])})');
   }
 }

@@ -36,7 +36,7 @@
 ### Simple Statements
 - [x] Implement REM statement (no-op)
 - [x] Implement END statement
-- [x] Implement basic PRINT (text only)
+- [x] Implement PRINT with expression evaluation
 - [x] Create statement dispatcher
 - [x] Write integration tests for simple programs
 
@@ -133,14 +133,14 @@
 - [x] Implement line lookup
 - [x] Support line insertion/deletion
 - [ ] Handle line renumbering (if needed)
-- [ ] Write unit tests for line management
+- [x] Write unit tests for line management
 
 ### GOTO Statement
 - [x] Implement GOTO statement
 - [x] Create line search algorithm
 - [x] Handle undefined line errors
 - [ ] Support computed GOTO
-- [ ] Write tests for GOTO
+- [x] Write tests for GOTO
 
 ### IF/THEN Statement
 - [x] Implement IF statement
@@ -148,17 +148,17 @@
 - [x] Implement THEN clause
 - [x] Support IF without THEN (implicit)
 - [ ] Handle nested IF statements
-- [ ] Write tests for conditionals
+- [x] Write tests for conditionals
 
 ### FOR/NEXT Loops
-- [ ] Create `lib/runtime/stack.dart` for loop stack
-- [ ] Implement FOR statement
-- [ ] Create 16-byte FOR stack entry
-- [ ] Implement NEXT statement
-- [ ] Handle STEP clause
-- [ ] Support nested loops
-- [ ] Implement loop variable lookup (FNDFOR)
-- [ ] Write tests for loops
+- [x] Create `lib/runtime/stack.dart` for loop stack
+- [x] Implement FOR statement
+- [x] Create 16-byte FOR stack entry
+- [x] Implement NEXT statement
+- [x] Handle STEP clause
+- [x] Support nested loops
+- [x] Implement loop variable lookup (FNDFOR)
+- [x] Write tests for loops
 
 ### GOSUB/RETURN
 - [ ] Implement GOSUB statement

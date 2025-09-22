@@ -4,6 +4,8 @@ import '../../lib/interpreter/tokenizer.dart';
 import '../../lib/interpreter/expression_evaluator.dart';
 import '../../lib/memory/memory.dart';
 import '../../lib/memory/variables.dart';
+import '../../lib/memory/program_storage.dart';
+import '../../lib/runtime/stack.dart';
 
 void main() {
   group('Interpreter', () {
@@ -11,6 +13,8 @@ void main() {
     late Tokenizer tokenizer;
     late VariableStorage variables;
     late ExpressionEvaluator expressionEvaluator;
+    late ProgramStorage programStorage;
+    late RuntimeStack runtimeStack;
     late Interpreter interpreter;
 
     setUp(() {
@@ -18,7 +22,9 @@ void main() {
       tokenizer = Tokenizer();
       variables = VariableStorage(memory);
       expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer);
-      interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator);
+      programStorage = ProgramStorage(memory);
+      runtimeStack = RuntimeStack(memory, variables);
+      interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack);
 
       // Initialize variable storage
       variables.initialize(0x2000);
