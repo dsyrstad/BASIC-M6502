@@ -129,24 +129,24 @@
 ## Phase 4: Control Flow
 
 ### Line Number Management
-- [ ] Create line number table
-- [ ] Implement line lookup
-- [ ] Support line insertion/deletion
+- [x] Create line number table
+- [x] Implement line lookup
+- [x] Support line insertion/deletion
 - [ ] Handle line renumbering (if needed)
 - [ ] Write unit tests for line management
 
 ### GOTO Statement
-- [ ] Implement GOTO statement
-- [ ] Create line search algorithm
-- [ ] Handle undefined line errors
+- [x] Implement GOTO statement
+- [x] Create line search algorithm
+- [x] Handle undefined line errors
 - [ ] Support computed GOTO
 - [ ] Write tests for GOTO
 
 ### IF/THEN Statement
-- [ ] Implement IF statement
-- [ ] Support relational operators (<, >, =, <=, >=, <>)
-- [ ] Implement THEN clause
-- [ ] Support IF without THEN (implicit)
+- [x] Implement IF statement
+- [x] Support relational operators (<, >, =, <=, >=, <>)
+- [x] Implement THEN clause
+- [x] Support IF without THEN (implicit)
 - [ ] Handle nested IF statements
 - [ ] Write tests for conditionals
 

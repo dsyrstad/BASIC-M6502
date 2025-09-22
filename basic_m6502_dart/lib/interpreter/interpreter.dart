@@ -1,5 +1,6 @@
 import '../memory/memory.dart';
 import '../memory/variables.dart';
+import '../memory/program_storage.dart';
 import 'tokenizer.dart';
 import 'expression_evaluator.dart';
 
@@ -12,6 +13,7 @@ class Interpreter {
   final Tokenizer tokenizer;
   final VariableStorage variables;
   final ExpressionEvaluator expressionEvaluator;
+  final ProgramStorage programStorage;
 
   /// Current execution state
   ExecutionState _state = ExecutionState.immediate;
@@ -22,6 +24,9 @@ class Interpreter {
   /// Current tokenized line being executed
   List<int> _currentLine = [];
 
+  /// Current line number being executed (-1 for direct mode)
+  int _currentLineNumber = -1;
+
   /// Direct mode input buffer
   String _directModeInput = '';
 
@@ -31,7 +36,7 @@ class Interpreter {
   /// Direct mode flag
   bool get isInDirectMode => _state == ExecutionState.immediate;
 
-  Interpreter(this.memory, this.tokenizer, this.variables, this.expressionEvaluator);
+  Interpreter(this.memory, this.tokenizer, this.variables, this.expressionEvaluator, this.programStorage);
 
   /// Main interpreter loop (NEWSTT equivalent)
   void mainLoop() {
@@ -200,21 +205,43 @@ class Interpreter {
 
   /// Store a line in the program
   void _storeLine(int lineNumber, List<int> content) {
-    // TODO: Implement program storage
-    print('Storing line $lineNumber: ${tokenizer.detokenize(content)}');
+    programStorage.storeLine(lineNumber, content);
   }
 
   /// Delete a line from the program
   void _deleteLine(int lineNumber) {
-    // TODO: Implement line deletion
-    print('Deleting line $lineNumber');
+    programStorage.deleteLine(lineNumber);
   }
 
   /// Advance to next program line
   void _advanceToNextLine() {
-    // TODO: Implement program line advancement
-    // For now, just stop
-    _state = ExecutionState.stopped;
+    if (_currentLineNumber == -1) {
+      // Direct mode - stop execution
+      _state = ExecutionState.stopped;
+      return;
+    }
+
+    final nextLineNumber = programStorage.getNextLineNumber(_currentLineNumber);
+    if (nextLineNumber == -1) {
+      // End of program
+      _state = ExecutionState.immediate;
+      print('READY.');
+      return;
+    }
+
+    _jumpToLine(nextLineNumber);
+  }
+
+  /// Jump to a specific line number
+  void _jumpToLine(int lineNumber) {
+    final lineAddress = programStorage.findLineAddress(lineNumber);
+    if (lineAddress == -1) {
+      throw InterpreterException('UNDEF\'D STATEMENT ERROR - Line $lineNumber not found');
+    }
+
+    _currentLineNumber = lineNumber;
+    _currentLine = programStorage.getLineContent(lineNumber);
+    _textPointer = 0;
   }
 
   /// Dispatch statement execution based on token
@@ -256,6 +283,9 @@ class Interpreter {
         break;
       case Tokenizer.letToken:
         _executeLet();
+        break;
+      case Tokenizer.ifToken:
+        _executeIf();
         break;
       default:
         throw InterpreterException('SYNTAX ERROR - Unknown statement: ${tokenizer.getTokenName(token)}');
@@ -330,27 +360,99 @@ class Interpreter {
 
   /// Execute RUN statement
   void _executeRun() {
-    // TODO: Implement RUN - start program execution
-    print('RUN not yet implemented');
-    _state = ExecutionState.stopped;
+    // Clear variables (RUN should start fresh)
+    variables.clearVariables();
+
+    // Check if there's a line number after RUN
+    final startLineNumber = _parseLineNumber();
+
+    int firstLine;
+    if (startLineNumber != -1) {
+      // Start from specified line
+      firstLine = startLineNumber;
+    } else {
+      // Start from first line in program
+      firstLine = programStorage.getFirstLineNumber();
+      if (firstLine == -1) {
+        print('READY.'); // Empty program
+        return;
+      }
+    }
+
+    // Switch to program mode and start execution
+    _state = ExecutionState.program;
+    _jumpToLine(firstLine);
   }
 
   /// Execute LIST statement
   void _executeList() {
-    // TODO: Implement LIST - show program lines
-    print('LIST not yet implemented');
+    final lineNumbers = programStorage.getAllLineNumbers();
+
+    if (lineNumbers.isEmpty) {
+      print('READY.'); // No program to list
+      return;
+    }
+
+    for (final lineNumber in lineNumbers) {
+      try {
+        final line = programStorage.getLineForDisplay(lineNumber, tokenizer.detokenize);
+        print(line);
+      } catch (e) {
+        print('Error listing line $lineNumber: $e');
+      }
+    }
   }
 
   /// Execute NEW statement
   void _executeNew() {
-    // TODO: Implement NEW - clear program
-    print('NEW not yet implemented');
+    // Clear the program
+    programStorage.clearProgram();
+
+    // Clear all variables
+    variables.clearVariables();
+
+    // Return to immediate mode
+    _state = ExecutionState.immediate;
+    _currentLineNumber = -1;
+
+    print('READY.');
   }
 
   /// Execute GOTO statement
   void _executeGoto() {
-    // TODO: Parse line number and jump
-    print('GOTO not yet implemented');
+    // Parse the target line number
+    final targetLineNumber = _parseLineNumber();
+
+    if (targetLineNumber == -1) {
+      throw InterpreterException('SYNTAX ERROR - Invalid line number in GOTO');
+    }
+
+    // Jump to the target line
+    _jumpToLine(targetLineNumber);
+  }
+
+  /// Parse a line number at current text pointer
+  int _parseLineNumber() {
+    _skipSpaces();
+
+    if (_textPointer >= _currentLine.length) {
+      return -1;
+    }
+
+    int lineNumber = 0;
+    int currentChar = _getCurrentChar();
+
+    if (!_isDigit(currentChar)) {
+      return -1;
+    }
+
+    while (_isDigit(currentChar) && _textPointer < _currentLine.length) {
+      lineNumber = lineNumber * 10 + (currentChar - 48);
+      _advanceTextPointer();
+      currentChar = _getCurrentChar();
+    }
+
+    return lineNumber;
   }
 
   /// Execute LET statement
@@ -371,6 +473,52 @@ class Interpreter {
 
     // Store the value in the variable
     variables.setVariable(variableName, result.value);
+  }
+
+  /// Execute IF statement
+  void _executeIf() {
+    // Evaluate the condition expression
+    final conditionResult = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+    _textPointer = conditionResult.endPosition;
+
+    // Check if condition is true (non-zero)
+    bool conditionTrue = false;
+    if (conditionResult.value is NumericValue) {
+      final numValue = conditionResult.value as NumericValue;
+      conditionTrue = numValue.value != 0.0;
+    } else {
+      throw InterpreterException('TYPE MISMATCH - IF condition must be numeric');
+    }
+
+    // Skip spaces
+    _skipSpaces();
+
+    // Check for THEN keyword (optional in some BASIC dialects)
+    if (_textPointer < _currentLine.length && _getCurrentChar() == Tokenizer.thenToken) {
+      _advanceTextPointer(); // Skip THEN token
+      _skipSpaces();
+    }
+
+    if (conditionTrue) {
+      // Condition is true - execute the statement after THEN
+      // Check if it's a line number (GOTO) or a statement
+      if (_textPointer < _currentLine.length) {
+        final nextChar = _getCurrentChar();
+        if (_isDigit(nextChar)) {
+          // It's a line number - jump to it
+          final targetLine = _parseLineNumber();
+          if (targetLine != -1) {
+            _jumpToLine(targetLine);
+          }
+        } else {
+          // It's a statement - execute it
+          _dispatchStatement(nextChar);
+        }
+      }
+    } else {
+      // Condition is false - skip to end of line
+      _textPointer = _currentLine.length;
+    }
   }
 
   /// Handle runtime errors

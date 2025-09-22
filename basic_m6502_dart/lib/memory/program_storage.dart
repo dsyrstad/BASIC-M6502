@@ -1,0 +1,362 @@
+import 'dart:typed_data';
+import 'memory.dart';
+
+/// Manages storage and retrieval of BASIC program lines.
+///
+/// Program lines are stored in memory following the Microsoft BASIC format:
+/// - 2 bytes: Link pointer to next line (0x0000 = end of program)
+/// - 2 bytes: Line number (binary, little-endian)
+/// - N bytes: Tokenized statement(s)
+/// - 1 byte: Zero terminator
+///
+/// Lines are stored in sorted order by line number for efficient lookup.
+class ProgramStorage {
+  final Memory memory;
+
+  /// Pointer to start of program in memory
+  int _programStart = 0x0801; // Commodore BASIC start address
+
+  /// Pointer to end of program in memory
+  int _programEnd = 0x0801;
+
+  /// Cache of line number to memory address mappings for fast lookup
+  final Map<int, int> _lineAddressCache = <int, int>{};
+
+  /// Flag to indicate if cache needs rebuilding
+  bool _cacheValid = false;
+
+  ProgramStorage(this.memory) {
+    _initializeProgram();
+  }
+
+  /// Initialize empty program storage
+  void _initializeProgram() {
+    // Write end-of-program marker at start
+    memory.writeWord(_programStart, 0x0000);
+    _programEnd = _programStart + 2;
+    _lineAddressCache.clear();
+    _cacheValid = true;
+  }
+
+  /// Store a program line, replacing any existing line with same number
+  void storeLine(int lineNumber, List<int> tokenizedContent) {
+    if (lineNumber < 0 || lineNumber > 65535) {
+      throw ProgramStorageException('Invalid line number: $lineNumber');
+    }
+
+    if (tokenizedContent.isEmpty) {
+      // Empty content means delete the line
+      deleteLine(lineNumber);
+      return;
+    }
+
+    // Find insertion point
+    final insertInfo = _findLineInsertionPoint(lineNumber);
+
+    if (insertInfo.existingLineAddress != -1) {
+      // Replace existing line
+      _replaceLine(insertInfo.existingLineAddress, lineNumber, tokenizedContent);
+    } else {
+      // Insert new line
+      _insertLine(insertInfo.insertAddress, lineNumber, tokenizedContent);
+    }
+
+    _invalidateCache();
+  }
+
+  /// Delete a program line
+  void deleteLine(int lineNumber) {
+    final lineAddress = findLineAddress(lineNumber);
+    if (lineAddress == -1) {
+      return; // Line doesn't exist
+    }
+
+    _removeLine(lineAddress);
+    _invalidateCache();
+  }
+
+  /// Find the memory address of a line number, returns -1 if not found
+  int findLineAddress(int lineNumber) {
+    if (!_cacheValid) {
+      _rebuildCache();
+    }
+
+    return _lineAddressCache[lineNumber] ?? -1;
+  }
+
+  /// Get the next line number after the given line number
+  /// Returns -1 if no next line exists
+  int getNextLineNumber(int currentLineNumber) {
+    if (!_cacheValid) {
+      _rebuildCache();
+    }
+
+    int? nextLineNumber;
+    for (final lineNum in _lineAddressCache.keys) {
+      if (lineNum > currentLineNumber) {
+        if (nextLineNumber == null || lineNum < nextLineNumber) {
+          nextLineNumber = lineNum;
+        }
+      }
+    }
+
+    return nextLineNumber ?? -1;
+  }
+
+  /// Get all line numbers in ascending order
+  List<int> getAllLineNumbers() {
+    if (!_cacheValid) {
+      _rebuildCache();
+    }
+
+    final lineNumbers = _lineAddressCache.keys.toList();
+    lineNumbers.sort();
+    return lineNumbers;
+  }
+
+  /// Get tokenized content of a line
+  List<int> getLineContent(int lineNumber) {
+    final lineAddress = findLineAddress(lineNumber);
+    if (lineAddress == -1) {
+      throw ProgramStorageException('Line $lineNumber not found');
+    }
+
+    return _readLineContent(lineAddress);
+  }
+
+  /// Get formatted line for display (line number + detokenized content)
+  String getLineForDisplay(int lineNumber, String Function(List<int>) detokenizer) {
+    final content = getLineContent(lineNumber);
+    final detokenizedContent = detokenizer(content);
+    return '$lineNumber $detokenizedContent';
+  }
+
+  /// Clear all program lines
+  void clearProgram() {
+    _initializeProgram();
+  }
+
+  /// Get the first line number in the program
+  /// Returns -1 if program is empty
+  int getFirstLineNumber() {
+    if (!_cacheValid) {
+      _rebuildCache();
+    }
+
+    if (_lineAddressCache.isEmpty) {
+      return -1;
+    }
+
+    final lineNumbers = _lineAddressCache.keys.toList();
+    lineNumbers.sort();
+    return lineNumbers.first;
+  }
+
+  /// Check if program is empty
+  bool get isEmpty {
+    if (!_cacheValid) {
+      _rebuildCache();
+    }
+    return _lineAddressCache.isEmpty;
+  }
+
+  /// Get program size in bytes
+  int get programSize => _programEnd - _programStart;
+
+  /// Set program start address (for different platforms)
+  void setProgramStart(int address) {
+    if (address < 0 || address > 0xFFFF) {
+      throw ProgramStorageException('Invalid program start address: $address');
+    }
+
+    _programStart = address;
+    _initializeProgram();
+  }
+
+  /// Find where to insert a line, returns info about insertion point
+  _LineInsertionInfo _findLineInsertionPoint(int lineNumber) {
+    int currentAddress = _programStart;
+    int previousAddress = -1;
+
+    while (true) {
+      final linkPointer = memory.readWord(currentAddress);
+
+      if (linkPointer == 0) {
+        // End of program
+        return _LineInsertionInfo(currentAddress, -1);
+      }
+
+      final currentLineNumber = memory.readWord(currentAddress + 2);
+
+      if (currentLineNumber == lineNumber) {
+        // Found existing line
+        return _LineInsertionInfo(currentAddress, currentAddress);
+      }
+
+      if (currentLineNumber > lineNumber) {
+        // Insert before this line
+        return _LineInsertionInfo(currentAddress, -1);
+      }
+
+      previousAddress = currentAddress;
+      currentAddress = linkPointer;
+    }
+  }
+
+  /// Replace an existing line with new content
+  void _replaceLine(int lineAddress, int lineNumber, List<int> content) {
+    final oldLineSize = _getLineSize(lineAddress);
+    final newLineSize = _calculateLineSize(content);
+
+    if (newLineSize == oldLineSize) {
+      // Same size, just replace content in place
+      _writeLineContent(lineAddress, lineNumber, content);
+    } else {
+      // Different size, remove old line and insert new one
+      final nextAddress = memory.readWord(lineAddress);
+      _removeLine(lineAddress);
+
+      // Find new insertion point (might have changed)
+      final insertInfo = _findLineInsertionPoint(lineNumber);
+      _insertLine(insertInfo.insertAddress, lineNumber, content);
+    }
+  }
+
+  /// Insert a new line at the specified address
+  void _insertLine(int insertAddress, int lineNumber, List<int> content) {
+    final lineSize = _calculateLineSize(content);
+
+    // Make space for the new line
+    _makeSpace(insertAddress, lineSize);
+
+    // Write the new line
+    _writeLineContent(insertAddress, lineNumber, content);
+
+    // Update program end pointer
+    _programEnd += lineSize;
+  }
+
+  /// Remove a line from memory
+  void _removeLine(int lineAddress) {
+    final lineSize = _getLineSize(lineAddress);
+    final nextAddress = memory.readWord(lineAddress);
+
+    // Move everything after this line down
+    if (nextAddress != 0) {
+      final moveSize = _programEnd - nextAddress;
+      memory.copyBlock(nextAddress, lineAddress, moveSize);
+    }
+
+    // Update program end pointer
+    _programEnd -= lineSize;
+
+    // Write new end-of-program marker
+    memory.writeWord(_programEnd, 0x0000);
+  }
+
+  /// Make space in memory for a new line
+  void _makeSpace(int address, int size) {
+    final moveSize = _programEnd - address;
+    if (moveSize > 0) {
+      memory.copyBlock(address, address + size, moveSize);
+    }
+  }
+
+  /// Calculate the size of a line in memory
+  int _calculateLineSize(List<int> content) {
+    return 4 + content.length + 1; // link(2) + linenum(2) + content + null
+  }
+
+  /// Get the size of an existing line in memory
+  int _getLineSize(int lineAddress) {
+    final linkPointer = memory.readWord(lineAddress);
+    if (linkPointer == 0) {
+      // This is the end marker
+      return 2;
+    }
+    return linkPointer - lineAddress;
+  }
+
+  /// Write line content to memory
+  void _writeLineContent(int address, int lineNumber, List<int> content) {
+    final lineSize = _calculateLineSize(content);
+    final nextAddress = address + lineSize;
+
+    // Write link pointer to next line
+    memory.writeWord(address, nextAddress);
+
+    // Write line number
+    memory.writeWord(address + 2, lineNumber);
+
+    // Write tokenized content
+    for (int i = 0; i < content.length; i++) {
+      memory.writeByte(address + 4 + i, content[i]);
+    }
+
+    // Write null terminator
+    memory.writeByte(address + 4 + content.length, 0);
+  }
+
+  /// Read the content of a line (without line number and structure)
+  List<int> _readLineContent(int lineAddress) {
+    final linkPointer = memory.readWord(lineAddress);
+    if (linkPointer == 0) {
+      throw ProgramStorageException('Invalid line address');
+    }
+
+    final contentStart = lineAddress + 4;
+    final contentEnd = linkPointer - 1; // Exclude null terminator
+    final content = <int>[];
+
+    for (int addr = contentStart; addr < contentEnd; addr++) {
+      content.add(memory.readByte(addr));
+    }
+
+    return content;
+  }
+
+  /// Rebuild the line number to address cache
+  void _rebuildCache() {
+    _lineAddressCache.clear();
+    int currentAddress = _programStart;
+
+    while (true) {
+      final linkPointer = memory.readWord(currentAddress);
+
+      if (linkPointer == 0) {
+        // End of program
+        break;
+      }
+
+      final lineNumber = memory.readWord(currentAddress + 2);
+      _lineAddressCache[lineNumber] = currentAddress;
+
+      currentAddress = linkPointer;
+    }
+
+    _cacheValid = true;
+  }
+
+  /// Mark cache as invalid
+  void _invalidateCache() {
+    _cacheValid = false;
+  }
+}
+
+/// Information about where to insert a line
+class _LineInsertionInfo {
+  final int insertAddress;     // Where to insert/replace
+  final int existingLineAddress; // -1 if new line, address if replacing
+
+  _LineInsertionInfo(this.insertAddress, this.existingLineAddress);
+}
+
+/// Exception thrown for program storage errors
+class ProgramStorageException implements Exception {
+  final String message;
+
+  ProgramStorageException(this.message);
+
+  @override
+  String toString() => 'ProgramStorageException: $message';
+}
