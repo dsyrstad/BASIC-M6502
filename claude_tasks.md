@@ -60,27 +60,27 @@
 - [x] Write unit tests for expressions
 
 ### LET Statement
-- [ ] Implement LET statement
-- [ ] Support implicit LET (assignment without LET)
-- [ ] Handle string assignments
-- [ ] Handle numeric assignments
-- [ ] Write tests for various assignments
+- [x] Implement LET statement
+- [x] Support implicit LET (assignment without LET)
+- [x] Handle string assignments
+- [x] Handle numeric assignments
+- [x] Write tests for various assignments
 
 ### String System
-- [ ] Create `lib/memory/strings.dart`
-- [ ] Implement 3-byte string descriptors
-- [ ] Create string space management
-- [ ] Implement temporary string handling
-- [ ] Add string comparison operations
-- [ ] Write unit tests for strings
+- [x] Create `lib/memory/strings.dart`
+- [x] Implement 3-byte string descriptors
+- [x] Create string space management
+- [x] Implement temporary string handling
+- [x] Add string comparison operations
+- [x] Write unit tests for strings
 
 ### Array Support
-- [ ] Implement DIM statement
-- [ ] Create array storage format
-- [ ] Support multi-dimensional arrays
-- [ ] Implement array access in expressions
-- [ ] Handle array bounds checking
-- [ ] Write unit tests for arrays
+- [x] Implement DIM statement
+- [x] Create array storage format
+- [x] Support multi-dimensional arrays
+- [x] Implement array access in expressions
+- [x] Handle array bounds checking
+- [x] Write unit tests for arrays
 
 ## Phase 3: Math Package
 
