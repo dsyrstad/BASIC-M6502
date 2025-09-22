@@ -1,18 +1,27 @@
 import 'package:test/test.dart';
 import '../../lib/interpreter/interpreter.dart';
 import '../../lib/interpreter/tokenizer.dart';
+import '../../lib/interpreter/expression_evaluator.dart';
 import '../../lib/memory/memory.dart';
+import '../../lib/memory/variables.dart';
 
 void main() {
   group('Interpreter', () {
     late Memory memory;
     late Tokenizer tokenizer;
+    late VariableStorage variables;
+    late ExpressionEvaluator expressionEvaluator;
     late Interpreter interpreter;
 
     setUp(() {
       memory = Memory();
       tokenizer = Tokenizer();
-      interpreter = Interpreter(memory, tokenizer);
+      variables = VariableStorage(memory);
+      expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer);
+      interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator);
+
+      // Initialize variable storage
+      variables.initialize(0x2000);
     });
 
     test('should initialize in direct mode', () {
@@ -51,7 +60,8 @@ void main() {
     });
 
     test('should handle invalid statement', () {
-      expect(() => interpreter.executeLine('INVALID'),
+      // Use a truly invalid syntax - an unknown symbol
+      expect(() => interpreter.executeLine('@#\$%'),
              throwsA(isA<InterpreterException>()));
     });
 
@@ -74,6 +84,75 @@ void main() {
       // Statements separated by colons
       expect(() => interpreter.executeLine('PRINT "A": PRINT "B"'),
              returnsNormally);
+    });
+
+    group('LET statement', () {
+      test('should assign numeric value with LET', () {
+        interpreter.executeLine('LET A = 42');
+        final value = variables.getVariable('A');
+        expect(value, isA<NumericValue>());
+        expect((value as NumericValue).value, equals(42.0));
+      });
+
+      test('should assign string value with LET', () {
+        interpreter.executeLine('LET A\$ = "HELLO"');
+        final value = variables.getVariable('A\$');
+        expect(value, isA<StringValue>());
+        expect((value as StringValue).value, equals('HELLO'));
+      });
+
+      test('should assign expression with LET', () {
+        interpreter.executeLine('LET B = 3 + 4 * 5');
+        final value = variables.getVariable('B');
+        expect(value, isA<NumericValue>());
+        expect((value as NumericValue).value, equals(23.0));
+      });
+
+      test('should support implicit LET (assignment without LET)', () {
+        interpreter.executeLine('C = 100');
+        final value = variables.getVariable('C');
+        expect(value, isA<NumericValue>());
+        expect((value as NumericValue).value, equals(100.0));
+      });
+
+      test('should support implicit string assignment', () {
+        interpreter.executeLine('D\$ = "WORLD"');
+        final value = variables.getVariable('D\$');
+        expect(value, isA<StringValue>());
+        expect((value as StringValue).value, equals('WORLD'));
+      });
+
+      test('should handle variable references in assignment', () {
+        interpreter.executeLine('E = 10');
+        interpreter.executeLine('F = E + 5');
+        final value = variables.getVariable('F');
+        expect(value, isA<NumericValue>());
+        expect((value as NumericValue).value, equals(15.0));
+      });
+
+      test('should error on missing equals sign in LET', () {
+        expect(() => interpreter.executeLine('LET G 42'),
+               throwsA(isA<InterpreterException>()));
+      });
+
+      test('should error on invalid variable name', () {
+        expect(() => interpreter.executeLine('LET 123 = 42'),
+               throwsA(isA<InterpreterException>()));
+      });
+
+      test('should handle different variable types', () {
+        // H and H$ are different variables in BASIC
+        interpreter.executeLine('H = 42');
+        interpreter.executeLine('H\$ = "TEST"');
+
+        final numValue = variables.getVariable('H');
+        final strValue = variables.getVariable('H\$');
+
+        expect(numValue, isA<NumericValue>());
+        expect((numValue as NumericValue).value, equals(42.0));
+        expect(strValue, isA<StringValue>());
+        expect((strValue as StringValue).value, equals('TEST'));
+      });
     });
   });
 }

@@ -1,5 +1,7 @@
 import '../memory/memory.dart';
+import '../memory/variables.dart';
 import 'tokenizer.dart';
+import 'expression_evaluator.dart';
 
 /// Main BASIC interpreter equivalent to NEWSTT in original code.
 ///
@@ -8,6 +10,8 @@ import 'tokenizer.dart';
 class Interpreter {
   final Memory memory;
   final Tokenizer tokenizer;
+  final VariableStorage variables;
+  final ExpressionEvaluator expressionEvaluator;
 
   /// Current execution state
   ExecutionState _state = ExecutionState.immediate;
@@ -27,7 +31,7 @@ class Interpreter {
   /// Direct mode flag
   bool get isInDirectMode => _state == ExecutionState.immediate;
 
-  Interpreter(this.memory, this.tokenizer);
+  Interpreter(this.memory, this.tokenizer, this.variables, this.expressionEvaluator);
 
   /// Main interpreter loop (NEWSTT equivalent)
   void mainLoop() {
@@ -107,6 +111,58 @@ class Interpreter {
   /// Check if character is a digit
   bool _isDigit(int ch) {
     return ch >= 48 && ch <= 57; // ASCII '0' to '9'
+  }
+
+  /// Check if character is a letter
+  bool _isLetter(int ch) {
+    return (ch >= 65 && ch <= 90) || (ch >= 97 && ch <= 122); // A-Z or a-z
+  }
+
+  /// Skip spaces at current text pointer
+  void _skipSpaces() {
+    while (_textPointer < _currentLine.length && _getCurrentChar() == 32) { // ASCII space
+      _advanceTextPointer();
+    }
+  }
+
+  /// Parse a variable name at current text pointer
+  String _parseVariableName() {
+    _skipSpaces();
+
+    if (_textPointer >= _currentLine.length) {
+      throw InterpreterException('SYNTAX ERROR - Missing variable name');
+    }
+
+    final nameStart = _textPointer;
+    final firstChar = _getCurrentChar();
+
+    // First character must be a letter
+    if (!_isLetter(firstChar)) {
+      throw InterpreterException('SYNTAX ERROR - Variable must start with letter');
+    }
+
+    _advanceTextPointer();
+
+    // Second character can be letter or digit
+    if (_textPointer < _currentLine.length) {
+      final secondChar = _getCurrentChar();
+      if (_isLetter(secondChar) || _isDigit(secondChar)) {
+        _advanceTextPointer();
+      }
+    }
+
+    // Check for string variable suffix '$'
+    if (_textPointer < _currentLine.length && _getCurrentChar() == 36) { // '$'
+      _advanceTextPointer();
+    }
+
+    // Check for array variable suffix '(' (we'll handle this later)
+    if (_textPointer < _currentLine.length && _getCurrentChar() == 40) { // '('
+      throw InterpreterException('ARRAY NOT YET IMPLEMENTED');
+    }
+
+    final nameBytes = _currentLine.sublist(nameStart, _textPointer);
+    return String.fromCharCodes(nameBytes);
   }
 
   /// Handle line number entry (program editing)
@@ -208,9 +264,46 @@ class Interpreter {
 
   /// Handle assignment or expression evaluation
   void _handleAssignmentOrExpression() {
-    // TODO: Check for variable assignment (implicit LET)
-    // TODO: Evaluate expression
-    throw InterpreterException('SYNTAX ERROR - Invalid statement');
+    // Try to parse as variable assignment (implicit LET)
+    if (_isLetter(_getCurrentChar())) {
+      final savedPosition = _textPointer;
+
+      try {
+        // Try to parse variable name
+        final variableName = _parseVariableName();
+
+        // Skip spaces and check for equals sign
+        _skipSpaces();
+        if (_getCurrentChar() == Tokenizer.equalToken) { // Equals token
+          // This is an assignment - execute like LET
+          _advanceTextPointer(); // Skip equals sign
+
+          // Evaluate the expression on the right side
+          final result = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+          _textPointer = result.endPosition;
+
+          // Store the value in the variable
+          variables.setVariable(variableName, result.value);
+          return;
+        }
+      } catch (e) {
+        // Not a valid assignment, restore position and fall through
+        _textPointer = savedPosition;
+      }
+    }
+
+    // Not an assignment - evaluate as expression (for direct mode)
+    try {
+      final result = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+      _textPointer = result.endPosition;
+
+      // In direct mode, print the result
+      if (_state == ExecutionState.immediate) {
+        print(result.value.toString());
+      }
+    } catch (e) {
+      throw InterpreterException('SYNTAX ERROR - Invalid statement');
+    }
   }
 
   /// Execute END statement
@@ -262,8 +355,22 @@ class Interpreter {
 
   /// Execute LET statement
   void _executeLet() {
-    // TODO: Implement variable assignment
-    print('LET not yet implemented');
+    // Parse variable name on left side of assignment
+    final variableName = _parseVariableName();
+
+    // Skip spaces and look for equals sign
+    _skipSpaces();
+    if (_getCurrentChar() != Tokenizer.equalToken) { // Equals token
+      throw InterpreterException('SYNTAX ERROR - Missing = in LET statement');
+    }
+    _advanceTextPointer(); // Skip the equals sign
+
+    // Evaluate the expression on the right side
+    final result = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+    _textPointer = result.endPosition;
+
+    // Store the value in the variable
+    variables.setVariable(variableName, result.value);
   }
 
   /// Handle runtime errors
