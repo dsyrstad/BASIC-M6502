@@ -85,37 +85,37 @@
 ## Phase 3: Math Package
 
 ### Floating-Point Format
-- [ ] Create `lib/math/floating_point.dart`
-- [ ] Implement Microsoft 5-byte float format
-- [ ] Create pack/unpack operations
-- [ ] Implement normalization
-- [ ] Handle special cases (zero, overflow)
-- [ ] Write unit tests for float format
+- [x] Create `lib/math/floating_point.dart`
+- [x] Implement Microsoft 5-byte float format
+- [x] Create pack/unpack operations
+- [x] Implement normalization
+- [x] Handle special cases (zero, overflow)
+- [x] Write unit tests for float format
 
 ### Basic Arithmetic
-- [ ] Create `lib/math/operations.dart`
-- [ ] Implement FADD (addition)
-- [ ] Implement FSUB (subtraction)
-- [ ] Implement FMUL (multiplication)
-- [ ] Implement FDIV (division)
-- [ ] Implement negation
-- [ ] Handle overflow/underflow
-- [ ] Write unit tests for arithmetic
+- [x] Create `lib/math/operations.dart`
+- [x] Implement FADD (addition)
+- [x] Implement FSUB (subtraction)
+- [x] Implement FMUL (multiplication)
+- [x] Implement FDIV (division)
+- [x] Implement negation
+- [x] Handle overflow/underflow
+- [x] Write unit tests for arithmetic
 
 ### Math Functions
-- [ ] Create `lib/math/functions.dart`
-- [ ] Implement SIN function
-- [ ] Implement COS function
-- [ ] Implement TAN function
-- [ ] Implement ATN function
-- [ ] Implement LOG function
-- [ ] Implement EXP function
-- [ ] Implement SQR function
-- [ ] Implement RND function
-- [ ] Implement INT function
-- [ ] Implement ABS function
-- [ ] Implement SGN function
-- [ ] Write unit tests for each function
+- [x] Create `lib/math/functions.dart`
+- [x] Implement SIN function
+- [x] Implement COS function
+- [x] Implement TAN function
+- [x] Implement ATN function
+- [x] Implement LOG function
+- [x] Implement EXP function
+- [x] Implement SQR function
+- [x] Implement RND function
+- [x] Implement INT function
+- [x] Implement ABS function
+- [x] Implement SGN function
+- [x] Write unit tests for each function
 
 ### Number Conversions
 - [ ] Create `lib/math/conversions.dart`

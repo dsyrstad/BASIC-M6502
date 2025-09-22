@@ -1,7 +1,7 @@
 # Plan to Convert Microsoft BASIC 6502 to Dart
 
 ## Project Overview
-Convert the ~7000 line MACRO-10 assembly code implementing Microsoft BASIC 1.1 for 6502 (Commodore version) into a modern Dart console application that can run BASIC programs via stdin/stdout.
+Convert the ~7000 line MACRO-10 assembly code (m6502.asm) implementing Microsoft BASIC 1.1 for 6502 (Commodore version) into a modern Dart console application that can run BASIC programs via stdin/stdout.
 
 ## Architecture Design
 
