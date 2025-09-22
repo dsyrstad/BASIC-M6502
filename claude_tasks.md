@@ -26,38 +26,38 @@
 - [x] Write unit tests for tokenizer
 
 ### Basic Interpreter Loop
-- [ ] Create `lib/interpreter/interpreter.dart`
-- [ ] Implement NEWSTT main loop equivalent
-- [ ] Handle direct mode vs program mode
-- [ ] Implement CHRGET/CHRGOT character fetch
-- [ ] Create text pointer management
-- [ ] Write unit tests for interpreter loop
+- [x] Create `lib/interpreter/interpreter.dart`
+- [x] Implement NEWSTT main loop equivalent
+- [x] Handle direct mode vs program mode
+- [x] Implement CHRGET/CHRGOT character fetch
+- [x] Create text pointer management
+- [x] Write unit tests for interpreter loop
 
 ### Simple Statements
-- [ ] Implement REM statement (no-op)
-- [ ] Implement END statement
-- [ ] Implement basic PRINT (text only)
-- [ ] Create statement dispatcher
-- [ ] Write integration tests for simple programs
+- [x] Implement REM statement (no-op)
+- [x] Implement END statement
+- [x] Implement basic PRINT (text only)
+- [x] Create statement dispatcher
+- [x] Write integration tests for simple programs
 
 ## Phase 2: Variables & Expressions
 
 ### Variable Storage
-- [ ] Create `lib/memory/variables.dart`
-- [ ] Implement 2-character variable names
-- [ ] Create 6-byte variable storage format
-- [ ] Implement variable lookup (PTRGET equivalent)
-- [ ] Handle variable creation
-- [ ] Write unit tests for variable operations
+- [x] Create `lib/memory/variables.dart`
+- [x] Implement 2-character variable names
+- [x] Create 6-byte variable storage format
+- [x] Implement variable lookup (PTRGET equivalent)
+- [x] Handle variable creation
+- [x] Write unit tests for variable operations
 
 ### Expression Evaluator
-- [ ] Create `lib/interpreter/expression_evaluator.dart`
-- [ ] Implement FRMEVL algorithm with stack
-- [ ] Handle operator precedence
-- [ ] Support parentheses
-- [ ] Implement numeric constants
-- [ ] Support variable references
-- [ ] Write unit tests for expressions
+- [x] Create `lib/interpreter/expression_evaluator.dart`
+- [x] Implement FRMEVL algorithm with stack
+- [x] Handle operator precedence
+- [x] Support parentheses
+- [x] Implement numeric constants
+- [x] Support variable references
+- [x] Write unit tests for expressions
 
 ### LET Statement
 - [ ] Implement LET statement
