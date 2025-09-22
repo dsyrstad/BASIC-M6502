@@ -118,13 +118,13 @@
 - [x] Write unit tests for each function
 
 ### Number Conversions
-- [ ] Create `lib/math/conversions.dart`
-- [ ] Implement FIN (string to float)
-- [ ] Implement FOUT (float to string)
-- [ ] Implement STR$ function
-- [ ] Implement VAL function
-- [ ] Handle different number formats
-- [ ] Write unit tests for conversions
+- [x] Create `lib/math/conversions.dart`
+- [x] Implement FIN (string to float)
+- [x] Implement FOUT (float to string)
+- [x] Implement STR$ function
+- [x] Implement VAL function
+- [x] Handle different number formats
+- [x] Write unit tests for conversions
 
 ## Phase 4: Control Flow
 
