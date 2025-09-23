@@ -161,19 +161,19 @@
 - [x] Write tests for loops
 
 ### GOSUB/RETURN
-- [ ] Implement GOSUB statement
-- [ ] Create 5-byte GOSUB stack entry
-- [ ] Implement RETURN statement
-- [ ] Handle stack unwinding
-- [ ] Support nested subroutines
-- [ ] Write tests for subroutines
+- [x] Implement GOSUB statement
+- [x] Create 5-byte GOSUB stack entry
+- [x] Implement RETURN statement
+- [x] Handle stack unwinding
+- [x] Support nested subroutines
+- [x] Write tests for subroutines
 
 ### ON Statement
-- [ ] Implement ON GOTO
-- [ ] Implement ON GOSUB
-- [ ] Handle expression evaluation
-- [ ] Support multiple targets
-- [ ] Write tests for ON statements
+- [x] Implement ON GOTO
+- [x] Implement ON GOSUB
+- [x] Handle expression evaluation
+- [x] Support multiple targets
+- [x] Write tests for ON statements
 
 ## Phase 5: I/O & Data
 

@@ -295,6 +295,15 @@ class Interpreter {
       case Tokenizer.nextToken:
         _executeNext();
         break;
+      case Tokenizer.gosubToken:
+        _executeGosub();
+        break;
+      case Tokenizer.returnToken:
+        _executeReturn();
+        break;
+      case Tokenizer.onToken:
+        _executeOn();
+        break;
       default:
         throw InterpreterException('SYNTAX ERROR - Unknown statement: ${tokenizer.getTokenName(token)}');
     }
@@ -747,6 +756,123 @@ class Interpreter {
       _textPointer = forEntry.textPointer;
     }
     // If not continuing, just fall through to next statement
+  }
+
+  /// Execute GOSUB statement
+  void _executeGosub() {
+    // Parse the target line number
+    final targetLineNumber = _parseLineNumber();
+
+    if (targetLineNumber == -1) {
+      throw InterpreterException('SYNTAX ERROR - Invalid line number in GOSUB');
+    }
+
+    // Push current position onto GOSUB stack for RETURN
+    // Save the current line number and text pointer for return
+    runtimeStack.pushGosub(_currentLineNumber, _textPointer);
+
+    // Jump to the subroutine
+    _jumpToLine(targetLineNumber);
+  }
+
+  /// Execute RETURN statement
+  void _executeReturn() {
+    // Pop the most recent GOSUB entry from stack
+    final gosubEntry = runtimeStack.popGosub();
+
+    if (gosubEntry == null) {
+      throw InterpreterException('RETURN WITHOUT GOSUB - No matching GOSUB statement');
+    }
+
+    // Return to the line and position after the GOSUB
+    _jumpToLine(gosubEntry.lineNumber);
+    _textPointer = gosubEntry.textPointer;
+  }
+
+  /// Execute ON statement (ON expression GOTO/GOSUB line1, line2, ...)
+  void _executeOn() {
+    // Evaluate the expression
+    final result = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+    _textPointer = result.endPosition;
+
+    if (result.value is! NumericValue) {
+      throw InterpreterException('TYPE MISMATCH - ON expression must be numeric');
+    }
+
+    final numValue = (result.value as NumericValue).value;
+    final index = numValue.truncate(); // Convert to integer
+
+    // Skip spaces and get the keyword (GOTO or GOSUB)
+    _skipSpaces();
+
+    if (_textPointer >= _currentLine.length) {
+      throw InterpreterException('SYNTAX ERROR - Missing GOTO or GOSUB in ON statement');
+    }
+
+    final keyword = _getCurrentChar();
+    bool isGosub;
+
+    if (keyword == Tokenizer.gotoToken) {
+      isGosub = false;
+      _advanceTextPointer(); // Skip GOTO token
+    } else if (keyword == Tokenizer.gosubToken) {
+      isGosub = true;
+      _advanceTextPointer(); // Skip GOSUB token
+    } else {
+      throw InterpreterException('SYNTAX ERROR - ON must be followed by GOTO or GOSUB');
+    }
+
+    // Parse the list of line numbers
+    final lineNumbers = <int>[];
+    _skipSpaces();
+
+    while (_textPointer < _currentLine.length) {
+      final currentChar = _getCurrentChar();
+
+      // Check for end of statement
+      if (currentChar == 0 || currentChar == 58) { // null or colon
+        break;
+      }
+
+      // Parse line number
+      final lineNumber = _parseLineNumber();
+      if (lineNumber == -1) {
+        throw InterpreterException('SYNTAX ERROR - Invalid line number in ON statement');
+      }
+
+      lineNumbers.add(lineNumber);
+
+      // Skip spaces and check for comma
+      _skipSpaces();
+      if (_textPointer < _currentLine.length && _getCurrentChar() == 44) { // comma
+        _advanceTextPointer(); // Skip comma
+        _skipSpaces();
+      } else {
+        break; // No more line numbers
+      }
+    }
+
+    // Check if we have any line numbers
+    if (lineNumbers.isEmpty) {
+      throw InterpreterException('SYNTAX ERROR - No line numbers in ON statement');
+    }
+
+    // Check if index is in range (1-based indexing in BASIC)
+    if (index < 1 || index > lineNumbers.length) {
+      // Out of range - do nothing (this is standard BASIC behavior)
+      return;
+    }
+
+    // Get the target line number (convert to 0-based indexing)
+    final targetLine = lineNumbers[index - 1];
+
+    // Execute GOTO or GOSUB to the target line
+    if (isGosub) {
+      // Save current position for GOSUB
+      runtimeStack.pushGosub(_currentLineNumber, _textPointer);
+    }
+
+    _jumpToLine(targetLine);
   }
 
   /// Skip to matching NEXT statement for a given variable
