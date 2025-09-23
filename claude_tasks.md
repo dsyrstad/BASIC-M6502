@@ -178,13 +178,13 @@
 ## Phase 5: I/O & Data
 
 ### INPUT Statement
-- [ ] Implement INPUT statement
-- [ ] Support prompts (? and custom)
-- [ ] Handle multiple variables
-- [ ] Support string and numeric input
-- [ ] Implement input validation
-- [ ] Handle redo from start
-- [ ] Write tests for INPUT
+- [x] Implement INPUT statement
+- [x] Support prompts (? and custom)
+- [x] Handle multiple variables
+- [x] Support string and numeric input
+- [x] Implement input validation
+- [x] Handle redo from start
+- [x] Write tests for INPUT
 
 ### PRINT Formatting
 - [ ] Enhance PRINT statement

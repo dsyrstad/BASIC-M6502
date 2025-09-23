@@ -1,3 +1,5 @@
+import 'dart:io';
+
 import '../memory/memory.dart';
 import '../memory/variables.dart';
 import '../memory/program_storage.dart';
@@ -303,6 +305,9 @@ class Interpreter {
         break;
       case Tokenizer.onToken:
         _executeOn();
+        break;
+      case Tokenizer.inputToken:
+        _executeInput();
         break;
       default:
         throw InterpreterException('SYNTAX ERROR - Unknown statement: ${tokenizer.getTokenName(token)}');
@@ -873,6 +878,194 @@ class Interpreter {
     }
 
     _jumpToLine(targetLine);
+  }
+
+  /// Execute INPUT statement
+  void _executeInput() {
+    // Parse optional prompt string
+    String prompt = "";
+    _skipSpaces();
+
+    // Check for quoted prompt string
+    if (_getCurrentChar() == 34) { // Double quote
+      _advanceTextPointer(); // Skip opening quote
+      final promptStart = _textPointer;
+
+      // Find closing quote
+      while (_textPointer < _currentLine.length && _getCurrentChar() != 34) {
+        _advanceTextPointer();
+      }
+
+      if (_textPointer >= _currentLine.length) {
+        throw InterpreterException('SYNTAX ERROR - Unterminated string in INPUT');
+      }
+
+      // Extract prompt string
+      prompt = String.fromCharCodes(
+        _currentLine.sublist(promptStart, _textPointer)
+      );
+
+      _advanceTextPointer(); // Skip closing quote
+      _skipSpaces();
+
+      // Check for required semicolon after prompt
+      if (_getCurrentChar() != 59) { // Semicolon
+        throw InterpreterException('SYNTAX ERROR - Missing semicolon after INPUT prompt');
+      }
+      _advanceTextPointer(); // Skip semicolon
+      _skipSpaces();
+    }
+
+    // Parse variable list
+    final variableNames = <String>[];
+
+    while (true) {
+      // Parse variable name
+      final variableName = _parseVariableName();
+      variableNames.add(variableName);
+
+      // Skip spaces and check for comma
+      _skipSpaces();
+      if (_textPointer >= _currentLine.length || _getCurrentChar() != 44) { // Comma
+        break; // No more variables
+      }
+      _advanceTextPointer(); // Skip comma
+      _skipSpaces();
+    }
+
+    // Get input from user
+    bool inputSuccess = false;
+    while (!inputSuccess) {
+      // Display prompt (use "? " if no custom prompt)
+      if (prompt.isEmpty) {
+        stdout.write('? ');
+      } else {
+        stdout.write(prompt);
+      }
+
+      // Read line from stdin
+      final inputLine = stdin.readLineSync() ?? '';
+
+      // Parse input values separated by commas
+      final values = <String>[];
+      int pos = 0;
+      bool parseError = false;
+
+      while (pos < inputLine.length && !parseError) {
+        // Skip leading spaces
+        while (pos < inputLine.length && inputLine[pos] == ' ') {
+          pos++;
+        }
+
+        if (pos >= inputLine.length) break;
+
+        // Check if value is a quoted string
+        if (inputLine[pos] == '"') {
+          // Parse quoted string
+          pos++; // Skip opening quote
+          final startPos = pos;
+
+          while (pos < inputLine.length && inputLine[pos] != '"') {
+            pos++;
+          }
+
+          if (pos >= inputLine.length) {
+            print('?REDO FROM START');
+            parseError = true;
+            break; // Break out of parsing loop to restart input
+          }
+
+          values.add(inputLine.substring(startPos, pos));
+          pos++; // Skip closing quote
+        } else {
+          // Parse unquoted value (up to comma or end)
+          final startPos = pos;
+
+          while (pos < inputLine.length && inputLine[pos] != ',') {
+            pos++;
+          }
+
+          values.add(inputLine.substring(startPos, pos).trim());
+        }
+
+        // Skip comma if present
+        if (pos < inputLine.length && inputLine[pos] == ',') {
+          pos++;
+        }
+      }
+
+      // If there was a parse error, restart input
+      if (parseError) {
+        continue; // Restart input loop
+      }
+
+      // If no values entered and we need at least one
+      if (values.isEmpty && variableNames.isNotEmpty) {
+        print('?REDO FROM START');
+        continue; // Restart input loop
+      }
+
+      // Check if we have the right number of values
+      if (values.length < variableNames.length) {
+        // Too few values - ask for remaining values individually
+        for (int i = values.length; i < variableNames.length; i++) {
+          stdout.write('? ');
+          final additionalInput = stdin.readLineSync() ?? '';
+          values.add(additionalInput.trim());
+        }
+      }
+
+      if (values.length > variableNames.length) {
+        print('?EXTRA IGNORED');
+        // Trim to the number of variables we need
+        values.removeRange(variableNames.length, values.length);
+      }
+
+      // Try to assign values to variables
+      bool assignmentSuccess = true;
+      for (int i = 0; i < variableNames.length; i++) {
+        final varName = variableNames[i];
+        final value = i < values.length ? values[i] : '';
+
+        if (varName.endsWith('\$')) {
+          // String variable
+          variables.setVariable(varName, StringValue(value));
+        } else {
+          // Numeric variable - parse the value
+          if (value.isEmpty) {
+            variables.setVariable(varName, NumericValue(0));
+          } else {
+            // Try to parse as number
+            try {
+              double numValue;
+
+              // Check for valid number format
+              if (value == '.') {
+                numValue = 0;
+              } else if (value.contains('E') || value.contains('e')) {
+                // Scientific notation
+                numValue = double.parse(value);
+              } else {
+                // Regular number
+                numValue = double.parse(value);
+              }
+
+              variables.setVariable(varName, NumericValue(numValue));
+            } catch (e) {
+              // Invalid number
+              print('?REDO FROM START');
+              assignmentSuccess = false;
+              break;
+            }
+          }
+        }
+      }
+
+      inputSuccess = assignmentSuccess;
+    }
+
+    // Ensure text pointer is at end of line after INPUT completes
+    _textPointer = _currentLine.length;
   }
 
   /// Skip to matching NEXT statement for a given variable
