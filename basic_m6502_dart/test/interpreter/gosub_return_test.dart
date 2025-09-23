@@ -6,6 +6,7 @@ import '../../lib/runtime/stack.dart';
 import '../../lib/interpreter/tokenizer.dart';
 import '../../lib/interpreter/expression_evaluator.dart';
 import '../../lib/interpreter/interpreter.dart';
+import '../../lib/io/screen.dart';
 
 void main() {
   late Memory memory;
@@ -15,6 +16,7 @@ void main() {
   late Tokenizer tokenizer;
   late ExpressionEvaluator expressionEvaluator;
   late Interpreter interpreter;
+  late Screen screen;
 
   setUp(() {
     memory = Memory();
@@ -23,7 +25,8 @@ void main() {
     runtimeStack = RuntimeStack(memory, variables);
     tokenizer = Tokenizer();
     expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer);
-    interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack);
+    screen = Screen();
+    interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen);
   });
 
   group('GOSUB/RETURN Tests', () {

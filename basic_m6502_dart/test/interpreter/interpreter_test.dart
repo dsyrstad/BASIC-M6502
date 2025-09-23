@@ -6,6 +6,7 @@ import '../../lib/memory/memory.dart';
 import '../../lib/memory/variables.dart';
 import '../../lib/memory/program_storage.dart';
 import '../../lib/runtime/stack.dart';
+import '../../lib/io/screen.dart';
 
 void main() {
   group('Interpreter', () {
@@ -15,6 +16,7 @@ void main() {
     late ExpressionEvaluator expressionEvaluator;
     late ProgramStorage programStorage;
     late RuntimeStack runtimeStack;
+    late Screen screen;
     late Interpreter interpreter;
 
     setUp(() {
@@ -24,7 +26,8 @@ void main() {
       expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer);
       programStorage = ProgramStorage(memory);
       runtimeStack = RuntimeStack(memory, variables);
-      interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack);
+      screen = Screen();
+      interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen);
 
       // Initialize variable storage
       variables.initialize(0x2000);

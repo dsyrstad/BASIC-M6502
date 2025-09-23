@@ -108,6 +108,8 @@ class ExpressionEvaluator {
       _parseVariableOrFunction();
     } else if (tokenizer.isSingleArgFunction(token)) { // Built-in function
       _parseBuiltinFunction(token);
+    } else if (token == Tokenizer.tabToken || token == Tokenizer.spcToken) { // TAB() or SPC() function
+      _parseTabOrSpcFunction(token);
     } else if (token == Tokenizer.minusToken) { // Unary minus
       _parseUnaryMinus();
     } else if (token == Tokenizer.plusToken) { // Unary plus
@@ -231,6 +233,38 @@ class ExpressionEvaluator {
     // Apply function
     final result = _applyFunction(functionToken, argResult.value);
     _stack.add(StackEntry(type: StackEntryType.value, value: result));
+  }
+
+  /// Parse TAB() or SPC() function
+  void _parseTabOrSpcFunction(int functionToken) {
+    _advance(); // Skip TAB( or SPC( token (includes opening parenthesis)
+
+    // Evaluate argument
+    final argResult = evaluateExpression(_expression, _position);
+    _position = argResult.endPosition;
+
+    _skipSpaces();
+    if (_position >= _expression.length || _getCurrentToken() != 41) { // Right parenthesis
+      throw ExpressionException('SYNTAX ERROR - Missing ) after function');
+    }
+    _advance(); // Skip closing parenthesis
+
+    // Apply function - return a special value that will be handled by PRINT
+    if (functionToken == Tokenizer.tabToken) {
+      if (argResult.value is NumericValue) {
+        final column = (argResult.value as NumericValue).value.round();
+        _stack.add(StackEntry(type: StackEntryType.value, value: TabValue(column)));
+      } else {
+        throw ExpressionException('TYPE MISMATCH');
+      }
+    } else if (functionToken == Tokenizer.spcToken) {
+      if (argResult.value is NumericValue) {
+        final spaces = (argResult.value as NumericValue).value.round();
+        _stack.add(StackEntry(type: StackEntryType.value, value: SpcValue(spaces)));
+      } else {
+        throw ExpressionException('TYPE MISMATCH');
+      }
+    }
   }
 
   /// Parse unary minus

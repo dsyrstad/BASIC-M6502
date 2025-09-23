@@ -396,6 +396,40 @@ class StringValue extends VariableValue {
   int get hashCode => value.hashCode;
 }
 
+/// Tab function value for PRINT statement
+class TabValue extends VariableValue {
+  final int column;
+
+  const TabValue(this.column);
+
+  @override
+  String toString() => 'TAB($column)';
+
+  @override
+  bool operator ==(Object other) =>
+      other is TabValue && other.column == column;
+
+  @override
+  int get hashCode => column.hashCode;
+}
+
+/// Space function value for PRINT statement
+class SpcValue extends VariableValue {
+  final int spaces;
+
+  const SpcValue(this.spaces);
+
+  @override
+  String toString() => 'SPC($spaces)';
+
+  @override
+  bool operator ==(Object other) =>
+      other is SpcValue && other.spaces == spaces;
+
+  @override
+  int get hashCode => spaces.hashCode;
+}
+
 /// Exception thrown by variable operations
 class VariableException implements Exception {
   final String message;

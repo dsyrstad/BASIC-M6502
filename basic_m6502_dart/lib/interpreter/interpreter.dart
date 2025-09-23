@@ -4,6 +4,7 @@ import '../memory/memory.dart';
 import '../memory/variables.dart';
 import '../memory/program_storage.dart';
 import '../runtime/stack.dart';
+import '../io/screen.dart';
 import 'tokenizer.dart';
 import 'expression_evaluator.dart';
 
@@ -18,6 +19,7 @@ class Interpreter {
   final ExpressionEvaluator expressionEvaluator;
   final ProgramStorage programStorage;
   final RuntimeStack runtimeStack;
+  final Screen screen;
 
   /// Current execution state
   ExecutionState _state = ExecutionState.immediate;
@@ -40,7 +42,7 @@ class Interpreter {
   /// Direct mode flag
   bool get isInDirectMode => _state == ExecutionState.immediate;
 
-  Interpreter(this.memory, this.tokenizer, this.variables, this.expressionEvaluator, this.programStorage, this.runtimeStack);
+  Interpreter(this.memory, this.tokenizer, this.variables, this.expressionEvaluator, this.programStorage, this.runtimeStack, this.screen);
 
   /// Main interpreter loop (NEWSTT equivalent)
   void mainLoop() {
@@ -378,7 +380,7 @@ class Interpreter {
     // Check if there's anything to print
     if (_textPointer >= _currentLine.length || _getCurrentChar() == 0) {
       // Empty PRINT - just print newline
-      print('');
+      screen.printLine('');
       return;
     }
 
@@ -393,7 +395,7 @@ class Interpreter {
 
       // Check for print separators
       if (currentChar == 44) { // comma - tab to next zone
-        print(''); // For now, just newline (TODO: implement tab zones)
+        screen.tabToNextZone();
         _advanceTextPointer();
         _skipSpaces();
         needNewline = false;
@@ -410,21 +412,33 @@ class Interpreter {
         final result = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
         _textPointer = result.endPosition;
 
-        // Print the result
+        // Format and print the result
         if (result.value is NumericValue) {
           final numValue = (result.value as NumericValue).value;
+          String formatted;
           if (numValue == numValue.truncate().toDouble() && numValue.abs() < 1e15) {
             // Print integers without decimal point
-            print(numValue.truncate().toString());
+            formatted = numValue.truncate().toString();
           } else {
             // Print floating point
-            print(numValue.toString());
+            formatted = numValue.toString();
           }
+          // Add leading space for positive numbers (BASIC convention)
+          if (numValue >= 0) {
+            formatted = ' $formatted';
+          }
+          screen.printWithoutNewline(formatted);
         } else if (result.value is StringValue) {
           final strValue = (result.value as StringValue).value;
-          print(strValue);
+          screen.printWithoutNewline(strValue);
+        } else if (result.value is TabValue) {
+          final tabValue = (result.value as TabValue);
+          screen.tabToColumn(tabValue.column);
+        } else if (result.value is SpcValue) {
+          final spcValue = (result.value as SpcValue);
+          screen.printSpaces(spcValue.spaces);
         } else {
-          print(result.value.toString());
+          screen.printWithoutNewline(result.value.toString());
         }
 
         needNewline = true;
@@ -433,7 +447,7 @@ class Interpreter {
         // If expression evaluation fails, try to print as literal
         final remaining = _getRemainingLine();
         final text = tokenizer.detokenize(remaining);
-        print(text);
+        screen.printWithoutNewline(text);
         _textPointer = _currentLine.length;
         break;
       }
@@ -441,7 +455,7 @@ class Interpreter {
 
     // Print final newline if needed
     if (needNewline) {
-      // Already printed with print() calls above
+      screen.printLine('');
     }
   }
 

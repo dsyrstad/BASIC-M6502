@@ -187,14 +187,14 @@
 - [x] Write tests for INPUT
 
 ### PRINT Formatting
-- [ ] Enhance PRINT statement
-- [ ] Implement semicolon separator (no spacing)
-- [ ] Implement comma separator (tab zones)
-- [ ] Implement TAB() function
-- [ ] Implement SPC() function
+- [x] Enhance PRINT statement
+- [x] Implement semicolon separator (no spacing)
+- [x] Implement comma separator (tab zones)
+- [x] Implement TAB() function
+- [x] Implement SPC() function
 - [ ] Support PRINT USING (if applicable)
-- [ ] Handle 40-column formatting
-- [ ] Write tests for PRINT formatting
+- [x] Handle 40-column formatting
+- [x] Write tests for PRINT formatting
 
 ### DATA/READ/RESTORE
 - [ ] Implement DATA statement
