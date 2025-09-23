@@ -197,20 +197,20 @@
 - [x] Write tests for PRINT formatting
 
 ### DATA/READ/RESTORE
-- [ ] Implement DATA statement
-- [ ] Create data pointer management
-- [ ] Implement READ statement
-- [ ] Implement RESTORE statement
-- [ ] Handle OUT OF DATA error
-- [ ] Support mixed data types
-- [ ] Write tests for DATA operations
+- [x] Implement DATA statement
+- [x] Create data pointer management
+- [x] Implement READ statement
+- [x] Implement RESTORE statement
+- [x] Handle OUT OF DATA error
+- [x] Support mixed data types
+- [x] Write tests for DATA operations
 
 ### GET Statement
-- [ ] Implement GET statement
-- [ ] Create single-character input
-- [ ] Handle keyboard buffer
-- [ ] Support non-blocking input
-- [ ] Write tests for GET
+- [x] Implement GET statement
+- [x] Create single-character input
+- [x] Handle keyboard buffer
+- [x] Support non-blocking input
+- [x] Write tests for GET
 
 ### Screen Emulation
 - [ ] Create `lib/io/screen.dart`

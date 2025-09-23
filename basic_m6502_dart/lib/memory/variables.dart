@@ -50,7 +50,9 @@ class VariableStorage {
 
   /// Find a variable by name (PTRGET equivalent)
   VariableResult findVariable(String name) {
-    if (name.isEmpty || name.length > 2) {
+    // Allow string variables with $ suffix (e.g., A$, S1$)
+    final maxLength = name.endsWith('\$') ? 3 : 2;
+    if (name.isEmpty || name.length > maxLength) {
       throw VariableException('Invalid variable name: $name');
     }
 
@@ -156,6 +158,11 @@ class VariableStorage {
       normalized = normalized.substring(0, normalized.length - 1);
     }
 
+    // Truncate to 2 characters if needed
+    if (normalized.length > 2) {
+      normalized = normalized.substring(0, 2);
+    }
+
     // Pad to 2 characters with spaces if needed
     while (normalized.length < 2) {
       normalized += ' ';
@@ -163,9 +170,9 @@ class VariableStorage {
 
     // Add back suffix if it was a string or array
     if (name.endsWith('\$')) {
-      normalized = normalized.substring(0, 1) + '\$';
+      normalized = normalized + '\$';
     } else if (name.endsWith('(')) {
-      normalized = normalized.substring(0, 1) + '(';
+      normalized = normalized + '(';
     }
 
     return normalized;

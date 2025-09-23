@@ -36,6 +36,15 @@ class Interpreter {
   /// Direct mode input buffer
   String _directModeInput = '';
 
+  /// DATA statement pointer - line number containing current DATA statement
+  int _dataLineNumber = -1;
+
+  /// DATA statement pointer - position within the DATA line
+  int _dataTextPointer = 0;
+
+  /// Flag to track if we need to find first DATA statement
+  bool _dataInitialized = false;
+
   /// Program mode flag
   bool get isInProgramMode => _state == ExecutionState.program;
 
@@ -310,6 +319,18 @@ class Interpreter {
         break;
       case Tokenizer.inputToken:
         _executeInput();
+        break;
+      case Tokenizer.dataToken:
+        _executeData();
+        break;
+      case Tokenizer.readToken:
+        _executeRead();
+        break;
+      case Tokenizer.restoreToken:
+        _executeRestore();
+        break;
+      case Tokenizer.getToken:
+        _executeGet();
         break;
       default:
         throw InterpreterException('SYNTAX ERROR - Unknown statement: ${tokenizer.getTokenName(token)}');
@@ -1080,6 +1101,309 @@ class Interpreter {
 
     // Ensure text pointer is at end of line after INPUT completes
     _textPointer = _currentLine.length;
+  }
+
+  /// Execute DATA statement
+  void _executeData() {
+    // DATA statements are not executed - they are only used by READ
+    // Skip to end of line
+    _textPointer = _currentLine.length;
+  }
+
+  /// Execute READ statement
+  void _executeRead() {
+    // Initialize data pointer if not yet done
+    if (!_dataInitialized) {
+      _findFirstData();
+    }
+
+    // Parse variable list
+    final variableNames = <String>[];
+
+    while (true) {
+      // Parse variable name
+      final variableName = _parseVariableName();
+      variableNames.add(variableName);
+
+      // Skip spaces and check for comma
+      _skipSpaces();
+      if (_textPointer >= _currentLine.length || _getCurrentChar() != 44) { // Comma
+        break; // No more variables
+      }
+      _advanceTextPointer(); // Skip comma
+      _skipSpaces();
+    }
+
+    // Read data values for each variable
+    for (final varName in variableNames) {
+      // Get next data value
+      final value = _getNextDataValue();
+
+      if (value == null) {
+        throw InterpreterException('OUT OF DATA ERROR');
+      }
+
+      if (varName.endsWith('\$')) {
+        // String variable - store as string
+        variables.setVariable(varName, StringValue(value));
+      } else {
+        // Numeric variable - parse as number
+        try {
+          final numValue = double.parse(value);
+          variables.setVariable(varName, NumericValue(numValue));
+        } catch (e) {
+          // If not a valid number, treat as 0
+          variables.setVariable(varName, NumericValue(0));
+        }
+      }
+    }
+  }
+
+  /// Execute RESTORE statement
+  void _executeRestore() {
+    // Check for optional line number
+    _skipSpaces();
+
+    if (_textPointer < _currentLine.length && _isDigit(_getCurrentChar())) {
+      // Parse line number
+      final targetLine = _parseLineNumber();
+
+      // Find specified DATA line
+      if (!_findDataAtOrAfter(targetLine)) {
+        throw InterpreterException('UNDEF\'D STATEMENT ERROR - No DATA at or after line $targetLine');
+      }
+    } else {
+      // No line number - restore to first DATA
+      _findFirstData();
+    }
+  }
+
+  /// Find the first DATA statement in the program
+  void _findFirstData() {
+    _dataInitialized = true;
+
+    // Start from the beginning of the program
+    final firstLine = programStorage.getFirstLineNumber();
+    if (firstLine == -1) {
+      _dataLineNumber = -1;
+      _dataTextPointer = 0;
+      return;
+    }
+
+    int currentLine = firstLine;
+
+    while (currentLine != -1) {
+      final lineContent = programStorage.getLineContent(currentLine);
+
+      // Search for DATA token in this line
+      for (int i = 0; i < lineContent.length; i++) {
+        if (lineContent[i] == Tokenizer.dataToken) {
+          _dataLineNumber = currentLine;
+          _dataTextPointer = i + 1; // Position after DATA token
+          return;
+        }
+      }
+
+      currentLine = programStorage.getNextLineNumber(currentLine);
+    }
+
+    // No DATA statements found
+    _dataLineNumber = -1;
+    _dataTextPointer = 0;
+  }
+
+  /// Find DATA statement at or after specified line number
+  bool _findDataAtOrAfter(int targetLine) {
+    // Find the target line or next available line
+    int currentLine = programStorage.findLineAddress(targetLine) != -1
+        ? targetLine
+        : programStorage.getNextLineNumber(targetLine - 1);
+
+    while (currentLine != -1) {
+      final lineContent = programStorage.getLineContent(currentLine);
+
+      // Search for DATA token in this line
+      for (int i = 0; i < lineContent.length; i++) {
+        if (lineContent[i] == Tokenizer.dataToken) {
+          _dataLineNumber = currentLine;
+          _dataTextPointer = i + 1; // Position after DATA token
+          _dataInitialized = true;
+          return true;
+        }
+      }
+
+      currentLine = programStorage.getNextLineNumber(currentLine);
+    }
+
+    return false;
+  }
+
+  /// Get the next value from DATA statements
+  String? _getNextDataValue() {
+    if (_dataLineNumber == -1) {
+      return null; // No DATA available
+    }
+
+    final lineContent = programStorage.getLineContent(_dataLineNumber);
+
+    // Skip spaces
+    while (_dataTextPointer < lineContent.length && lineContent[_dataTextPointer] == 32) {
+      _dataTextPointer++;
+    }
+
+    if (_dataTextPointer >= lineContent.length || lineContent[_dataTextPointer] == 0 || lineContent[_dataTextPointer] == 58) {
+      // End of current DATA statement - find next DATA
+      _findNextData();
+      if (_dataLineNumber == -1) {
+        return null; // No more DATA
+      }
+      return _getNextDataValue(); // Recursive call to get value from next DATA
+    }
+
+    // Check if value is quoted string
+    if (lineContent[_dataTextPointer] == 34) { // Double quote
+      _dataTextPointer++; // Skip opening quote
+      final valueStart = _dataTextPointer;
+
+      // Find closing quote
+      while (_dataTextPointer < lineContent.length && lineContent[_dataTextPointer] != 34) {
+        _dataTextPointer++;
+      }
+
+      final value = String.fromCharCodes(lineContent.sublist(valueStart, _dataTextPointer));
+
+      if (_dataTextPointer < lineContent.length && lineContent[_dataTextPointer] == 34) {
+        _dataTextPointer++; // Skip closing quote
+      }
+
+      // Skip comma if present
+      _skipDataComma(lineContent);
+
+      return value;
+    } else {
+      // Unquoted value - read until comma or end
+      final valueStart = _dataTextPointer;
+
+      while (_dataTextPointer < lineContent.length &&
+             lineContent[_dataTextPointer] != 44 && // Comma
+             lineContent[_dataTextPointer] != 58 && // Colon
+             lineContent[_dataTextPointer] != 0) {   // End of line
+        _dataTextPointer++;
+      }
+
+      // Trim trailing spaces
+      int valueEnd = _dataTextPointer;
+      while (valueEnd > valueStart && lineContent[valueEnd - 1] == 32) {
+        valueEnd--;
+      }
+
+      final value = String.fromCharCodes(lineContent.sublist(valueStart, valueEnd));
+
+      // Skip comma if present
+      _skipDataComma(lineContent);
+
+      return value;
+    }
+  }
+
+  /// Skip comma in DATA statement
+  void _skipDataComma(List<int> lineContent) {
+    // Skip spaces
+    while (_dataTextPointer < lineContent.length && lineContent[_dataTextPointer] == 32) {
+      _dataTextPointer++;
+    }
+
+    // Skip comma if present
+    if (_dataTextPointer < lineContent.length && lineContent[_dataTextPointer] == 44) {
+      _dataTextPointer++;
+    }
+  }
+
+  /// Execute GET statement - read single character from keyboard
+  void _executeGet() {
+    // Parse variable name
+    final variableName = _parseVariableName();
+
+    // Read a single character from stdin without waiting for Enter
+    stdout.write(''); // Flush output
+
+    // Note: In Dart, reading a single character without Enter is platform-specific
+    // and requires terminal mode changes. For now, we'll read a line and take first char
+    stdin.echoMode = false;
+    stdin.lineMode = false;
+
+    try {
+      // Read single character
+      final char = stdin.readByteSync();
+
+      if (char == -1) {
+        // EOF or error - store empty string
+        if (variableName.endsWith('\$')) {
+          variables.setVariable(variableName, StringValue(''));
+        } else {
+          variables.setVariable(variableName, NumericValue(0));
+        }
+      } else {
+        // Convert to string
+        final charStr = String.fromCharCode(char);
+
+        if (variableName.endsWith('\$')) {
+          // String variable - store character as string
+          variables.setVariable(variableName, StringValue(charStr));
+        } else {
+          // Numeric variable - store ASCII code
+          variables.setVariable(variableName, NumericValue(char.toDouble()));
+        }
+      }
+    } finally {
+      // Restore normal terminal mode
+      stdin.echoMode = true;
+      stdin.lineMode = true;
+    }
+  }
+
+  /// Find the next DATA statement after current position
+  void _findNextData() {
+    if (_dataLineNumber == -1) {
+      return;
+    }
+
+    final currentLineContent = programStorage.getLineContent(_dataLineNumber);
+
+    // Check if there's another DATA on the same line (after colon)
+    for (int i = _dataTextPointer; i < currentLineContent.length; i++) {
+      if (currentLineContent[i] == 58) { // Colon
+        // Check for DATA after colon
+        for (int j = i + 1; j < currentLineContent.length; j++) {
+          if (currentLineContent[j] == Tokenizer.dataToken) {
+            _dataTextPointer = j + 1; // Position after DATA token
+            return;
+          }
+        }
+      }
+    }
+
+    // Look for DATA in subsequent lines
+    int currentLine = programStorage.getNextLineNumber(_dataLineNumber);
+
+    while (currentLine != -1) {
+      final lineContent = programStorage.getLineContent(currentLine);
+
+      // Search for DATA token
+      for (int i = 0; i < lineContent.length; i++) {
+        if (lineContent[i] == Tokenizer.dataToken) {
+          _dataLineNumber = currentLine;
+          _dataTextPointer = i + 1; // Position after DATA token
+          return;
+        }
+      }
+
+      currentLine = programStorage.getNextLineNumber(currentLine);
+    }
+
+    // No more DATA statements
+    _dataLineNumber = -1;
+    _dataTextPointer = 0;
   }
 
   /// Skip to matching NEXT statement for a given variable
