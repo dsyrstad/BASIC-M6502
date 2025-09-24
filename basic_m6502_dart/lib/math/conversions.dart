@@ -143,13 +143,19 @@ class NumberConversions {
   }
 
   /// STR$ function - convert number to string
-  static StringDescriptor str(Uint8List floatBytes, StringManager stringManager) {
+  static StringDescriptor str(
+    Uint8List floatBytes,
+    StringManager stringManager,
+  ) {
     String result = floatToString(floatBytes);
     return stringManager.createTemporaryString(result);
   }
 
   /// VAL function - convert string to number
-  static Uint8List val(StringDescriptor stringDesc, StringManager stringManager) {
+  static Uint8List val(
+    StringDescriptor stringDesc,
+    StringManager stringManager,
+  ) {
     String input = stringManager.readString(stringDesc);
     return stringToFloat(input);
   }
@@ -223,8 +229,9 @@ class NumberConversions {
     }
 
     // Format exponent
-    String expStr = exponent >= 0 ? '+${exponent.toString().padLeft(2, '0')}' :
-                                   '-${(-exponent).toString().padLeft(2, '0')}';
+    String expStr = exponent >= 0
+        ? '+${exponent.toString().padLeft(2, '0')}'
+        : '-${(-exponent).toString().padLeft(2, '0')}';
 
     return '${mantissaStr}E$expStr';
   }
@@ -233,7 +240,9 @@ class NumberConversions {
   static double _roundToPrecision(double value, int precision) {
     if (value == 0.0) return 0.0;
 
-    double factor = math.pow(10.0, precision - (math.log(value.abs()) / math.ln10).floor() - 1).toDouble();
+    double factor = math
+        .pow(10.0, precision - (math.log(value.abs()) / math.ln10).floor() - 1)
+        .toDouble();
     return (value * factor).round() / factor;
   }
 

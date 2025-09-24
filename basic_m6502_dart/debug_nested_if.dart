@@ -15,7 +15,15 @@ void main() {
   final programStorage = ProgramStorage(memory);
   final runtimeStack = RuntimeStack(memory, variables);
   final screen = Screen();
-  final interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen);
+  final interpreter = Interpreter(
+    memory,
+    tokenizer,
+    variables,
+    expressionEvaluator,
+    programStorage,
+    runtimeStack,
+    screen,
+  );
 
   // Initialize variable storage
   variables.initialize(0x2000);
@@ -29,7 +37,9 @@ void main() {
     programStorage.storeLine(10, tokens1);
     final tokens2 = tokenizer.tokenizeLine('B = 2');
     programStorage.storeLine(20, tokens2);
-    final tokens3 = tokenizer.tokenizeLine('IF A = 1 THEN IF B = 2 THEN PRINT "NESTED IF WORKS!"');
+    final tokens3 = tokenizer.tokenizeLine(
+      'IF A = 1 THEN IF B = 2 THEN PRINT "NESTED IF WORKS!"',
+    );
     programStorage.storeLine(30, tokens3);
 
     interpreter.executeLine('RUN');
@@ -50,7 +60,9 @@ void main() {
     programStorage.storeLine(10, tokens1);
     final tokens2 = tokenizer.tokenizeLine('B = 2');
     programStorage.storeLine(20, tokens2);
-    final tokens3 = tokenizer.tokenizeLine('IF A = 1 THEN IF B = 2 THEN PRINT "SHOULD NOT PRINT"');
+    final tokens3 = tokenizer.tokenizeLine(
+      'IF A = 1 THEN IF B = 2 THEN PRINT "SHOULD NOT PRINT"',
+    );
     programStorage.storeLine(30, tokens3);
     final tokens4 = tokenizer.tokenizeLine('PRINT "END OF PROGRAM"');
     programStorage.storeLine(40, tokens4);

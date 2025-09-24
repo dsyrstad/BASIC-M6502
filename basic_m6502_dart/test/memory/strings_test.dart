@@ -12,10 +12,10 @@ void main() {
       stringManager = StringManager(memory);
 
       // Set up basic memory layout
-      memory.writeWord(Memory.vartab, 0x0800);  // Variable table at 0x0800
-      memory.writeWord(Memory.arytab, 0x0800);  // Array table starts same place
-      memory.writeWord(Memory.strend, 0x0800);  // String end at variable table
-      memory.writeWord(Memory.memsiz, 0x8000);  // Top of memory at 32KB
+      memory.writeWord(Memory.vartab, 0x0800); // Variable table at 0x0800
+      memory.writeWord(Memory.arytab, 0x0800); // Array table starts same place
+      memory.writeWord(Memory.strend, 0x0800); // String end at variable table
+      memory.writeWord(Memory.memsiz, 0x8000); // Top of memory at 32KB
 
       stringManager.initialize(0x8000);
     });
@@ -51,7 +51,7 @@ void main() {
         final longString = 'A' * 256;
         expect(
           () => stringManager.createString(longString),
-          throwsA(isA<StringException>())
+          throwsA(isA<StringException>()),
         );
       });
 
@@ -81,7 +81,10 @@ void main() {
         }
 
         // Should not throw - oldest strings are automatically removed
-        expect(stringManager.createTemporaryString('FINAL'), isA<StringDescriptor>());
+        expect(
+          stringManager.createTemporaryString('FINAL'),
+          isA<StringDescriptor>(),
+        );
       });
 
       test('clears temporary strings', () {
@@ -167,12 +170,12 @@ void main() {
       test('throws exception for invalid ASCII', () {
         expect(
           () => stringManager.charFromAscii(-1),
-          throwsA(isA<StringException>())
+          throwsA(isA<StringException>()),
         );
 
         expect(
           () => stringManager.charFromAscii(256),
-          throwsA(isA<StringException>())
+          throwsA(isA<StringException>()),
         );
       });
 
@@ -185,7 +188,7 @@ void main() {
         final empty = stringManager.createString('');
         expect(
           () => stringManager.asciiFromChar(empty),
-          throwsA(isA<StringException>())
+          throwsA(isA<StringException>()),
         );
       });
     });
@@ -231,7 +234,9 @@ void main() {
 
         // Create many strings to fill space
         for (int i = 0; i < 100; i++) {
-          stringManager.createString('String number $i - this is a longer string to fill memory');
+          stringManager.createString(
+            'String number $i - this is a longer string to fill memory',
+          );
         }
 
         // Now it might be low (depending on available memory)
@@ -282,7 +287,7 @@ void main() {
         // Try to create a large string
         expect(
           () => stringManager.createString('A' * 100),
-          throwsA(isA<StringException>())
+          throwsA(isA<StringException>()),
         );
       });
 

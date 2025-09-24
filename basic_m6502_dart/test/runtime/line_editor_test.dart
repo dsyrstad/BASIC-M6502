@@ -26,11 +26,25 @@ void main() {
       tokenizer = Tokenizer();
       variables = VariableStorage(memory);
       userFunctions = UserFunctionStorage();
-      expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer, userFunctions);
+      expressionEvaluator = ExpressionEvaluator(
+        memory,
+        variables,
+        tokenizer,
+        userFunctions,
+      );
       programStorage = ProgramStorage(memory);
       runtimeStack = RuntimeStack(memory, variables);
       screen = Screen();
-      interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen, userFunctions);
+      interpreter = Interpreter(
+        memory,
+        tokenizer,
+        variables,
+        expressionEvaluator,
+        programStorage,
+        runtimeStack,
+        screen,
+        userFunctions,
+      );
 
       variables.initialize(0x2000);
     });
@@ -122,7 +136,9 @@ void main() {
     });
 
     test('should handle complex line with multiple statements', () {
-      interpreter.processDirectModeInput('100 FOR I = 1 TO 10: PRINT I: NEXT I');
+      interpreter.processDirectModeInput(
+        '100 FOR I = 1 TO 10: PRINT I: NEXT I',
+      );
 
       final lines = programStorage.getAllLines();
       expect(lines, hasLength(1));
@@ -137,7 +153,9 @@ void main() {
     });
 
     test('should handle line with string literals', () {
-      interpreter.processDirectModeInput('10 PRINT "Hello, World!"; " - "; "From BASIC"');
+      interpreter.processDirectModeInput(
+        '10 PRINT "Hello, World!"; " - "; "From BASIC"',
+      );
 
       final lines = programStorage.getAllLines();
       final tokens = lines[10]!;
@@ -228,8 +246,10 @@ void main() {
       expect(programStorage.getAllLines(), hasLength(1));
 
       // Try to replace with invalid syntax
-      expect(() => interpreter.processDirectModeInput('10 BADCOMMAND'),
-             throwsA(isA<Exception>()));
+      expect(
+        () => interpreter.processDirectModeInput('10 BADCOMMAND'),
+        throwsA(isA<Exception>()),
+      );
 
       // Original line should still be there if error handling preserves it
       // (depends on implementation - might be removed if parsing fails)

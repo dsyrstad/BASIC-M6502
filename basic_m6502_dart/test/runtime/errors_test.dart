@@ -28,20 +28,36 @@ void main() {
       tokenizer = Tokenizer();
       variables = VariableStorage(memory);
       userFunctions = UserFunctionStorage();
-      expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer, userFunctions);
+      expressionEvaluator = ExpressionEvaluator(
+        memory,
+        variables,
+        tokenizer,
+        userFunctions,
+      );
       programStorage = ProgramStorage(memory);
       runtimeStack = RuntimeStack(memory, variables);
       screen = Screen();
-      interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen, userFunctions);
+      interpreter = Interpreter(
+        memory,
+        tokenizer,
+        variables,
+        expressionEvaluator,
+        programStorage,
+        runtimeStack,
+        screen,
+        userFunctions,
+      );
 
       variables.initialize(0x2000);
     });
 
     group('BasicError', () {
       test('should create error with correct properties', () {
-        final error = BasicError(BasicErrorCode.syntaxError,
-                                context: 'Invalid expression',
-                                lineNumber: 100);
+        final error = BasicError(
+          BasicErrorCode.syntaxError,
+          context: 'Invalid expression',
+          lineNumber: 100,
+        );
 
         expect(error.errorCode, equals(BasicErrorCode.syntaxError));
         expect(error.context, equals('Invalid expression'));
@@ -49,11 +65,16 @@ void main() {
       });
 
       test('should format error message correctly', () {
-        final error = BasicError(BasicErrorCode.syntaxError,
-                                context: 'Invalid expression',
-                                lineNumber: 100);
+        final error = BasicError(
+          BasicErrorCode.syntaxError,
+          context: 'Invalid expression',
+          lineNumber: 100,
+        );
 
-        expect(error.message, equals('?SN ERROR in line 100: Invalid expression'));
+        expect(
+          error.message,
+          equals('?SN ERROR in line 100: Invalid expression'),
+        );
       });
 
       test('should format short error message correctly', () {
@@ -63,8 +84,10 @@ void main() {
       });
 
       test('should handle error without line number', () {
-        final error = BasicError(BasicErrorCode.typeMismatch,
-                                context: 'String expected');
+        final error = BasicError(
+          BasicErrorCode.typeMismatch,
+          context: 'String expected',
+        );
 
         expect(error.message, equals('?TM ERROR: String expected'));
       });
@@ -144,71 +167,97 @@ void main() {
 
     group('Runtime Error Scenarios', () {
       test('should throw syntax error for invalid statement', () {
-        expect(() => interpreter.processDirectModeInput('BADCOMMAND'),
-               throwsA(isA<BasicError>()));
+        expect(
+          () => interpreter.processDirectModeInput('BADCOMMAND'),
+          throwsA(isA<BasicError>()),
+        );
       });
 
       test('should throw division by zero error', () {
-        expect(() => interpreter.evaluateExpressionFromString('5 / 0'),
-               throwsA(isA<BasicError>()));
+        expect(
+          () => interpreter.evaluateExpressionFromString('5 / 0'),
+          throwsA(isA<BasicError>()),
+        );
       });
 
       test('should throw type mismatch for invalid operation', () {
         variables.setVariable('A\$', StringValue('hello'));
 
-        expect(() => interpreter.evaluateExpressionFromString('A\$ + 5'),
-               throwsA(isA<BasicError>()));
+        expect(
+          () => interpreter.evaluateExpressionFromString('A\$ + 5'),
+          throwsA(isA<BasicError>()),
+        );
       });
 
       test('should throw undefined line error for GOTO', () {
-        expect(() => interpreter.processDirectModeInput('GOTO 9999'),
-               throwsA(isA<BasicError>()));
+        expect(
+          () => interpreter.processDirectModeInput('GOTO 9999'),
+          throwsA(isA<BasicError>()),
+        );
       });
 
       test('should throw NEXT without FOR error', () {
-        expect(() => interpreter.processDirectModeInput('NEXT I'),
-               throwsA(isA<BasicError>()));
+        expect(
+          () => interpreter.processDirectModeInput('NEXT I'),
+          throwsA(isA<BasicError>()),
+        );
       });
 
       test('should throw RETURN without GOSUB error', () {
-        expect(() => interpreter.processDirectModeInput('RETURN'),
-               throwsA(isA<BasicError>()));
+        expect(
+          () => interpreter.processDirectModeInput('RETURN'),
+          throwsA(isA<BasicError>()),
+        );
       });
 
       test('should throw subscript out of range error', () {
         interpreter.processDirectModeInput('DIM A(5)');
 
-        expect(() => interpreter.processDirectModeInput('A(10) = 5'),
-               throwsA(isA<BasicError>()));
+        expect(
+          () => interpreter.processDirectModeInput('A(10) = 5'),
+          throwsA(isA<BasicError>()),
+        );
       });
 
       test('should throw out of data error', () {
         programStorage.storeLine(10, tokenizer.tokenizeLine('DATA 1, 2'));
         programStorage.storeLine(20, tokenizer.tokenizeLine('READ A, B, C'));
 
-        expect(() => {
-          interpreter.processDirectModeInput('RESTORE'),
-          interpreter.processDirectModeInput('READ A'),
-          interpreter.processDirectModeInput('READ B'),
-          interpreter.processDirectModeInput('READ C') // This should throw
-        }, throwsA(isA<BasicError>()));
+        expect(
+          () => {
+            interpreter.processDirectModeInput('RESTORE'),
+            interpreter.processDirectModeInput('READ A'),
+            interpreter.processDirectModeInput('READ B'),
+            interpreter.processDirectModeInput('READ C'), // This should throw
+          },
+          throwsA(isA<BasicError>()),
+        );
       });
 
-      test('should throw illegal quantity error for negative array dimension', () {
-        expect(() => interpreter.processDirectModeInput('DIM A(-5)'),
-               throwsA(isA<BasicError>()));
-      });
+      test(
+        'should throw illegal quantity error for negative array dimension',
+        () {
+          expect(
+            () => interpreter.processDirectModeInput('DIM A(-5)'),
+            throwsA(isA<BasicError>()),
+          );
+        },
+      );
 
       test('should throw redimensioned array error', () {
         interpreter.processDirectModeInput('DIM A(5)');
 
-        expect(() => interpreter.processDirectModeInput('DIM A(10)'),
-               throwsA(isA<BasicError>()));
+        expect(
+          () => interpreter.processDirectModeInput('DIM A(10)'),
+          throwsA(isA<BasicError>()),
+        );
       });
 
       test('should throw undefined function error', () {
-        expect(() => interpreter.evaluateExpressionFromString('FNX(5)'),
-               throwsA(isA<BasicError>()));
+        expect(
+          () => interpreter.evaluateExpressionFromString('FNX(5)'),
+          throwsA(isA<BasicError>()),
+        );
       });
 
       test('should handle string too long error', () {
@@ -216,8 +265,10 @@ void main() {
         final longString = 'A' * 300; // Assuming 255 char limit
         variables.setVariable('S\$', StringValue('test'));
 
-        expect(() => interpreter.evaluateExpressionFromString('S\$ + "$longString"'),
-               throwsA(isA<BasicError>()));
+        expect(
+          () => interpreter.evaluateExpressionFromString('S\$ + "$longString"'),
+          throwsA(isA<BasicError>()),
+        );
       });
     });
 
@@ -229,17 +280,25 @@ void main() {
 
         expect(BasicErrorCode.divisionByZero.code, equals(10));
         expect(BasicErrorCode.divisionByZero.shortMessage, equals('DZ'));
-        expect(BasicErrorCode.divisionByZero.longMessage, equals('Division by zero'));
+        expect(
+          BasicErrorCode.divisionByZero.longMessage,
+          equals('Division by zero'),
+        );
 
         expect(BasicErrorCode.typeMismatch.code, equals(12));
         expect(BasicErrorCode.typeMismatch.shortMessage, equals('TM'));
-        expect(BasicErrorCode.typeMismatch.longMessage, equals('Type mismatch'));
+        expect(
+          BasicErrorCode.typeMismatch.longMessage,
+          equals('Type mismatch'),
+        );
       });
 
       test('should format complete error message', () {
-        final error = BasicError(BasicErrorCode.nextWithoutFor,
-                                context: 'Variable I',
-                                lineNumber: 150);
+        final error = BasicError(
+          BasicErrorCode.nextWithoutFor,
+          context: 'Variable I',
+          lineNumber: 150,
+        );
 
         expect(error.toString(), equals('?NF ERROR in line 150: Variable I'));
       });

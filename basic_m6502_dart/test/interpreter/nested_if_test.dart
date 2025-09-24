@@ -25,12 +25,26 @@ void main() {
       memory = Memory();
       tokenizer = Tokenizer();
       variables = VariableStorage(memory);
-      expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer, userFunctions);
+      expressionEvaluator = ExpressionEvaluator(
+        memory,
+        variables,
+        tokenizer,
+        userFunctions,
+      );
       programStorage = ProgramStorage(memory);
       runtimeStack = RuntimeStack(memory, variables);
       screen = Screen();
       userFunctions = UserFunctionStorage();
-      interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen, userFunctions);
+      interpreter = Interpreter(
+        memory,
+        tokenizer,
+        variables,
+        expressionEvaluator,
+        programStorage,
+        runtimeStack,
+        screen,
+        userFunctions,
+      );
 
       // Initialize variable storage
       variables.initialize(0x2000);
@@ -42,7 +56,9 @@ void main() {
       programStorage.storeLine(10, tokens1);
       final tokens2 = tokenizer.tokenizeLine('B = 2');
       programStorage.storeLine(20, tokens2);
-      final tokens3 = tokenizer.tokenizeLine('IF A = 1 THEN IF B = 2 THEN X = 42');
+      final tokens3 = tokenizer.tokenizeLine(
+        'IF A = 1 THEN IF B = 2 THEN X = 42',
+      );
       programStorage.storeLine(30, tokens3);
       final tokens4 = tokenizer.tokenizeLine('Y = 99'); // This should execute
       programStorage.storeLine(40, tokens4);
@@ -54,9 +70,15 @@ void main() {
       final varX = variables.getVariable('X');
       final varY = variables.getVariable('Y');
       expect(varX, isA<NumericValue>());
-      expect((varX as NumericValue).value, equals(42.0)); // Should be set by nested IF
+      expect(
+        (varX as NumericValue).value,
+        equals(42.0),
+      ); // Should be set by nested IF
       expect(varY, isA<NumericValue>());
-      expect((varY as NumericValue).value, equals(99.0)); // Should continue execution
+      expect(
+        (varY as NumericValue).value,
+        equals(99.0),
+      ); // Should continue execution
     });
 
     test('should handle nested IF - outer false', () {
@@ -65,7 +87,9 @@ void main() {
       programStorage.storeLine(10, tokens1);
       final tokens2 = tokenizer.tokenizeLine('B = 2');
       programStorage.storeLine(20, tokens2);
-      final tokens3 = tokenizer.tokenizeLine('IF A = 1 THEN IF B = 2 THEN X = 42');
+      final tokens3 = tokenizer.tokenizeLine(
+        'IF A = 1 THEN IF B = 2 THEN X = 42',
+      );
       programStorage.storeLine(30, tokens3);
       final tokens4 = tokenizer.tokenizeLine('Y = 99'); // This should execute
       programStorage.storeLine(40, tokens4);
@@ -79,7 +103,10 @@ void main() {
       expect(varX, isA<NumericValue>());
       expect((varX as NumericValue).value, equals(0.0)); // Should not be set
       expect(varY, isA<NumericValue>());
-      expect((varY as NumericValue).value, equals(99.0)); // Should continue execution
+      expect(
+        (varY as NumericValue).value,
+        equals(99.0),
+      ); // Should continue execution
     });
 
     test('should handle nested IF - outer true, inner false', () {
@@ -88,7 +115,9 @@ void main() {
       programStorage.storeLine(10, tokens1);
       final tokens2 = tokenizer.tokenizeLine('B = 3'); // Not 2
       programStorage.storeLine(20, tokens2);
-      final tokens3 = tokenizer.tokenizeLine('IF A = 1 THEN IF B = 2 THEN X = 42');
+      final tokens3 = tokenizer.tokenizeLine(
+        'IF A = 1 THEN IF B = 2 THEN X = 42',
+      );
       programStorage.storeLine(30, tokens3);
       final tokens4 = tokenizer.tokenizeLine('Y = 99'); // This should execute
       programStorage.storeLine(40, tokens4);
@@ -102,7 +131,10 @@ void main() {
       expect(varX, isA<NumericValue>());
       expect((varX as NumericValue).value, equals(0.0)); // Should not be set
       expect(varY, isA<NumericValue>());
-      expect((varY as NumericValue).value, equals(99.0)); // Should continue execution
+      expect(
+        (varY as NumericValue).value,
+        equals(99.0),
+      ); // Should continue execution
     });
 
     test('should handle nested IF with GOTO', () {
@@ -111,7 +143,9 @@ void main() {
       programStorage.storeLine(10, tokens1);
       final tokens2 = tokenizer.tokenizeLine('B = 2');
       programStorage.storeLine(20, tokens2);
-      final tokens3 = tokenizer.tokenizeLine('IF A = 1 THEN IF B = 2 THEN GOTO 50');
+      final tokens3 = tokenizer.tokenizeLine(
+        'IF A = 1 THEN IF B = 2 THEN GOTO 50',
+      );
       programStorage.storeLine(30, tokens3);
       final tokens4 = tokenizer.tokenizeLine('X = 99'); // Should be skipped
       programStorage.storeLine(40, tokens4);
@@ -124,7 +158,10 @@ void main() {
       // Verify nested GOTO worked
       final varX = variables.getVariable('X');
       expect(varX, isA<NumericValue>());
-      expect((varX as NumericValue).value, equals(42.0)); // Set by line 50, not 40
+      expect(
+        (varX as NumericValue).value,
+        equals(42.0),
+      ); // Set by line 50, not 40
     });
 
     test('should handle triple nested IF', () {
@@ -135,7 +172,9 @@ void main() {
       programStorage.storeLine(20, tokens2);
       final tokens3 = tokenizer.tokenizeLine('C = 3');
       programStorage.storeLine(25, tokens3);
-      final tokens4 = tokenizer.tokenizeLine('IF A = 1 THEN IF B = 2 THEN IF C = 3 THEN X = 42');
+      final tokens4 = tokenizer.tokenizeLine(
+        'IF A = 1 THEN IF B = 2 THEN IF C = 3 THEN X = 42',
+      );
       programStorage.storeLine(30, tokens4);
 
       // Run the program
@@ -144,7 +183,10 @@ void main() {
       // Verify all three conditions were true
       final varX = variables.getVariable('X');
       expect(varX, isA<NumericValue>());
-      expect((varX as NumericValue).value, equals(42.0)); // Should be set by triple nested IF
+      expect(
+        (varX as NumericValue).value,
+        equals(42.0),
+      ); // Should be set by triple nested IF
     });
 
     test('should handle nested IF with different operators', () {
@@ -153,7 +195,9 @@ void main() {
       programStorage.storeLine(10, tokens1);
       final tokens2 = tokenizer.tokenizeLine('B = 3');
       programStorage.storeLine(20, tokens2);
-      final tokens3 = tokenizer.tokenizeLine('IF A > 4 THEN IF B < 4 THEN X = 42');
+      final tokens3 = tokenizer.tokenizeLine(
+        'IF A > 4 THEN IF B < 4 THEN X = 42',
+      );
       programStorage.storeLine(30, tokens3);
 
       // Run the program
@@ -169,7 +213,9 @@ void main() {
       // Create a program with nested IF and assignment
       final tokens1 = tokenizer.tokenizeLine('A = 1');
       programStorage.storeLine(10, tokens1);
-      final tokens2 = tokenizer.tokenizeLine('IF A = 1 THEN X = 10: IF X = 10 THEN Y = 20');
+      final tokens2 = tokenizer.tokenizeLine(
+        'IF A = 1 THEN X = 10: IF X = 10 THEN Y = 20',
+      );
       programStorage.storeLine(20, tokens2);
 
       // Run the program

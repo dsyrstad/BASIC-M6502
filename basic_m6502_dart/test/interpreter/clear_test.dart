@@ -25,12 +25,26 @@ void main() {
       memory = Memory();
       tokenizer = Tokenizer();
       variables = VariableStorage(memory);
-      expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer, userFunctions);
+      expressionEvaluator = ExpressionEvaluator(
+        memory,
+        variables,
+        tokenizer,
+        userFunctions,
+      );
       programStorage = ProgramStorage(memory);
       runtimeStack = RuntimeStack(memory, variables);
       screen = Screen();
       userFunctions = UserFunctionStorage();
-      interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen, userFunctions);
+      interpreter = Interpreter(
+        memory,
+        tokenizer,
+        variables,
+        expressionEvaluator,
+        programStorage,
+        runtimeStack,
+        screen,
+        userFunctions,
+      );
 
       // Initialize variable storage
       variables.initialize(0x2000);

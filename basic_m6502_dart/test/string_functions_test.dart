@@ -18,7 +18,12 @@ void main() {
       tokenizer = Tokenizer();
       variables = VariableStorage(memory);
       userFunctions = UserFunctionStorage();
-      expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer, userFunctions);
+      expressionEvaluator = ExpressionEvaluator(
+        memory,
+        variables,
+        tokenizer,
+        userFunctions,
+      );
 
       // Initialize variable storage
       variables.initialize(0x2000);
@@ -61,8 +66,7 @@ void main() {
       });
 
       test('should error on empty string', () {
-        expect(() => evaluateExpression('ASC("")'),
-               throwsA(anything));
+        expect(() => evaluateExpression('ASC("")'), throwsA(anything));
       });
     });
 
@@ -78,13 +82,11 @@ void main() {
       });
 
       test('should error on invalid codes', () {
-        expect(() => evaluateExpression('CHR\$(256)'),
-               throwsA(anything));
+        expect(() => evaluateExpression('CHR\$(256)'), throwsA(anything));
       });
 
       test('should error on negative codes', () {
-        expect(() => evaluateExpression('CHR\$(-1)'),
-               throwsA(anything));
+        expect(() => evaluateExpression('CHR\$(-1)'), throwsA(anything));
       });
     });
 
@@ -174,7 +176,9 @@ void main() {
       });
 
       test('should work with concatenation', () {
-        final result = evaluateExpression('LEFT\$("HELLO", 3) + RIGHT\$("WORLD", 3)');
+        final result = evaluateExpression(
+          'LEFT\$("HELLO", 3) + RIGHT\$("WORLD", 3)',
+        );
         expect(result.value, equals('HELRLD'));
       });
 

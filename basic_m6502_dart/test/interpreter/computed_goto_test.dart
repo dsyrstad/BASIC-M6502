@@ -25,12 +25,26 @@ void main() {
       memory = Memory();
       tokenizer = Tokenizer();
       variables = VariableStorage(memory);
-      expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer, userFunctions);
+      expressionEvaluator = ExpressionEvaluator(
+        memory,
+        variables,
+        tokenizer,
+        userFunctions,
+      );
       programStorage = ProgramStorage(memory);
       runtimeStack = RuntimeStack(memory, variables);
       screen = Screen();
       userFunctions = UserFunctionStorage();
-      interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen, userFunctions);
+      interpreter = Interpreter(
+        memory,
+        tokenizer,
+        variables,
+        expressionEvaluator,
+        programStorage,
+        runtimeStack,
+        screen,
+        userFunctions,
+      );
 
       // Initialize variable storage
       variables.initialize(0x2000);
@@ -53,7 +67,10 @@ void main() {
       // Verify that GOTO worked correctly
       final varA = variables.getVariable('A');
       expect(varA, isA<NumericValue>());
-      expect((varA as NumericValue).value, equals(2.0)); // Set by line 40, not 30
+      expect(
+        (varA as NumericValue).value,
+        equals(2.0),
+      ); // Set by line 40, not 30
     });
 
     test('should handle computed GOTO with variable', () {
@@ -77,7 +94,10 @@ void main() {
       // Verify that computed GOTO worked (A + B = 30 + 10 = 40)
       final varX = variables.getVariable('X');
       expect(varX, isA<NumericValue>());
-      expect((varX as NumericValue).value, equals(2.0)); // Set by line 40, skipped line 37
+      expect(
+        (varX as NumericValue).value,
+        equals(2.0),
+      ); // Set by line 40, skipped line 37
     });
 
     test('should handle computed GOTO with arithmetic expression', () {
@@ -106,7 +126,9 @@ void main() {
       programStorage.storeLine(10, tokens1);
       final tokens2 = tokenizer.tokenizeLine('X = 1');
       programStorage.storeLine(20, tokens2);
-      final tokens3 = tokenizer.tokenizeLine('GOTO (N + 3) * 5'); // (5 + 3) * 5 = 40
+      final tokens3 = tokenizer.tokenizeLine(
+        'GOTO (N + 3) * 5',
+      ); // (5 + 3) * 5 = 40
       programStorage.storeLine(30, tokens3);
       final tokens4 = tokenizer.tokenizeLine('X = 99'); // Should be skipped
       programStorage.storeLine(35, tokens4);
@@ -127,20 +149,26 @@ void main() {
       interpreter.executeLine('S\$ = "HELLO"');
 
       // Try to use string in GOTO
-      expect(() => interpreter.executeLine('GOTO S\$'),
-             throwsA(isA<InterpreterException>()));
+      expect(
+        () => interpreter.executeLine('GOTO S\$'),
+        throwsA(isA<InterpreterException>()),
+      );
     });
 
     test('should throw error for negative line number', () {
       // Try to use negative number in computed GOTO
-      expect(() => interpreter.executeLine('GOTO -10'),
-             throwsA(isA<InterpreterException>()));
+      expect(
+        () => interpreter.executeLine('GOTO -10'),
+        throwsA(isA<InterpreterException>()),
+      );
     });
 
     test('should throw error for line number too large', () {
       // Try to use overly large number in computed GOTO
-      expect(() => interpreter.executeLine('GOTO 70000'),
-             throwsA(isA<InterpreterException>()));
+      expect(
+        () => interpreter.executeLine('GOTO 70000'),
+        throwsA(isA<InterpreterException>()),
+      );
     });
 
     test('should handle computed GOTO to non-existent line', () {
@@ -149,15 +177,21 @@ void main() {
       programStorage.storeLine(10, tokens1);
 
       // Run program with computed GOTO to non-existent line
-      expect(() => interpreter.executeLine('GOTO 10 + 15'), // Goes to line 25 which doesn't exist
-             throwsA(isA<InterpreterException>()));
+      expect(
+        () => interpreter.executeLine(
+          'GOTO 10 + 15',
+        ), // Goes to line 25 which doesn't exist
+        throwsA(isA<InterpreterException>()),
+      );
     });
 
     test('should handle floating point result in computed GOTO', () {
       // Create a program that uses floating point in GOTO
       final tokens1 = tokenizer.tokenizeLine('X = 1');
       programStorage.storeLine(10, tokens1);
-      final tokens2 = tokenizer.tokenizeLine('GOTO 39.9 + 0.1'); // Should go to line 40
+      final tokens2 = tokenizer.tokenizeLine(
+        'GOTO 39.9 + 0.1',
+      ); // Should go to line 40
       programStorage.storeLine(20, tokens2);
       final tokens3 = tokenizer.tokenizeLine('X = 99'); // Should be skipped
       programStorage.storeLine(30, tokens3);
@@ -177,7 +211,9 @@ void main() {
       // Create a program that uses function in GOTO
       final tokens1 = tokenizer.tokenizeLine('X = 1');
       programStorage.storeLine(10, tokens1);
-      final tokens2 = tokenizer.tokenizeLine('GOTO INT(40.7)'); // Should go to line 40
+      final tokens2 = tokenizer.tokenizeLine(
+        'GOTO INT(40.7)',
+      ); // Should go to line 40
       programStorage.storeLine(20, tokens2);
       final tokens3 = tokenizer.tokenizeLine('X = 99'); // Should be skipped
       programStorage.storeLine(30, tokens3);

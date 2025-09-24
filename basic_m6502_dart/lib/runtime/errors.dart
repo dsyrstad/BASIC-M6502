@@ -195,50 +195,120 @@ class ErrorHandler {
 
   /// Create common error types
   static BasicError syntaxError([String? context, int lineNumber = -1]) =>
-      BasicError(BasicErrorCode.syntaxError, context: context, lineNumber: lineNumber);
+      BasicError(
+        BasicErrorCode.syntaxError,
+        context: context,
+        lineNumber: lineNumber,
+      );
 
   static BasicError typeMismatch([String? context, int lineNumber = -1]) =>
-      BasicError(BasicErrorCode.typeMismatch, context: context, lineNumber: lineNumber);
+      BasicError(
+        BasicErrorCode.typeMismatch,
+        context: context,
+        lineNumber: lineNumber,
+      );
 
   static BasicError illegalQuantity([String? context, int lineNumber = -1]) =>
-      BasicError(BasicErrorCode.illegalQuantity, context: context, lineNumber: lineNumber);
+      BasicError(
+        BasicErrorCode.illegalQuantity,
+        context: context,
+        lineNumber: lineNumber,
+      );
 
   static BasicError divisionByZero([String? context, int lineNumber = -1]) =>
-      BasicError(BasicErrorCode.divisionByZero, context: context, lineNumber: lineNumber);
+      BasicError(
+        BasicErrorCode.divisionByZero,
+        context: context,
+        lineNumber: lineNumber,
+      );
 
   static BasicError overflow([String? context, int lineNumber = -1]) =>
-      BasicError(BasicErrorCode.overflow, context: context, lineNumber: lineNumber);
+      BasicError(
+        BasicErrorCode.overflow,
+        context: context,
+        lineNumber: lineNumber,
+      );
 
   static BasicError outOfMemory([String? context, int lineNumber = -1]) =>
-      BasicError(BasicErrorCode.outOfMemory, context: context, lineNumber: lineNumber);
+      BasicError(
+        BasicErrorCode.outOfMemory,
+        context: context,
+        lineNumber: lineNumber,
+      );
 
-  static BasicError subscriptOutOfRange([String? context, int lineNumber = -1]) =>
-      BasicError(BasicErrorCode.subscriptOutOfRange, context: context, lineNumber: lineNumber);
+  static BasicError subscriptOutOfRange([
+    String? context,
+    int lineNumber = -1,
+  ]) => BasicError(
+    BasicErrorCode.subscriptOutOfRange,
+    context: context,
+    lineNumber: lineNumber,
+  );
 
   static BasicError outOfData([String? context, int lineNumber = -1]) =>
-      BasicError(BasicErrorCode.outOfData, context: context, lineNumber: lineNumber);
+      BasicError(
+        BasicErrorCode.outOfData,
+        context: context,
+        lineNumber: lineNumber,
+      );
 
   static BasicError undefinedLine([String? context, int lineNumber = -1]) =>
-      BasicError(BasicErrorCode.undefinedLine, context: context, lineNumber: lineNumber);
+      BasicError(
+        BasicErrorCode.undefinedLine,
+        context: context,
+        lineNumber: lineNumber,
+      );
 
   static BasicError nextWithoutFor([String? context, int lineNumber = -1]) =>
-      BasicError(BasicErrorCode.nextWithoutFor, context: context, lineNumber: lineNumber);
+      BasicError(
+        BasicErrorCode.nextWithoutFor,
+        context: context,
+        lineNumber: lineNumber,
+      );
 
-  static BasicError returnWithoutGosub([String? context, int lineNumber = -1]) =>
-      BasicError(BasicErrorCode.returnWithoutGosub, context: context, lineNumber: lineNumber);
+  static BasicError returnWithoutGosub([
+    String? context,
+    int lineNumber = -1,
+  ]) => BasicError(
+    BasicErrorCode.returnWithoutGosub,
+    context: context,
+    lineNumber: lineNumber,
+  );
 
   static BasicError undefinedFunction([String? context, int lineNumber = -1]) =>
-      BasicError(BasicErrorCode.undefinedFunction, context: context, lineNumber: lineNumber);
+      BasicError(
+        BasicErrorCode.undefinedFunction,
+        context: context,
+        lineNumber: lineNumber,
+      );
 
   static BasicError stringTooLong([String? context, int lineNumber = -1]) =>
-      BasicError(BasicErrorCode.stringTooLong, context: context, lineNumber: lineNumber);
+      BasicError(
+        BasicErrorCode.stringTooLong,
+        context: context,
+        lineNumber: lineNumber,
+      );
 
   static BasicError fileNotFound([String? context, int lineNumber = -1]) =>
-      BasicError(BasicErrorCode.fileNotFound, context: context, lineNumber: lineNumber);
+      BasicError(
+        BasicErrorCode.fileNotFound,
+        context: context,
+        lineNumber: lineNumber,
+      );
 
-  static BasicError redimensionedArray([String? context, int lineNumber = -1]) =>
-      BasicError(BasicErrorCode.redimensionedArray, context: context, lineNumber: lineNumber);
+  static BasicError redimensionedArray([
+    String? context,
+    int lineNumber = -1,
+  ]) => BasicError(
+    BasicErrorCode.redimensionedArray,
+    context: context,
+    lineNumber: lineNumber,
+  );
 
   static BasicError illegalDirect([String? context, int lineNumber = -1]) =>
-      BasicError(BasicErrorCode.illegalDirect, context: context, lineNumber: lineNumber);
+      BasicError(
+        BasicErrorCode.illegalDirect,
+        context: context,
+        lineNumber: lineNumber,
+      );
 }

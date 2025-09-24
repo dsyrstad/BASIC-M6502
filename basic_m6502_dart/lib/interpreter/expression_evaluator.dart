@@ -40,7 +40,12 @@ class ExpressionEvaluator {
   /// Current expression being evaluated
   List<int> _expression = [];
 
-  ExpressionEvaluator(this.memory, this.variables, this.tokenizer, this.userFunctions);
+  ExpressionEvaluator(
+    this.memory,
+    this.variables,
+    this.tokenizer,
+    this.userFunctions,
+  );
 
   /// Evaluate an expression starting at current position (FRMEVL equivalent)
   ExpressionResult evaluateExpression(List<int> tokens, int startPos) {
@@ -100,26 +105,38 @@ class ExpressionEvaluator {
 
     final token = _getCurrentToken();
 
-    if (token == 40) { // Left parenthesis
+    if (token == 40) {
+      // Left parenthesis
       _parseParentheses();
-    } else if (_isDigit(token) || token == 46) { // Number (digit or decimal point)
+    } else if (_isDigit(token) || token == 46) {
+      // Number (digit or decimal point)
       _parseNumber();
-    } else if (token == 34) { // String literal
+    } else if (token == 34) {
+      // String literal
       _parseStringLiteral();
-    } else if (_isLetter(token)) { // Variable or function
+    } else if (_isLetter(token)) {
+      // Variable or function
       _parseVariableOrFunction();
-    } else if (tokenizer.isSingleArgFunction(token)) { // Built-in function
+    } else if (tokenizer.isSingleArgFunction(token)) {
+      // Built-in function
       _parseBuiltinFunction(token);
-    } else if (_isMultiArgFunction(token)) { // Multi-argument functions (LEFT$, RIGHT$, MID$)
+    } else if (_isMultiArgFunction(token)) {
+      // Multi-argument functions (LEFT$, RIGHT$, MID$)
       _parseMultiArgFunction(token);
-    } else if (token == Tokenizer.tabToken || token == Tokenizer.spcToken) { // TAB() or SPC() function
+    } else if (token == Tokenizer.tabToken || token == Tokenizer.spcToken) {
+      // TAB() or SPC() function
       _parseTabOrSpcFunction(token);
     } else if (token == Tokenizer.fnToken ||
-               (token == 70 && _position + 1 < _expression.length && _expression[_position + 1] == 78)) { // User-defined function (FN token or F+N chars)
+        (token == 70 &&
+            _position + 1 < _expression.length &&
+            _expression[_position + 1] == 78)) {
+      // User-defined function (FN token or F+N chars)
       _parseUserFunction();
-    } else if (token == Tokenizer.minusToken) { // Unary minus
+    } else if (token == Tokenizer.minusToken) {
+      // Unary minus
       _parseUnaryMinus();
-    } else if (token == Tokenizer.plusToken) { // Unary plus
+    } else if (token == Tokenizer.plusToken) {
+      // Unary plus
       _parseUnaryPlus();
     } else {
       throw ExpressionException('SYNTAX ERROR - Invalid expression');
@@ -135,7 +152,8 @@ class ExpressionEvaluator {
     _position = result.endPosition;
 
     _skipSpaces();
-    if (_position >= _expression.length || _getCurrentToken() != 41) { // Right parenthesis
+    if (_position >= _expression.length || _getCurrentToken() != 41) {
+      // Right parenthesis
       throw ExpressionException('SYNTAX ERROR - Missing )');
     }
     _advance(); // Skip closing parenthesis
@@ -153,7 +171,8 @@ class ExpressionEvaluator {
       final token = _getCurrentToken();
       if (_isDigit(token)) {
         _advance();
-      } else if (token == 46 && !hasDecimalPoint) { // Decimal point
+      } else if (token == 46 && !hasDecimalPoint) {
+        // Decimal point
         hasDecimalPoint = true;
         _advance();
       } else {
@@ -171,7 +190,9 @@ class ExpressionEvaluator {
       throw ExpressionException('SYNTAX ERROR - Invalid number: $numberStr');
     }
 
-    _stack.add(StackEntry(type: StackEntryType.value, value: NumericValue(value)));
+    _stack.add(
+      StackEntry(type: StackEntryType.value, value: NumericValue(value)),
+    );
   }
 
   /// Parse string literal
@@ -181,7 +202,8 @@ class ExpressionEvaluator {
     final buffer = StringBuffer();
     while (_position < _expression.length) {
       final token = _getCurrentToken();
-      if (token == 34) { // Closing quote
+      if (token == 34) {
+        // Closing quote
         _advance();
         break;
       }
@@ -189,7 +211,12 @@ class ExpressionEvaluator {
       _advance();
     }
 
-    _stack.add(StackEntry(type: StackEntryType.value, value: StringValue(buffer.toString())));
+    _stack.add(
+      StackEntry(
+        type: StackEntryType.value,
+        value: StringValue(buffer.toString()),
+      ),
+    );
   }
 
   /// Parse variable reference or function call
@@ -198,13 +225,14 @@ class ExpressionEvaluator {
 
     // Collect variable name (up to 2 characters)
     while (_position < _expression.length &&
-           _position - nameStart < 2 &&
-           (_isLetter(_getCurrentToken()) || _isDigit(_getCurrentToken()))) {
+        _position - nameStart < 2 &&
+        (_isLetter(_getCurrentToken()) || _isDigit(_getCurrentToken()))) {
       _advance();
     }
 
     // Check for string variable suffix
-    if (_position < _expression.length && _getCurrentToken() == 36) { // '$'
+    if (_position < _expression.length && _getCurrentToken() == 36) {
+      // '$'
       _advance();
     }
 
@@ -221,7 +249,8 @@ class ExpressionEvaluator {
     _advance(); // Skip function token
 
     _skipSpaces();
-    if (_position >= _expression.length || _getCurrentToken() != 40) { // Left parenthesis
+    if (_position >= _expression.length || _getCurrentToken() != 40) {
+      // Left parenthesis
       throw ExpressionException('SYNTAX ERROR - Missing ( after function');
     }
 
@@ -232,7 +261,8 @@ class ExpressionEvaluator {
     _position = argResult.endPosition;
 
     _skipSpaces();
-    if (_position >= _expression.length || _getCurrentToken() != 41) { // Right parenthesis
+    if (_position >= _expression.length || _getCurrentToken() != 41) {
+      // Right parenthesis
       throw ExpressionException('SYNTAX ERROR - Missing ) after function');
     }
     _advance(); // Skip closing parenthesis
@@ -247,7 +277,8 @@ class ExpressionEvaluator {
     _advance(); // Skip function token
 
     _skipSpaces();
-    if (_position >= _expression.length || _getCurrentToken() != 40) { // Left parenthesis
+    if (_position >= _expression.length || _getCurrentToken() != 40) {
+      // Left parenthesis
       throw ExpressionException('SYNTAX ERROR - Missing ( after function');
     }
     _advance(); // Skip opening parenthesis
@@ -257,7 +288,8 @@ class ExpressionEvaluator {
     _position = stringArgResult.endPosition;
 
     _skipSpaces();
-    if (_position >= _expression.length || _getCurrentToken() != 44) { // Comma
+    if (_position >= _expression.length || _getCurrentToken() != 44) {
+      // Comma
       throw ExpressionException('SYNTAX ERROR - Missing comma in function');
     }
     _advance(); // Skip comma
@@ -270,7 +302,8 @@ class ExpressionEvaluator {
     if (functionToken == Tokenizer.midDollarToken) {
       // MID$ can have an optional third argument
       _skipSpaces();
-      if (_position < _expression.length && _getCurrentToken() == 44) { // Comma
+      if (_position < _expression.length && _getCurrentToken() == 44) {
+        // Comma
         _advance(); // Skip comma
         final thirdArgResult = evaluateExpression(_expression, _position);
         _position = thirdArgResult.endPosition;
@@ -279,13 +312,19 @@ class ExpressionEvaluator {
     }
 
     _skipSpaces();
-    if (_position >= _expression.length || _getCurrentToken() != 41) { // Right parenthesis
+    if (_position >= _expression.length || _getCurrentToken() != 41) {
+      // Right parenthesis
       throw ExpressionException('SYNTAX ERROR - Missing ) after function');
     }
     _advance(); // Skip closing parenthesis
 
     // Apply function
-    final result = _applyMultiArgFunction(functionToken, stringArgResult.value, numArgResult.value, thirdArg);
+    final result = _applyMultiArgFunction(
+      functionToken,
+      stringArgResult.value,
+      numArgResult.value,
+      thirdArg,
+    );
     _stack.add(StackEntry(type: StackEntryType.value, value: result));
   }
 
@@ -298,7 +337,8 @@ class ExpressionEvaluator {
     _position = argResult.endPosition;
 
     _skipSpaces();
-    if (_position >= _expression.length || _getCurrentToken() != 41) { // Right parenthesis
+    if (_position >= _expression.length || _getCurrentToken() != 41) {
+      // Right parenthesis
       throw ExpressionException('SYNTAX ERROR - Missing ) after function');
     }
     _advance(); // Skip closing parenthesis
@@ -307,14 +347,18 @@ class ExpressionEvaluator {
     if (functionToken == Tokenizer.tabToken) {
       if (argResult.value is NumericValue) {
         final column = (argResult.value as NumericValue).value.round();
-        _stack.add(StackEntry(type: StackEntryType.value, value: TabValue(column)));
+        _stack.add(
+          StackEntry(type: StackEntryType.value, value: TabValue(column)),
+        );
       } else {
         throw ExpressionException('TYPE MISMATCH');
       }
     } else if (functionToken == Tokenizer.spcToken) {
       if (argResult.value is NumericValue) {
         final spaces = (argResult.value as NumericValue).value.round();
-        _stack.add(StackEntry(type: StackEntryType.value, value: SpcValue(spaces)));
+        _stack.add(
+          StackEntry(type: StackEntryType.value, value: SpcValue(spaces)),
+        );
       } else {
         throw ExpressionException('TYPE MISMATCH');
       }
@@ -332,7 +376,12 @@ class ExpressionEvaluator {
 
     final operand = _stack.removeLast().value!;
     if (operand is NumericValue) {
-      _stack.add(StackEntry(type: StackEntryType.value, value: NumericValue(-operand.value)));
+      _stack.add(
+        StackEntry(
+          type: StackEntryType.value,
+          value: NumericValue(-operand.value),
+        ),
+      );
     } else {
       throw ExpressionException('TYPE MISMATCH - Cannot negate string');
     }
@@ -350,7 +399,9 @@ class ExpressionEvaluator {
 
     final operand = _stack.last.value!;
     if (operand is! NumericValue) {
-      throw ExpressionException('TYPE MISMATCH - Cannot apply unary plus to string');
+      throw ExpressionException(
+        'TYPE MISMATCH - Cannot apply unary plus to string',
+      );
     }
   }
 
@@ -358,22 +409,26 @@ class ExpressionEvaluator {
   void _handleOperator(int operatorToken) {
     final precedence = _operatorPrecedence[operatorToken];
     if (precedence == null) {
-      throw ExpressionException('SYNTAX ERROR - Unknown operator: $operatorToken');
+      throw ExpressionException(
+        'SYNTAX ERROR - Unknown operator: $operatorToken',
+      );
     }
 
     // Apply operators with higher or equal precedence
     while (_stack.length >= 3 &&
-           _stack[_stack.length - 2].type == StackEntryType.operator &&
-           _stack[_stack.length - 2].precedence >= precedence) {
+        _stack[_stack.length - 2].type == StackEntryType.operator &&
+        _stack[_stack.length - 2].precedence >= precedence) {
       _applyTopOperator();
     }
 
     // Push new operator
-    _stack.add(StackEntry(
-      type: StackEntryType.operator,
-      operator: operatorToken,
-      precedence: precedence
-    ));
+    _stack.add(
+      StackEntry(
+        type: StackEntryType.operator,
+        operator: operatorToken,
+        precedence: precedence,
+      ),
+    );
 
     _advance(); // Skip operator token
     _parsePrimary(); // Parse next operand
@@ -396,12 +451,20 @@ class ExpressionEvaluator {
       throw ExpressionException('SYNTAX ERROR - Invalid stack state');
     }
 
-    final result = _applyBinaryOperator(operator.operator!, left.value!, right.value!);
+    final result = _applyBinaryOperator(
+      operator.operator!,
+      left.value!,
+      right.value!,
+    );
     _stack.add(StackEntry(type: StackEntryType.value, value: result));
   }
 
   /// Apply a binary operator to two operands
-  VariableValue _applyBinaryOperator(int operator, VariableValue left, VariableValue right) {
+  VariableValue _applyBinaryOperator(
+    int operator,
+    VariableValue left,
+    VariableValue right,
+  ) {
     switch (operator) {
       case Tokenizer.plusToken:
         if (left is NumericValue && right is NumericValue) {
@@ -510,7 +573,9 @@ class ExpressionEvaluator {
         throw ExpressionException('TYPE MISMATCH');
 
       default:
-        throw ExpressionException('FUNCTION NOT IMPLEMENTED: ${tokenizer.getTokenName(functionToken)}');
+        throw ExpressionException(
+          'FUNCTION NOT IMPLEMENTED: ${tokenizer.getTokenName(functionToken)}',
+        );
     }
   }
 
@@ -534,7 +599,12 @@ class ExpressionEvaluator {
   }
 
   /// Apply a multi-argument function
-  VariableValue _applyMultiArgFunction(int functionToken, VariableValue stringArg, VariableValue numArg, VariableValue? thirdArg) {
+  VariableValue _applyMultiArgFunction(
+    int functionToken,
+    VariableValue stringArg,
+    VariableValue numArg,
+    VariableValue? thirdArg,
+  ) {
     switch (functionToken) {
       case Tokenizer.leftDollarToken:
         if (stringArg is! StringValue || numArg is! NumericValue) {
@@ -560,7 +630,9 @@ class ExpressionEvaluator {
         if (count >= stringArg.value.length) {
           return StringValue(stringArg.value);
         }
-        return StringValue(stringArg.value.substring(stringArg.value.length - count));
+        return StringValue(
+          stringArg.value.substring(stringArg.value.length - count),
+        );
 
       case Tokenizer.midDollarToken:
         if (stringArg is! StringValue || numArg is! NumericValue) {
@@ -594,14 +666,15 @@ class ExpressionEvaluator {
 
   /// Check if token is an operator
   bool _isOperator(int token) {
-    return _operatorPrecedence.containsKey(token) || tokenizer.isOperator(token);
+    return _operatorPrecedence.containsKey(token) ||
+        tokenizer.isOperator(token);
   }
 
   /// Check if token is a multi-argument function
   bool _isMultiArgFunction(int token) {
     return token == Tokenizer.leftDollarToken ||
-           token == Tokenizer.rightDollarToken ||
-           token == Tokenizer.midDollarToken;
+        token == Tokenizer.rightDollarToken ||
+        token == Tokenizer.midDollarToken;
   }
 
   /// Check if character is a digit
@@ -629,7 +702,8 @@ class ExpressionEvaluator {
 
   /// Skip spaces
   void _skipSpaces() {
-    while (_position < _expression.length && _getCurrentToken() == 32) { // ASCII space
+    while (_position < _expression.length && _getCurrentToken() == 32) {
+      // ASCII space
       _advance();
     }
   }
@@ -644,28 +718,37 @@ class ExpressionEvaluator {
       _skipSpaces();
 
       if (_position >= _expression.length || !_isLetter(_getCurrentToken())) {
-        throw ExpressionException('SYNTAX ERROR - Invalid function name after FN');
+        throw ExpressionException(
+          'SYNTAX ERROR - Invalid function name after FN',
+        );
       }
 
-      functionName = 'FN' + String.fromCharCode(_getCurrentToken()).toUpperCase();
+      functionName =
+          'FN' + String.fromCharCode(_getCurrentToken()).toUpperCase();
       _advance();
-    } else if (_getCurrentToken() == 70 && _position + 1 < _expression.length && _expression[_position + 1] == 78) {
+    } else if (_getCurrentToken() == 70 &&
+        _position + 1 < _expression.length &&
+        _expression[_position + 1] == 78) {
       // Case 2: FN is stored as individual characters
       _advance(); // Skip 'F'
       _advance(); // Skip 'N'
 
       if (_position >= _expression.length || !_isLetter(_getCurrentToken())) {
-        throw ExpressionException('SYNTAX ERROR - Invalid function name after FN');
+        throw ExpressionException(
+          'SYNTAX ERROR - Invalid function name after FN',
+        );
       }
 
-      functionName = 'FN' + String.fromCharCode(_getCurrentToken()).toUpperCase();
+      functionName =
+          'FN' + String.fromCharCode(_getCurrentToken()).toUpperCase();
       _advance();
     } else {
       throw ExpressionException('SYNTAX ERROR - Expected FN token');
     }
 
     bool isStringFunction = false;
-    if (_position < _expression.length && _getCurrentToken() == 36) { // $ character
+    if (_position < _expression.length && _getCurrentToken() == 36) {
+      // $ character
       isStringFunction = true;
       functionName += '\$';
       _advance();
@@ -674,7 +757,8 @@ class ExpressionEvaluator {
     _skipSpaces();
 
     // Expect opening parenthesis
-    if (_position >= _expression.length || _getCurrentToken() != 40) { // (
+    if (_position >= _expression.length || _getCurrentToken() != 40) {
+      // (
       throw ExpressionException('SYNTAX ERROR - Missing ( after function name');
     }
     _advance(); // Skip (
@@ -684,15 +768,20 @@ class ExpressionEvaluator {
     _position = argResult.endPosition;
 
     _skipSpaces();
-    if (_position >= _expression.length || _getCurrentToken() != 41) { // )
-      throw ExpressionException('SYNTAX ERROR - Missing ) after function argument');
+    if (_position >= _expression.length || _getCurrentToken() != 41) {
+      // )
+      throw ExpressionException(
+        'SYNTAX ERROR - Missing ) after function argument',
+      );
     }
     _advance(); // Skip )
 
     // Look up the function
     final function = userFunctions.getFunction(functionName);
     if (function == null) {
-      throw ExpressionException('UNDEFINED FUNCTION - $functionName not defined');
+      throw ExpressionException(
+        'UNDEFINED FUNCTION - $functionName not defined',
+      );
     }
 
     // Evaluate the function by substituting the parameter
@@ -701,7 +790,10 @@ class ExpressionEvaluator {
   }
 
   /// Evaluate a user-defined function with the given argument
-  VariableValue _evaluateUserFunction(UserFunction function, VariableValue argument) {
+  VariableValue _evaluateUserFunction(
+    UserFunction function,
+    VariableValue argument,
+  ) {
     // Create a temporary variable storage for the function parameter
     final originalValue = variables.getVariable(function.parameter);
 
@@ -714,9 +806,13 @@ class ExpressionEvaluator {
 
       // Verify return type matches function type
       if (function.isStringFunction && result.value is! StringValue) {
-        throw ExpressionException('TYPE MISMATCH - String function must return string');
+        throw ExpressionException(
+          'TYPE MISMATCH - String function must return string',
+        );
       } else if (!function.isStringFunction && result.value is! NumericValue) {
-        throw ExpressionException('TYPE MISMATCH - Numeric function must return number');
+        throw ExpressionException(
+          'TYPE MISMATCH - Numeric function must return number',
+        );
       }
 
       return result.value;
@@ -751,7 +847,7 @@ class StackEntry {
 
 /// Type of stack entry
 enum StackEntryType {
-  value,    // Operand value
+  value, // Operand value
   operator, // Operator
 }
 
@@ -772,4 +868,3 @@ class ExpressionException implements Exception {
   @override
   String toString() => 'ExpressionException: $message';
 }
-

@@ -15,7 +15,15 @@ void main() {
   final programStorage = ProgramStorage(memory);
   final runtimeStack = RuntimeStack(memory, variables);
   final screen = Screen();
-  final interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen);
+  final interpreter = Interpreter(
+    memory,
+    tokenizer,
+    variables,
+    expressionEvaluator,
+    programStorage,
+    runtimeStack,
+    screen,
+  );
 
   // Initialize variable storage
   variables.initialize(0x2000);

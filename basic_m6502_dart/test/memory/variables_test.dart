@@ -83,7 +83,7 @@ void main() {
 
       expect(
         () => variables.setVariable('D', const StringValue('ERROR')),
-        throwsA(isA<VariableException>())
+        throwsA(isA<VariableException>()),
       );
     });
 
@@ -108,18 +108,21 @@ void main() {
 
       expect((variables.getVariable('A') as NumericValue).value, equals(1.0));
       expect((variables.getVariable('B') as NumericValue).value, equals(2.0));
-      expect((variables.getVariable('C\$') as StringValue).value, equals('TEST'));
+      expect(
+        (variables.getVariable('C\$') as StringValue).value,
+        equals('TEST'),
+      );
     });
 
     test('should handle invalid variable names', () {
       expect(
         () => variables.findVariable(''),
-        throwsA(isA<VariableException>())
+        throwsA(isA<VariableException>()),
       );
 
       expect(
         () => variables.findVariable('ABC'),
-        throwsA(isA<VariableException>())
+        throwsA(isA<VariableException>()),
       );
     });
   });

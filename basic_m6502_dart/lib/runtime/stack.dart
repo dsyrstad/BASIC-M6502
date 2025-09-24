@@ -9,8 +9,8 @@ import '../memory/variables.dart';
 
 /// Stack entry types
 enum StackEntryType {
-  forLoop(0x81),   // FOR loop entry type (matches original)
-  gosub(0x8D);     // GOSUB entry type (matches original)
+  forLoop(0x81), // FOR loop entry type (matches original)
+  gosub(0x8D); // GOSUB entry type (matches original)
 
   const StackEntryType(this.typeMarker);
   final int typeMarker;
@@ -18,11 +18,11 @@ enum StackEntryType {
 
 /// FOR loop stack entry (16 bytes total)
 class ForLoopEntry {
-  final String variableName;    // Loop variable name (2 chars)
-  final double stepValue;       // STEP value (5 bytes float)
-  final double limitValue;      // TO limit value (5 bytes float)
-  final int lineNumber;         // Line number of FOR statement
-  final int textPointer;        // Position after FOR statement
+  final String variableName; // Loop variable name (2 chars)
+  final double stepValue; // STEP value (5 bytes float)
+  final double limitValue; // TO limit value (5 bytes float)
+  final int lineNumber; // Line number of FOR statement
+  final int textPointer; // Position after FOR statement
 
   ForLoopEntry({
     required this.variableName,
@@ -40,13 +40,10 @@ class ForLoopEntry {
 
 /// GOSUB stack entry (5 bytes total)
 class GosubEntry {
-  final int lineNumber;         // Return line number
-  final int textPointer;        // Return text pointer
+  final int lineNumber; // Return line number
+  final int textPointer; // Return text pointer
 
-  GosubEntry({
-    required this.lineNumber,
-    required this.textPointer,
-  });
+  GosubEntry({required this.lineNumber, required this.textPointer});
 
   @override
   String toString() {
@@ -71,8 +68,13 @@ class RuntimeStack {
   RuntimeStack(this._memory, this._variables);
 
   /// Push a FOR loop entry onto the stack
-  void pushForLoop(String variableName, double stepValue, double limitValue,
-                   int lineNumber, int textPointer) {
+  void pushForLoop(
+    String variableName,
+    double stepValue,
+    double limitValue,
+    int lineNumber,
+    int textPointer,
+  ) {
     if (_stack.length >= maxStackDepth) {
       throw StackException('OUT OF MEMORY - Stack overflow');
     }
@@ -94,10 +96,7 @@ class RuntimeStack {
       throw StackException('OUT OF MEMORY - Stack overflow');
     }
 
-    final entry = GosubEntry(
-      lineNumber: lineNumber,
-      textPointer: textPointer,
-    );
+    final entry = GosubEntry(lineNumber: lineNumber, textPointer: textPointer);
 
     _stack.add(entry);
   }

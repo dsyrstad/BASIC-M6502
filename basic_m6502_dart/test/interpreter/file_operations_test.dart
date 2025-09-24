@@ -32,8 +32,22 @@ void main() {
       screen = Screen();
       tokenizer = Tokenizer();
       userFunctions = UserFunctionStorage();
-      expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer, userFunctions);
-      interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen, userFunctions);
+      expressionEvaluator = ExpressionEvaluator(
+        memory,
+        variables,
+        tokenizer,
+        userFunctions,
+      );
+      interpreter = Interpreter(
+        memory,
+        tokenizer,
+        variables,
+        expressionEvaluator,
+        programStorage,
+        runtimeStack,
+        screen,
+        userFunctions,
+      );
 
       // Create temporary directory for test files
       tempDir = Directory.systemTemp.createTempSync('basic_test_');
@@ -87,7 +101,10 @@ void main() {
       interpreter.executeLine('SAVE "$testFileName"');
 
       // Verify it - should succeed without error
-      expect(() => interpreter.executeLine('VERIFY "$testFileName"'), returnsNormally);
+      expect(
+        () => interpreter.executeLine('VERIFY "$testFileName"'),
+        returnsNormally,
+      );
     });
 
     test('SAVE with empty filename throws error', () {
@@ -103,11 +120,17 @@ void main() {
     });
 
     test('SAVE with empty program throws error', () {
-      expect(() => interpreter.executeLine('SAVE "$testFileName"'), throwsA(anything));
+      expect(
+        () => interpreter.executeLine('SAVE "$testFileName"'),
+        throwsA(anything),
+      );
     });
 
     test('LOAD non-existent file throws error', () {
-      expect(() => interpreter.executeLine('LOAD "nonexistent.bas"'), throwsA(anything));
+      expect(
+        () => interpreter.executeLine('LOAD "nonexistent.bas"'),
+        throwsA(anything),
+      );
     });
 
     test('LOAD with empty filename throws error', () {
@@ -121,7 +144,10 @@ void main() {
     test('VERIFY non-existent file throws error', () {
       interpreter.executeLine('10 PRINT "TEST"');
 
-      expect(() => interpreter.executeLine('VERIFY "nonexistent.bas"'), throwsA(anything));
+      expect(
+        () => interpreter.executeLine('VERIFY "nonexistent.bas"'),
+        throwsA(anything),
+      );
     });
 
     test('VERIFY with empty filename throws error', () {
@@ -152,7 +178,13 @@ void main() {
 
       // Check each line can be retrieved for display
       for (final lineNumber in lineNumbers) {
-        expect(() => programStorage.getLineForDisplay(lineNumber, tokenizer.detokenize), returnsNormally);
+        expect(
+          () => programStorage.getLineForDisplay(
+            lineNumber,
+            tokenizer.detokenize,
+          ),
+          returnsNormally,
+        );
       }
     });
 

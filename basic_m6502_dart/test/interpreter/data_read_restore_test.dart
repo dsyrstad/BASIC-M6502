@@ -25,12 +25,26 @@ void main() {
     memory = Memory();
     tokenizer = Tokenizer();
     variables = VariableStorage(memory);
-    expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer, userFunctions);
+    expressionEvaluator = ExpressionEvaluator(
+      memory,
+      variables,
+      tokenizer,
+      userFunctions,
+    );
     programStorage = ProgramStorage(memory);
     runtimeStack = RuntimeStack(memory, variables);
     screen = Screen();
     userFunctions = UserFunctionStorage();
-    interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen, userFunctions);
+    interpreter = Interpreter(
+      memory,
+      tokenizer,
+      variables,
+      expressionEvaluator,
+      programStorage,
+      runtimeStack,
+      screen,
+      userFunctions,
+    );
 
     // Initialize variable storage
     variables.initialize(0x2000);
@@ -237,9 +251,16 @@ void main() {
       }
 
       // Run the program - should throw OUT OF DATA error
-      expect(() => interpreter.executeLine('RUN 10'),
-             throwsA(isA<InterpreterException>()
-               .having((e) => e.message, 'message', contains('OUT OF DATA'))));
+      expect(
+        () => interpreter.executeLine('RUN 10'),
+        throwsA(
+          isA<InterpreterException>().having(
+            (e) => e.message,
+            'message',
+            contains('OUT OF DATA'),
+          ),
+        ),
+      );
     });
 
     test('DATA with unquoted strings', () {

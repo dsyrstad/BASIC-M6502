@@ -13,7 +13,14 @@ void main() {
   final programStorage = ProgramStorage(memory);
   final expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer);
   final runtimeStack = RuntimeStack(memory, variables);
-  final interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack);
+  final interpreter = Interpreter(
+    memory,
+    tokenizer,
+    variables,
+    expressionEvaluator,
+    programStorage,
+    runtimeStack,
+  );
 
   print('=== Debugging INPUT Statement ===\n');
 

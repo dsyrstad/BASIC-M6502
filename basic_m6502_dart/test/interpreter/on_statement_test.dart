@@ -26,10 +26,24 @@ void main() {
     programStorage = ProgramStorage(memory);
     runtimeStack = RuntimeStack(memory, variables);
     tokenizer = Tokenizer();
-    expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer, userFunctions);
+    expressionEvaluator = ExpressionEvaluator(
+      memory,
+      variables,
+      tokenizer,
+      userFunctions,
+    );
     screen = Screen();
     userFunctions = UserFunctionStorage();
-    interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen, userFunctions);
+    interpreter = Interpreter(
+      memory,
+      tokenizer,
+      variables,
+      expressionEvaluator,
+      programStorage,
+      runtimeStack,
+      screen,
+      userFunctions,
+    );
   });
 
   group('ON Statement Tests', () {
@@ -58,7 +72,10 @@ void main() {
       interpreter.executeLine('310 END');
 
       // Verify program structure
-      expect(programStorage.getAllLineNumbers(), equals([10, 20, 30, 40, 100, 110, 200, 210, 300, 310]));
+      expect(
+        programStorage.getAllLineNumbers(),
+        equals([10, 20, 30, 40, 100, 110, 200, 210, 300, 310]),
+      );
     });
 
     test('ON GOSUB with valid index', () {
@@ -86,7 +103,10 @@ void main() {
       interpreter.executeLine('310 RETURN');
 
       // Verify program structure
-      expect(programStorage.getAllLineNumbers(), equals([10, 20, 30, 40, 100, 110, 200, 210, 300, 310]));
+      expect(
+        programStorage.getAllLineNumbers(),
+        equals([10, 20, 30, 40, 100, 110, 200, 210, 300, 310]),
+      );
     });
 
     test('ON GOTO with index out of range (low)', () {
@@ -106,7 +126,10 @@ void main() {
       interpreter.executeLine('110 END');
 
       // Verify program structure
-      expect(programStorage.getAllLineNumbers(), equals([10, 20, 30, 40, 100, 110]));
+      expect(
+        programStorage.getAllLineNumbers(),
+        equals([10, 20, 30, 40, 100, 110]),
+      );
     });
 
     test('ON GOTO with index out of range (high)', () {
@@ -126,7 +149,10 @@ void main() {
       interpreter.executeLine('110 END');
 
       // Verify program structure
-      expect(programStorage.getAllLineNumbers(), equals([10, 20, 30, 40, 100, 110]));
+      expect(
+        programStorage.getAllLineNumbers(),
+        equals([10, 20, 30, 40, 100, 110]),
+      );
     });
 
     test('ON with expression evaluation', () {
@@ -156,7 +182,10 @@ void main() {
       interpreter.executeLine('310 END');
 
       // Verify program structure
-      expect(programStorage.getAllLineNumbers(), equals([10, 20, 30, 40, 50, 100, 110, 200, 210, 300, 310]));
+      expect(
+        programStorage.getAllLineNumbers(),
+        equals([10, 20, 30, 40, 50, 100, 110, 200, 210, 300, 310]),
+      );
     });
 
     test('ON with floating point value should truncate', () {
@@ -184,7 +213,10 @@ void main() {
       interpreter.executeLine('310 END');
 
       // Verify program structure (should go to line 200 because 2.7 truncates to 2)
-      expect(programStorage.getAllLineNumbers(), equals([10, 20, 30, 40, 100, 110, 200, 210, 300, 310]));
+      expect(
+        programStorage.getAllLineNumbers(),
+        equals([10, 20, 30, 40, 100, 110, 200, 210, 300, 310]),
+      );
     });
 
     test('ON with string expression should throw error', () {
@@ -233,7 +265,10 @@ void main() {
       interpreter.executeLine('110 END');
 
       // Verify program structure
-      expect(programStorage.getAllLineNumbers(), equals([10, 20, 30, 40, 100, 110]));
+      expect(
+        programStorage.getAllLineNumbers(),
+        equals([10, 20, 30, 40, 100, 110]),
+      );
     });
   });
 
@@ -255,7 +290,10 @@ void main() {
       interpreter.executeLine('110 END');
 
       // Verify program structure
-      expect(programStorage.getAllLineNumbers(), equals([10, 20, 30, 40, 100, 110]));
+      expect(
+        programStorage.getAllLineNumbers(),
+        equals([10, 20, 30, 40, 100, 110]),
+      );
     });
 
     test('ON GOSUB with nested calls', () {
@@ -287,7 +325,10 @@ void main() {
       interpreter.executeLine('310 RETURN');
 
       // Verify program structure
-      expect(programStorage.getAllLineNumbers(), equals([10, 20, 30, 40, 100, 110, 120, 130, 200, 210, 300, 310]));
+      expect(
+        programStorage.getAllLineNumbers(),
+        equals([10, 20, 30, 40, 100, 110, 120, 130, 200, 210, 300, 310]),
+      );
     });
   });
 }

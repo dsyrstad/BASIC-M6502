@@ -71,10 +71,7 @@ class VariableStorage {
     int tableEnd = isArray ? _arrayTableStart : memory.readWord(Memory.arytab);
 
     for (int addr = tableStart; addr < tableEnd; addr += variableSize) {
-      final varNameBytes = [
-        memory.readByte(addr),
-        memory.readByte(addr + 1)
-      ];
+      final varNameBytes = [memory.readByte(addr), memory.readByte(addr + 1)];
 
       if (varNameBytes[0] == nameBytes[0] && varNameBytes[1] == nameBytes[1]) {
         // Found variable with matching name - but we need to check if it's the right type
@@ -92,7 +89,7 @@ class VariableStorage {
             name: normalizedName,
             value: value,
             isString: isString,
-            isArray: isArray
+            isArray: isArray,
           );
         }
         // Continue searching for the correct type
@@ -100,7 +97,12 @@ class VariableStorage {
     }
 
     // Variable not found - need to create it
-    final newAddr = _createVariable(normalizedName, nameBytes, isString, isArray);
+    final newAddr = _createVariable(
+      normalizedName,
+      nameBytes,
+      isString,
+      isArray,
+    );
     final defaultValue = isString ? StringValue('') : NumericValue(0.0);
 
     return VariableResult(
@@ -109,12 +111,17 @@ class VariableStorage {
       name: normalizedName,
       value: defaultValue,
       isString: isString,
-      isArray: isArray
+      isArray: isArray,
     );
   }
 
   /// Create a new variable entry
-  int _createVariable(String name, List<int> nameBytes, bool isString, bool isArray) {
+  int _createVariable(
+    String name,
+    List<int> nameBytes,
+    bool isString,
+    bool isArray,
+  ) {
     int insertPoint;
 
     if (isArray) {
@@ -168,7 +175,9 @@ class VariableStorage {
       final baseName = normalized.substring(0, normalized.length - 1);
 
       // Truncate base name to 2 characters if needed
-      final truncatedBase = baseName.length > 2 ? baseName.substring(0, 2) : baseName;
+      final truncatedBase = baseName.length > 2
+          ? baseName.substring(0, 2)
+          : baseName;
 
       return truncatedBase + suffix;
     }
@@ -334,11 +343,13 @@ class VariableStorage {
     // Check if this looks like a string descriptor
     // String length should be reasonable (0-255, which firstByte already is)
     // Pointer should be within reasonable bounds (not 0, and within memory)
-    if (firstByte <= 255 && (pointer == 0 || (pointer >= 0x2000 && pointer < 0x8000))) {
+    if (firstByte <= 255 &&
+        (pointer == 0 || (pointer >= 0x2000 && pointer < 0x8000))) {
       // Additional check: if this is a float, the first byte would be an exponent
       // Microsoft float exponents are biased by +200, so valid range is roughly 1-255
       // But string lengths are typically much smaller
-      if (firstByte <= 100) { // Most strings are shorter than 100 chars
+      if (firstByte <= 100) {
+        // Most strings are shorter than 100 chars
         return true;
       }
     }
@@ -423,8 +434,7 @@ class TabValue extends VariableValue {
   String toString() => 'TAB($column)';
 
   @override
-  bool operator ==(Object other) =>
-      other is TabValue && other.column == column;
+  bool operator ==(Object other) => other is TabValue && other.column == column;
 
   @override
   int get hashCode => column.hashCode;
@@ -440,8 +450,7 @@ class SpcValue extends VariableValue {
   String toString() => 'SPC($spaces)';
 
   @override
-  bool operator ==(Object other) =>
-      other is SpcValue && other.spaces == spaces;
+  bool operator ==(Object other) => other is SpcValue && other.spaces == spaces;
 
   @override
   int get hashCode => spaces.hashCode;

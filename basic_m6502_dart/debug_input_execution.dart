@@ -17,7 +17,9 @@ void main() {
   print('Tokens: ');
   for (int i = 0; i < tokens.length; i++) {
     final token = tokens[i];
-    print('  [$i]: $token (${token < 128 ? String.fromCharCode(token) : 'TOKEN'})');
+    print(
+      '  [$i]: $token (${token < 128 ? String.fromCharCode(token) : 'TOKEN'})',
+    );
   }
 
   // Let's specifically look for the INPUT token
@@ -28,7 +30,9 @@ void main() {
       print('Remaining tokens:');
       for (int j = i + 1; j < tokens.length; j++) {
         final token = tokens[j];
-        print('  [$j]: $token (${token < 128 ? String.fromCharCode(token) : 'TOKEN'})');
+        print(
+          '  [$j]: $token (${token < 128 ? String.fromCharCode(token) : 'TOKEN'})',
+        );
       }
       break;
     }

@@ -18,11 +18,25 @@ void main() {
   final tokenizer = Tokenizer();
   final variables = VariableStorage(memory);
   final userFunctions = UserFunctionStorage();
-  final expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer, userFunctions);
+  final expressionEvaluator = ExpressionEvaluator(
+    memory,
+    variables,
+    tokenizer,
+    userFunctions,
+  );
   final programStorage = ProgramStorage(memory);
   final runtimeStack = RuntimeStack(memory, variables);
   final screen = Screen();
-  final interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen, userFunctions);
+  final interpreter = Interpreter(
+    memory,
+    tokenizer,
+    variables,
+    expressionEvaluator,
+    programStorage,
+    runtimeStack,
+    screen,
+    userFunctions,
+  );
 
   // Initialize variable storage
   variables.initialize(0x2000);
@@ -75,7 +89,9 @@ void main() {
     // Test direct mode calculations
     final calc1Tokens = tokenizer.tokenizeLine('5 + 3 * 2');
     final calc1Result = expressionEvaluator.evaluateExpression(calc1Tokens, 0);
-    print('Direct calculation 5 + 3 * 2 = ${(calc1Result.value as NumericValue).value}');
+    print(
+      'Direct calculation 5 + 3 * 2 = ${(calc1Result.value as NumericValue).value}',
+    );
 
     // Test string operations
     variables.setVariable('S1\$', StringValue('Hello'));
@@ -96,7 +112,6 @@ void main() {
     print('✓ Simple calculations work');
     print('✓ Variable assignment works');
     print('✓ Basic PRINT formatting works');
-
   } catch (e) {
     print('❌ Error during testing: $e');
     print('Stack trace:');

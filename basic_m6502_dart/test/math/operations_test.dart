@@ -114,14 +114,14 @@ void main() {
       final zero = MicrosoftFloat.pack(0.0);
 
       expect(MathOperations.fcompare(a, b), equals(-1)); // 3 < 5
-      expect(MathOperations.fcompare(b, a), equals(1));  // 5 > 3
-      expect(MathOperations.fcompare(a, c), equals(0));  // 3 == 3
+      expect(MathOperations.fcompare(b, a), equals(1)); // 5 > 3
+      expect(MathOperations.fcompare(a, c), equals(0)); // 3 == 3
       expect(MathOperations.fcompare(zero, zero), equals(0)); // 0 == 0
 
       // Test with negative numbers
       final neg = MicrosoftFloat.pack(-2.0);
       expect(MathOperations.fcompare(neg, a), equals(-1)); // -2 < 3
-      expect(MathOperations.fcompare(a, neg), equals(1));  // 3 > -2
+      expect(MathOperations.fcompare(a, neg), equals(1)); // 3 > -2
     });
 
     test('equality (FEQUAL)', () {

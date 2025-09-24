@@ -13,7 +13,14 @@ void main() {
   final expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer);
   final programStorage = ProgramStorage(memory);
   final runtimeStack = RuntimeStack(memory, variables);
-  final interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack);
+  final interpreter = Interpreter(
+    memory,
+    tokenizer,
+    variables,
+    expressionEvaluator,
+    programStorage,
+    runtimeStack,
+  );
 
   // Initialize variable storage
   variables.initialize(0x2000);
@@ -55,7 +62,6 @@ void main() {
       // The issue is that we need to call the main loop or have a step method
       break; // For now, just break to avoid infinite loop
     }
-
   } catch (e) {
     print('Error: $e');
     print('Stack trace: ${e.runtimeType}');

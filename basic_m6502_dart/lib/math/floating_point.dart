@@ -36,7 +36,9 @@ class MicrosoftFloat {
 
     // Handle special IEEE values
     if (value.isInfinite || value.isNaN) {
-      throw ArgumentError('Cannot represent infinity or NaN in Microsoft format');
+      throw ArgumentError(
+        'Cannot represent infinity or NaN in Microsoft format',
+      );
     }
 
     // Normalize the value to get mantissa in range [1.0, 2.0)
@@ -64,7 +66,9 @@ class MicrosoftFloat {
 
     // Check exponent range
     if (microsoftExponent <= 0 || microsoftExponent > 255) {
-      throw ArgumentError('Value out of range for Microsoft float format: $value');
+      throw ArgumentError(
+        'Value out of range for Microsoft float format: $value',
+      );
     }
 
     // Convert mantissa to 23-bit integer (remove implied leading 1)
@@ -79,7 +83,9 @@ class MicrosoftFloat {
 
       // Check exponent range again after adjustment
       if (microsoftExponent <= 0 || microsoftExponent > 255) {
-        throw ArgumentError('Value out of range for Microsoft float format: $value');
+        throw ArgumentError(
+          'Value out of range for Microsoft float format: $value',
+        );
       }
     }
 
@@ -123,8 +129,8 @@ class MicrosoftFloat {
 
     // Extract mantissa parts
     int mantissaHigh = bytes[1] & 0x7F; // Top 7 bits of mantissa
-    int mantissaMid = bytes[2];         // Middle 8 bits of mantissa
-    int mantissaLow = bytes[3];         // Bottom 8 bits of mantissa
+    int mantissaMid = bytes[2]; // Middle 8 bits of mantissa
+    int mantissaLow = bytes[3]; // Bottom 8 bits of mantissa
 
     // Reconstruct 23-bit mantissa and add implied leading 1
     int mantissaInt = (mantissaHigh << 16) | (mantissaMid << 8) | mantissaLow;
@@ -195,8 +201,8 @@ class MicrosoftFloat {
     int mantissaLow = bytes[3];
 
     return 'Exp: $exponent, Sign: ${negative ? "-" : "+"}, '
-           'Mantissa: ${mantissaHigh.toRadixString(16).padLeft(2, '0')}'
-           '${mantissaMid.toRadixString(16).padLeft(2, '0')}'
-           '${mantissaLow.toRadixString(16).padLeft(2, '0')}';
+        'Mantissa: ${mantissaHigh.toRadixString(16).padLeft(2, '0')}'
+        '${mantissaMid.toRadixString(16).padLeft(2, '0')}'
+        '${mantissaLow.toRadixString(16).padLeft(2, '0')}';
   }
 }

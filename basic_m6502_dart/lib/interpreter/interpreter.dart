@@ -53,7 +53,16 @@ class Interpreter {
   /// Direct mode flag
   bool get isInDirectMode => _state == ExecutionState.immediate;
 
-  Interpreter(this.memory, this.tokenizer, this.variables, this.expressionEvaluator, this.programStorage, this.runtimeStack, this.screen, this.userFunctions);
+  Interpreter(
+    this.memory,
+    this.tokenizer,
+    this.variables,
+    this.expressionEvaluator,
+    this.programStorage,
+    this.runtimeStack,
+    this.screen,
+    this.userFunctions,
+  );
 
   /// Main interpreter loop (NEWSTT equivalent)
   void mainLoop() {
@@ -95,7 +104,8 @@ class Interpreter {
     }
 
     // Check for end of line or end of statement
-    if (currentChar == 0 || currentChar == 58) { // null or colon
+    if (currentChar == 0 || currentChar == 58) {
+      // null or colon
       if (currentChar == 58) {
         _advanceTextPointer(); // Skip the colon
       }
@@ -142,7 +152,8 @@ class Interpreter {
 
   /// Skip spaces at current text pointer
   void _skipSpaces() {
-    while (_textPointer < _currentLine.length && _getCurrentChar() == 32) { // ASCII space
+    while (_textPointer < _currentLine.length && _getCurrentChar() == 32) {
+      // ASCII space
       _advanceTextPointer();
     }
   }
@@ -160,7 +171,9 @@ class Interpreter {
 
     // First character must be a letter
     if (!_isLetter(firstChar)) {
-      throw InterpreterException('SYNTAX ERROR - Variable must start with letter');
+      throw InterpreterException(
+        'SYNTAX ERROR - Variable must start with letter',
+      );
     }
 
     _advanceTextPointer();
@@ -174,12 +187,14 @@ class Interpreter {
     }
 
     // Check for string variable suffix '$'
-    if (_textPointer < _currentLine.length && _getCurrentChar() == 36) { // '$'
+    if (_textPointer < _currentLine.length && _getCurrentChar() == 36) {
+      // '$'
       _advanceTextPointer();
     }
 
     // Check for array variable suffix '(' (we'll handle this later)
-    if (_textPointer < _currentLine.length && _getCurrentChar() == 40) { // '('
+    if (_textPointer < _currentLine.length && _getCurrentChar() == 40) {
+      // '('
       throw InterpreterException('ARRAY NOT YET IMPLEMENTED');
     }
 
@@ -253,7 +268,9 @@ class Interpreter {
   void _jumpToLine(int lineNumber) {
     final lineAddress = programStorage.findLineAddress(lineNumber);
     if (lineAddress == -1) {
-      throw InterpreterException('UNDEF\'D STATEMENT ERROR - Line $lineNumber not found');
+      throw InterpreterException(
+        'UNDEF\'D STATEMENT ERROR - Line $lineNumber not found',
+      );
     }
 
     _currentLineNumber = lineNumber;
@@ -353,7 +370,9 @@ class Interpreter {
         _executeDef();
         break;
       default:
-        throw InterpreterException('SYNTAX ERROR - Unknown statement: ${tokenizer.getTokenName(token)}');
+        throw InterpreterException(
+          'SYNTAX ERROR - Unknown statement: ${tokenizer.getTokenName(token)}',
+        );
     }
   }
 
@@ -369,12 +388,16 @@ class Interpreter {
 
         // Skip spaces and check for equals sign
         _skipSpaces();
-        if (_getCurrentChar() == Tokenizer.equalToken) { // Equals token
+        if (_getCurrentChar() == Tokenizer.equalToken) {
+          // Equals token
           // This is an assignment - execute like LET
           _advanceTextPointer(); // Skip equals sign
 
           // Evaluate the expression on the right side
-          final result = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+          final result = expressionEvaluator.evaluateExpression(
+            _currentLine,
+            _textPointer,
+          );
           _textPointer = result.endPosition;
 
           // Store the value in the variable
@@ -389,7 +412,10 @@ class Interpreter {
 
     // Not an assignment - evaluate as expression (for direct mode)
     try {
-      final result = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+      final result = expressionEvaluator.evaluateExpression(
+        _currentLine,
+        _textPointer,
+      );
       _textPointer = result.endPosition;
 
       // In direct mode, print the result
@@ -430,18 +456,21 @@ class Interpreter {
     while (_textPointer < _currentLine.length) {
       final currentChar = _getCurrentChar();
 
-      if (currentChar == 0 || currentChar == 58) { // null or colon (end of statement)
+      if (currentChar == 0 || currentChar == 58) {
+        // null or colon (end of statement)
         break;
       }
 
       // Check for print separators
-      if (currentChar == 44) { // comma - tab to next zone
+      if (currentChar == 44) {
+        // comma - tab to next zone
         screen.tabToNextZone();
         _advanceTextPointer();
         _skipSpaces();
         needNewline = false;
         continue;
-      } else if (currentChar == 59) { // semicolon - no spacing
+      } else if (currentChar == 59) {
+        // semicolon - no spacing
         _advanceTextPointer();
         _skipSpaces();
         needNewline = false;
@@ -450,14 +479,18 @@ class Interpreter {
 
       // Evaluate expression
       try {
-        final result = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+        final result = expressionEvaluator.evaluateExpression(
+          _currentLine,
+          _textPointer,
+        );
         _textPointer = result.endPosition;
 
         // Format and print the result
         if (result.value is NumericValue) {
           final numValue = (result.value as NumericValue).value;
           String formatted;
-          if (numValue == numValue.truncate().toDouble() && numValue.abs() < 1e15) {
+          if (numValue == numValue.truncate().toDouble() &&
+              numValue.abs() < 1e15) {
             // Print integers without decimal point
             formatted = numValue.truncate().toString();
           } else {
@@ -546,18 +579,21 @@ class Interpreter {
     int? endLine;
 
     _skipSpaces();
-    if (_textPointer < _currentLine.length && _isDigit(_currentLine[_textPointer])) {
+    if (_textPointer < _currentLine.length &&
+        _isDigit(_currentLine[_textPointer])) {
       // Parse start line number
       startLine = _parseLineNumber();
 
       _skipSpaces();
       // Check for dash indicating range
-      if (_textPointer < _currentLine.length && _currentLine[_textPointer] == '-') {
+      if (_textPointer < _currentLine.length &&
+          _currentLine[_textPointer] == '-') {
         _textPointer++;
         _skipSpaces();
 
         // Parse end line number if present
-        if (_textPointer < _currentLine.length && _isDigit(_currentLine[_textPointer])) {
+        if (_textPointer < _currentLine.length &&
+            _isDigit(_currentLine[_textPointer])) {
           endLine = _parseLineNumber();
         }
       } else {
@@ -571,7 +607,9 @@ class Interpreter {
     if (startLine != null) {
       if (endLine != null) {
         // Range specified
-        linesToList = lineNumbers.where((ln) => ln >= startLine! && ln <= endLine!).toList();
+        linesToList = lineNumbers
+            .where((ln) => ln >= startLine! && ln <= endLine!)
+            .toList();
       } else {
         // Open-ended range (LIST 100-)
         linesToList = lineNumbers.where((ln) => ln >= startLine!).toList();
@@ -583,7 +621,10 @@ class Interpreter {
 
     for (final lineNumber in linesToList) {
       try {
-        final line = programStorage.getLineForDisplay(lineNumber, tokenizer.detokenize);
+        final line = programStorage.getLineForDisplay(
+          lineNumber,
+          tokenizer.detokenize,
+        );
         print(line);
       } catch (e) {
         print('Error listing line $lineNumber: $e');
@@ -637,7 +678,10 @@ class Interpreter {
     }
 
     // Always evaluate as an expression (handles both static numbers and computations)
-    final result = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+    final result = expressionEvaluator.evaluateExpression(
+      _currentLine,
+      _textPointer,
+    );
     _textPointer = result.endPosition;
 
     if (result.value is! NumericValue) {
@@ -646,7 +690,9 @@ class Interpreter {
 
     final targetLineNumber = (result.value as NumericValue).value.toInt();
     if (targetLineNumber < 0 || targetLineNumber > 65535) {
-      throw InterpreterException('ILLEGAL QUANTITY ERROR - Line number out of range');
+      throw InterpreterException(
+        'ILLEGAL QUANTITY ERROR - Line number out of range',
+      );
     }
 
     _jumpToLine(targetLineNumber);
@@ -683,13 +729,17 @@ class Interpreter {
 
     // Skip spaces and look for equals sign
     _skipSpaces();
-    if (_getCurrentChar() != Tokenizer.equalToken) { // Equals token
+    if (_getCurrentChar() != Tokenizer.equalToken) {
+      // Equals token
       throw InterpreterException('SYNTAX ERROR - Missing = in LET statement');
     }
     _advanceTextPointer(); // Skip the equals sign
 
     // Evaluate the expression on the right side
-    final result = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+    final result = expressionEvaluator.evaluateExpression(
+      _currentLine,
+      _textPointer,
+    );
     _textPointer = result.endPosition;
 
     // Store the value in the variable
@@ -699,7 +749,10 @@ class Interpreter {
   /// Execute IF statement
   void _executeIf() {
     // Evaluate the condition expression
-    final conditionResult = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+    final conditionResult = expressionEvaluator.evaluateExpression(
+      _currentLine,
+      _textPointer,
+    );
     _textPointer = conditionResult.endPosition;
 
     // Check if condition is true (non-zero)
@@ -708,14 +761,17 @@ class Interpreter {
       final numValue = conditionResult.value as NumericValue;
       conditionTrue = numValue.value != 0.0;
     } else {
-      throw InterpreterException('TYPE MISMATCH - IF condition must be numeric');
+      throw InterpreterException(
+        'TYPE MISMATCH - IF condition must be numeric',
+      );
     }
 
     // Skip spaces
     _skipSpaces();
 
     // Check for THEN keyword (optional in some BASIC dialects)
-    if (_textPointer < _currentLine.length && _getCurrentChar() == Tokenizer.thenToken) {
+    if (_textPointer < _currentLine.length &&
+        _getCurrentChar() == Tokenizer.thenToken) {
       _advanceTextPointer(); // Skip THEN token
       _skipSpaces();
     }
@@ -757,11 +813,16 @@ class Interpreter {
     _advanceTextPointer(); // Skip equals sign
 
     // Evaluate the start value
-    final startResult = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+    final startResult = expressionEvaluator.evaluateExpression(
+      _currentLine,
+      _textPointer,
+    );
     _textPointer = startResult.endPosition;
 
     if (startResult.value is! NumericValue) {
-      throw InterpreterException('TYPE MISMATCH - FOR start value must be numeric');
+      throw InterpreterException(
+        'TYPE MISMATCH - FOR start value must be numeric',
+      );
     }
     final startValue = (startResult.value as NumericValue).value;
 
@@ -773,30 +834,43 @@ class Interpreter {
     _advanceTextPointer(); // Skip TO token
 
     // Evaluate the end value
-    final endResult = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+    final endResult = expressionEvaluator.evaluateExpression(
+      _currentLine,
+      _textPointer,
+    );
     _textPointer = endResult.endPosition;
 
     if (endResult.value is! NumericValue) {
-      throw InterpreterException('TYPE MISMATCH - FOR end value must be numeric');
+      throw InterpreterException(
+        'TYPE MISMATCH - FOR end value must be numeric',
+      );
     }
     final endValue = (endResult.value as NumericValue).value;
 
     // Check for optional STEP clause
     double stepValue = 1.0; // Default step
     _skipSpaces();
-    if (_textPointer < _currentLine.length && _getCurrentChar() == Tokenizer.stepToken) {
+    if (_textPointer < _currentLine.length &&
+        _getCurrentChar() == Tokenizer.stepToken) {
       _advanceTextPointer(); // Skip STEP token
 
-      final stepResult = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+      final stepResult = expressionEvaluator.evaluateExpression(
+        _currentLine,
+        _textPointer,
+      );
       _textPointer = stepResult.endPosition;
 
       if (stepResult.value is! NumericValue) {
-        throw InterpreterException('TYPE MISMATCH - FOR step value must be numeric');
+        throw InterpreterException(
+          'TYPE MISMATCH - FOR step value must be numeric',
+        );
       }
       stepValue = (stepResult.value as NumericValue).value;
 
       if (stepValue == 0.0) {
-        throw InterpreterException('ILLEGAL QUANTITY ERROR - STEP cannot be zero');
+        throw InterpreterException(
+          'ILLEGAL QUANTITY ERROR - STEP cannot be zero',
+        );
       }
     }
 
@@ -818,7 +892,13 @@ class Interpreter {
     }
 
     // Push FOR loop onto stack
-    runtimeStack.pushForLoop(variableName, stepValue, endValue, _currentLineNumber, _textPointer);
+    runtimeStack.pushForLoop(
+      variableName,
+      stepValue,
+      endValue,
+      _currentLineNumber,
+      _textPointer,
+    );
   }
 
   /// Execute NEXT statement
@@ -840,7 +920,9 @@ class Interpreter {
       // Pop the specific FOR loop
       forEntry = runtimeStack.popForLoop(variableName);
       if (forEntry == null) {
-        throw InterpreterException('NEXT WITHOUT FOR - No matching FOR statement for variable $variableName');
+        throw InterpreterException(
+          'NEXT WITHOUT FOR - No matching FOR statement for variable $variableName',
+        );
       }
     } else {
       // Pop the most recent FOR loop
@@ -856,13 +938,17 @@ class Interpreter {
     }
 
     if (forEntry == null) {
-      throw InterpreterException('NEXT WITHOUT FOR - No matching FOR statement');
+      throw InterpreterException(
+        'NEXT WITHOUT FOR - No matching FOR statement',
+      );
     }
 
     // Get current value of loop variable
     final currentVar = variables.getVariable(variableName);
     if (currentVar is! NumericValue) {
-      throw InterpreterException('TYPE MISMATCH - Loop variable must be numeric');
+      throw InterpreterException(
+        'TYPE MISMATCH - Loop variable must be numeric',
+      );
     }
 
     // Increment the loop variable by step
@@ -917,7 +1003,9 @@ class Interpreter {
     final gosubEntry = runtimeStack.popGosub();
 
     if (gosubEntry == null) {
-      throw InterpreterException('RETURN WITHOUT GOSUB - No matching GOSUB statement');
+      throw InterpreterException(
+        'RETURN WITHOUT GOSUB - No matching GOSUB statement',
+      );
     }
 
     // Return to the line and position after the GOSUB
@@ -928,11 +1016,16 @@ class Interpreter {
   /// Execute ON statement (ON expression GOTO/GOSUB line1, line2, ...)
   void _executeOn() {
     // Evaluate the expression
-    final result = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+    final result = expressionEvaluator.evaluateExpression(
+      _currentLine,
+      _textPointer,
+    );
     _textPointer = result.endPosition;
 
     if (result.value is! NumericValue) {
-      throw InterpreterException('TYPE MISMATCH - ON expression must be numeric');
+      throw InterpreterException(
+        'TYPE MISMATCH - ON expression must be numeric',
+      );
     }
 
     final numValue = (result.value as NumericValue).value;
@@ -942,7 +1035,9 @@ class Interpreter {
     _skipSpaces();
 
     if (_textPointer >= _currentLine.length) {
-      throw InterpreterException('SYNTAX ERROR - Missing GOTO or GOSUB in ON statement');
+      throw InterpreterException(
+        'SYNTAX ERROR - Missing GOTO or GOSUB in ON statement',
+      );
     }
 
     final keyword = _getCurrentChar();
@@ -955,7 +1050,9 @@ class Interpreter {
       isGosub = true;
       _advanceTextPointer(); // Skip GOSUB token
     } else {
-      throw InterpreterException('SYNTAX ERROR - ON must be followed by GOTO or GOSUB');
+      throw InterpreterException(
+        'SYNTAX ERROR - ON must be followed by GOTO or GOSUB',
+      );
     }
 
     // Parse the list of line numbers
@@ -966,21 +1063,25 @@ class Interpreter {
       final currentChar = _getCurrentChar();
 
       // Check for end of statement
-      if (currentChar == 0 || currentChar == 58) { // null or colon
+      if (currentChar == 0 || currentChar == 58) {
+        // null or colon
         break;
       }
 
       // Parse line number
       final lineNumber = _parseLineNumber();
       if (lineNumber == -1) {
-        throw InterpreterException('SYNTAX ERROR - Invalid line number in ON statement');
+        throw InterpreterException(
+          'SYNTAX ERROR - Invalid line number in ON statement',
+        );
       }
 
       lineNumbers.add(lineNumber);
 
       // Skip spaces and check for comma
       _skipSpaces();
-      if (_textPointer < _currentLine.length && _getCurrentChar() == 44) { // comma
+      if (_textPointer < _currentLine.length && _getCurrentChar() == 44) {
+        // comma
         _advanceTextPointer(); // Skip comma
         _skipSpaces();
       } else {
@@ -990,7 +1091,9 @@ class Interpreter {
 
     // Check if we have any line numbers
     if (lineNumbers.isEmpty) {
-      throw InterpreterException('SYNTAX ERROR - No line numbers in ON statement');
+      throw InterpreterException(
+        'SYNTAX ERROR - No line numbers in ON statement',
+      );
     }
 
     // Check if index is in range (1-based indexing in BASIC)
@@ -1018,7 +1121,8 @@ class Interpreter {
     _skipSpaces();
 
     // Check for quoted prompt string
-    if (_getCurrentChar() == 34) { // Double quote
+    if (_getCurrentChar() == 34) {
+      // Double quote
       _advanceTextPointer(); // Skip opening quote
       final promptStart = _textPointer;
 
@@ -1028,20 +1132,25 @@ class Interpreter {
       }
 
       if (_textPointer >= _currentLine.length) {
-        throw InterpreterException('SYNTAX ERROR - Unterminated string in INPUT');
+        throw InterpreterException(
+          'SYNTAX ERROR - Unterminated string in INPUT',
+        );
       }
 
       // Extract prompt string
       prompt = String.fromCharCodes(
-        _currentLine.sublist(promptStart, _textPointer)
+        _currentLine.sublist(promptStart, _textPointer),
       );
 
       _advanceTextPointer(); // Skip closing quote
       _skipSpaces();
 
       // Check for required semicolon after prompt
-      if (_getCurrentChar() != 59) { // Semicolon
-        throw InterpreterException('SYNTAX ERROR - Missing semicolon after INPUT prompt');
+      if (_getCurrentChar() != 59) {
+        // Semicolon
+        throw InterpreterException(
+          'SYNTAX ERROR - Missing semicolon after INPUT prompt',
+        );
       }
       _advanceTextPointer(); // Skip semicolon
       _skipSpaces();
@@ -1057,7 +1166,8 @@ class Interpreter {
 
       // Skip spaces and check for comma
       _skipSpaces();
-      if (_textPointer >= _currentLine.length || _getCurrentChar() != 44) { // Comma
+      if (_textPointer >= _currentLine.length || _getCurrentChar() != 44) {
+        // Comma
         break; // No more variables
       }
       _advanceTextPointer(); // Skip comma
@@ -1223,7 +1333,8 @@ class Interpreter {
 
       // Skip spaces and check for comma
       _skipSpaces();
-      if (_textPointer >= _currentLine.length || _getCurrentChar() != 44) { // Comma
+      if (_textPointer >= _currentLine.length || _getCurrentChar() != 44) {
+        // Comma
         break; // No more variables
       }
       _advanceTextPointer(); // Skip comma
@@ -1266,7 +1377,9 @@ class Interpreter {
 
       // Find specified DATA line
       if (!_findDataAtOrAfter(targetLine)) {
-        throw InterpreterException('UNDEF\'D STATEMENT ERROR - No DATA at or after line $targetLine');
+        throw InterpreterException(
+          'UNDEF\'D STATEMENT ERROR - No DATA at or after line $targetLine',
+        );
       }
     } else {
       // No line number - restore to first DATA
@@ -1343,11 +1456,14 @@ class Interpreter {
     final lineContent = programStorage.getLineContent(_dataLineNumber);
 
     // Skip spaces
-    while (_dataTextPointer < lineContent.length && lineContent[_dataTextPointer] == 32) {
+    while (_dataTextPointer < lineContent.length &&
+        lineContent[_dataTextPointer] == 32) {
       _dataTextPointer++;
     }
 
-    if (_dataTextPointer >= lineContent.length || lineContent[_dataTextPointer] == 0 || lineContent[_dataTextPointer] == 58) {
+    if (_dataTextPointer >= lineContent.length ||
+        lineContent[_dataTextPointer] == 0 ||
+        lineContent[_dataTextPointer] == 58) {
       // End of current DATA statement - find next DATA
       _findNextData();
       if (_dataLineNumber == -1) {
@@ -1357,18 +1473,23 @@ class Interpreter {
     }
 
     // Check if value is quoted string
-    if (lineContent[_dataTextPointer] == 34) { // Double quote
+    if (lineContent[_dataTextPointer] == 34) {
+      // Double quote
       _dataTextPointer++; // Skip opening quote
       final valueStart = _dataTextPointer;
 
       // Find closing quote
-      while (_dataTextPointer < lineContent.length && lineContent[_dataTextPointer] != 34) {
+      while (_dataTextPointer < lineContent.length &&
+          lineContent[_dataTextPointer] != 34) {
         _dataTextPointer++;
       }
 
-      final value = String.fromCharCodes(lineContent.sublist(valueStart, _dataTextPointer));
+      final value = String.fromCharCodes(
+        lineContent.sublist(valueStart, _dataTextPointer),
+      );
 
-      if (_dataTextPointer < lineContent.length && lineContent[_dataTextPointer] == 34) {
+      if (_dataTextPointer < lineContent.length &&
+          lineContent[_dataTextPointer] == 34) {
         _dataTextPointer++; // Skip closing quote
       }
 
@@ -1381,9 +1502,10 @@ class Interpreter {
       final valueStart = _dataTextPointer;
 
       while (_dataTextPointer < lineContent.length &&
-             lineContent[_dataTextPointer] != 44 && // Comma
-             lineContent[_dataTextPointer] != 58 && // Colon
-             lineContent[_dataTextPointer] != 0) {   // End of line
+          lineContent[_dataTextPointer] != 44 && // Comma
+          lineContent[_dataTextPointer] != 58 && // Colon
+          lineContent[_dataTextPointer] != 0) {
+        // End of line
         _dataTextPointer++;
       }
 
@@ -1393,7 +1515,9 @@ class Interpreter {
         valueEnd--;
       }
 
-      final value = String.fromCharCodes(lineContent.sublist(valueStart, valueEnd));
+      final value = String.fromCharCodes(
+        lineContent.sublist(valueStart, valueEnd),
+      );
 
       // Skip comma if present
       _skipDataComma(lineContent);
@@ -1405,12 +1529,14 @@ class Interpreter {
   /// Skip comma in DATA statement
   void _skipDataComma(List<int> lineContent) {
     // Skip spaces
-    while (_dataTextPointer < lineContent.length && lineContent[_dataTextPointer] == 32) {
+    while (_dataTextPointer < lineContent.length &&
+        lineContent[_dataTextPointer] == 32) {
       _dataTextPointer++;
     }
 
     // Skip comma if present
-    if (_dataTextPointer < lineContent.length && lineContent[_dataTextPointer] == 44) {
+    if (_dataTextPointer < lineContent.length &&
+        lineContent[_dataTextPointer] == 44) {
       _dataTextPointer++;
     }
   }
@@ -1468,7 +1594,8 @@ class Interpreter {
 
     // Check if there's another DATA on the same line (after colon)
     for (int i = _dataTextPointer; i < currentLineContent.length; i++) {
-      if (currentLineContent[i] == 58) { // Colon
+      if (currentLineContent[i] == 58) {
+        // Colon
         // Check for DATA after colon
         for (int j = i + 1; j < currentLineContent.length; j++) {
           if (currentLineContent[j] == Tokenizer.dataToken) {
@@ -1511,7 +1638,9 @@ class Interpreter {
       _advanceToNextLine();
 
       if (_currentLineNumber == -1) {
-        throw InterpreterException('FOR WITHOUT NEXT - Missing NEXT statement for variable $variableName');
+        throw InterpreterException(
+          'FOR WITHOUT NEXT - Missing NEXT statement for variable $variableName',
+        );
       }
 
       // Look for FOR and NEXT tokens in current line
@@ -1529,7 +1658,8 @@ class Interpreter {
             _skipSpaces();
 
             // Check if it specifies our variable
-            if (_textPointer < _currentLine.length && _isLetter(_getCurrentChar())) {
+            if (_textPointer < _currentLine.length &&
+                _isLetter(_getCurrentChar())) {
               final nextVar = _parseVariableName();
               if (nextVar == variableName) {
                 return; // Found exact match
@@ -1595,7 +1725,8 @@ class Interpreter {
 
     // If line starts with a number, it's a program line
     if (_currentLine.isNotEmpty && _isDigit(_currentLine[0])) {
-      _state = ExecutionState.immediate; // Stay in immediate mode for line entry
+      _state =
+          ExecutionState.immediate; // Stay in immediate mode for line entry
       _handleLineNumberEntry();
     } else {
       // Direct mode execution
@@ -1618,7 +1749,10 @@ class Interpreter {
     _textPointer = 0;
 
     // Evaluate the expression
-    var result = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+    var result = expressionEvaluator.evaluateExpression(
+      _currentLine,
+      _textPointer,
+    );
     _textPointer = result.endPosition;
     return result.value;
   }
@@ -1628,7 +1762,8 @@ class Interpreter {
     _skipSpaces();
 
     // Parse filename string
-    if (_getCurrentChar() != 34) { // Not a quote
+    if (_getCurrentChar() != 34) {
+      // Not a quote
       throw InterpreterException('SYNTAX ERROR - Filename must be in quotes');
     }
 
@@ -1667,16 +1802,20 @@ class Interpreter {
       // Check if directory exists and is writable
       final directory = file.parent;
       if (!directory.existsSync()) {
-        throw InterpreterException('DEVICE NOT PRESENT - Directory does not exist');
+        throw InterpreterException(
+          'DEVICE NOT PRESENT - Directory does not exist',
+        );
       }
 
       // Check for disk space (basic check - if file exists, we should be able to write)
       file.writeAsBytesSync(programData);
       print('SAVED');
     } on FileSystemException catch (e) {
-      if (e.osError?.errorCode == 28) { // ENOSPC - No space left on device
+      if (e.osError?.errorCode == 28) {
+        // ENOSPC - No space left on device
         throw InterpreterException('DEVICE FULL - Insufficient disk space');
-      } else if (e.osError?.errorCode == 13) { // EACCES - Permission denied
+      } else if (e.osError?.errorCode == 13) {
+        // EACCES - Permission denied
         throw InterpreterException('WRITE PROTECT - Cannot write to file');
       } else {
         throw InterpreterException('DEVICE ERROR - ${e.message}');
@@ -1691,7 +1830,8 @@ class Interpreter {
     _skipSpaces();
 
     // Parse filename string
-    if (_getCurrentChar() != 34) { // Not a quote
+    if (_getCurrentChar() != 34) {
+      // Not a quote
       throw InterpreterException('SYNTAX ERROR - Filename must be in quotes');
     }
 
@@ -1733,7 +1873,8 @@ class Interpreter {
       }
 
       // Check file size - prevent loading huge files
-      if (stat.size > 65536) { // 64KB limit for BASIC programs
+      if (stat.size > 65536) {
+        // 64KB limit for BASIC programs
         throw InterpreterException('PROGRAM TOO LARGE - File exceeds 64KB');
       }
 
@@ -1759,13 +1900,15 @@ class Interpreter {
         variables.clearVariables();
         throw InterpreterException('BAD FORMAT - Invalid program file');
       }
-
     } on FileSystemException catch (e) {
-      if (e.osError?.errorCode == 2) { // ENOENT - No such file or directory
+      if (e.osError?.errorCode == 2) {
+        // ENOENT - No such file or directory
         throw InterpreterException('FILE NOT FOUND - $filename');
-      } else if (e.osError?.errorCode == 13) { // EACCES - Permission denied
+      } else if (e.osError?.errorCode == 13) {
+        // EACCES - Permission denied
         throw InterpreterException('READ PROTECTED - Cannot read file');
-      } else if (e.osError?.errorCode == 21) { // EISDIR - Is a directory
+      } else if (e.osError?.errorCode == 21) {
+        // EISDIR - Is a directory
         throw InterpreterException('DEVICE ERROR - $filename is a directory');
       } else {
         throw InterpreterException('DEVICE ERROR - ${e.message}');
@@ -1783,7 +1926,8 @@ class Interpreter {
     _skipSpaces();
 
     // Parse filename string
-    if (_getCurrentChar() != 34) { // Not a quote
+    if (_getCurrentChar() != 34) {
+      // Not a quote
       throw InterpreterException('SYNTAX ERROR - Filename must be in quotes');
     }
 
@@ -1825,7 +1969,8 @@ class Interpreter {
       }
 
       // Check file size
-      if (stat.size > 65536) { // 64KB limit for BASIC programs
+      if (stat.size > 65536) {
+        // 64KB limit for BASIC programs
         throw InterpreterException('PROGRAM TOO LARGE - File exceeds 64KB');
       }
 
@@ -1854,13 +1999,15 @@ class Interpreter {
       }
 
       print('VERIFIED');
-
     } on FileSystemException catch (e) {
-      if (e.osError?.errorCode == 2) { // ENOENT - No such file or directory
+      if (e.osError?.errorCode == 2) {
+        // ENOENT - No such file or directory
         throw InterpreterException('FILE NOT FOUND - $filename');
-      } else if (e.osError?.errorCode == 13) { // EACCES - Permission denied
+      } else if (e.osError?.errorCode == 13) {
+        // EACCES - Permission denied
         throw InterpreterException('READ PROTECTED - Cannot read file');
-      } else if (e.osError?.errorCode == 21) { // EISDIR - Is a directory
+      } else if (e.osError?.errorCode == 21) {
+        // EISDIR - Is a directory
         throw InterpreterException('DEVICE ERROR - $filename is a directory');
       } else {
         throw InterpreterException('DEVICE ERROR - ${e.message}');
@@ -1878,7 +2025,10 @@ class Interpreter {
     _skipSpaces();
 
     // Evaluate address expression
-    final addressResult = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+    final addressResult = expressionEvaluator.evaluateExpression(
+      _currentLine,
+      _textPointer,
+    );
     _textPointer = addressResult.endPosition;
 
     if (addressResult.value is! NumericValue) {
@@ -1893,7 +2043,8 @@ class Interpreter {
     _skipSpaces();
 
     // Expect comma separator
-    if (_textPointer >= _currentLine.length || _getCurrentChar() != 44) { // comma
+    if (_textPointer >= _currentLine.length || _getCurrentChar() != 44) {
+      // comma
       throw InterpreterException('SYNTAX ERROR - Missing comma in POKE');
     }
     _advanceTextPointer(); // Skip comma
@@ -1901,7 +2052,10 @@ class Interpreter {
     _skipSpaces();
 
     // Evaluate value expression
-    final valueResult = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+    final valueResult = expressionEvaluator.evaluateExpression(
+      _currentLine,
+      _textPointer,
+    );
     _textPointer = valueResult.endPosition;
 
     if (valueResult.value is! NumericValue) {
@@ -1925,36 +2079,47 @@ class Interpreter {
     // This could be tokenized as FN token + letter, or as individual letters F + N + letter
     String functionName = '';
 
-    if (_textPointer < _currentLine.length && _getCurrentChar() == Tokenizer.fnToken) {
+    if (_textPointer < _currentLine.length &&
+        _getCurrentChar() == Tokenizer.fnToken) {
       // Case 1: FN is properly tokenized
       _advanceTextPointer(); // Skip FN token
       _skipSpaces();
 
-      if (_textPointer >= _currentLine.length || !_isLetter(_getCurrentChar())) {
-        throw InterpreterException('SYNTAX ERROR - Invalid function name after FN');
+      if (_textPointer >= _currentLine.length ||
+          !_isLetter(_getCurrentChar())) {
+        throw InterpreterException(
+          'SYNTAX ERROR - Invalid function name after FN',
+        );
       }
 
-      functionName = 'FN' + String.fromCharCode(_getCurrentChar()).toUpperCase();
+      functionName =
+          'FN' + String.fromCharCode(_getCurrentChar()).toUpperCase();
       _advanceTextPointer();
     } else if (_textPointer + 1 < _currentLine.length &&
-               _getCurrentChar() == 70 && // 'F'
-               _currentLine[_textPointer + 1] == 78) { // 'N'
+        _getCurrentChar() == 70 && // 'F'
+        _currentLine[_textPointer + 1] == 78) {
+      // 'N'
       // Case 2: FN is stored as individual characters
       _advanceTextPointer(); // Skip 'F'
       _advanceTextPointer(); // Skip 'N'
 
-      if (_textPointer >= _currentLine.length || !_isLetter(_getCurrentChar())) {
-        throw InterpreterException('SYNTAX ERROR - Invalid function name after FN');
+      if (_textPointer >= _currentLine.length ||
+          !_isLetter(_getCurrentChar())) {
+        throw InterpreterException(
+          'SYNTAX ERROR - Invalid function name after FN',
+        );
       }
 
-      functionName = 'FN' + String.fromCharCode(_getCurrentChar()).toUpperCase();
+      functionName =
+          'FN' + String.fromCharCode(_getCurrentChar()).toUpperCase();
       _advanceTextPointer();
     } else {
       throw InterpreterException('SYNTAX ERROR - Expected FN after DEF');
     }
 
     bool isStringFunction = false;
-    if (_textPointer < _currentLine.length && _getCurrentChar() == 36) { // $ character
+    if (_textPointer < _currentLine.length && _getCurrentChar() == 36) {
+      // $ character
       isStringFunction = true;
       functionName += '\$';
       _advanceTextPointer();
@@ -1963,8 +2128,11 @@ class Interpreter {
     _skipSpaces();
 
     // Expect opening parenthesis
-    if (_textPointer >= _currentLine.length || _getCurrentChar() != 40) { // (
-      throw InterpreterException('SYNTAX ERROR - Expected ( after function name');
+    if (_textPointer >= _currentLine.length || _getCurrentChar() != 40) {
+      // (
+      throw InterpreterException(
+        'SYNTAX ERROR - Expected ( after function name',
+      );
     }
     _advanceTextPointer(); // Skip (
 
@@ -1979,7 +2147,8 @@ class Interpreter {
     _advanceTextPointer();
 
     // Check for string parameter
-    if (_textPointer < _currentLine.length && _getCurrentChar() == 36) { // $ character
+    if (_textPointer < _currentLine.length && _getCurrentChar() == 36) {
+      // $ character
       parameter += '\$';
       _advanceTextPointer();
     }
@@ -1987,7 +2156,8 @@ class Interpreter {
     _skipSpaces();
 
     // Expect closing parenthesis
-    if (_textPointer >= _currentLine.length || _getCurrentChar() != 41) { // )
+    if (_textPointer >= _currentLine.length || _getCurrentChar() != 41) {
+      // )
       throw InterpreterException('SYNTAX ERROR - Expected ) after parameter');
     }
     _advanceTextPointer(); // Skip )
@@ -1995,8 +2165,11 @@ class Interpreter {
     _skipSpaces();
 
     // Expect equals sign
-    if (_textPointer >= _currentLine.length || _getCurrentChar() != Tokenizer.equalToken) {
-      throw InterpreterException('SYNTAX ERROR - Expected = after parameter list');
+    if (_textPointer >= _currentLine.length ||
+        _getCurrentChar() != Tokenizer.equalToken) {
+      throw InterpreterException(
+        'SYNTAX ERROR - Expected = after parameter list',
+      );
     }
     _advanceTextPointer(); // Skip =
 
@@ -2069,8 +2242,8 @@ class Interpreter {
 /// Execution state of the interpreter
 enum ExecutionState {
   immediate, // Direct mode - executing immediate commands
-  program,   // Program mode - executing stored program
-  stopped    // Stopped - exit interpreter
+  program, // Program mode - executing stored program
+  stopped, // Stopped - exit interpreter
 }
 
 /// Exception thrown by interpreter

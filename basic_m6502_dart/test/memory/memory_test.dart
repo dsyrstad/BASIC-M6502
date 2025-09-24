@@ -25,12 +25,21 @@ void main() {
         expect(() => memory.readByte(-1), throwsA(isA<MemoryException>()));
         expect(() => memory.readByte(65536), throwsA(isA<MemoryException>()));
         expect(() => memory.writeByte(-1, 0), throwsA(isA<MemoryException>()));
-        expect(() => memory.writeByte(65536, 0), throwsA(isA<MemoryException>()));
+        expect(
+          () => memory.writeByte(65536, 0),
+          throwsA(isA<MemoryException>()),
+        );
       });
 
       test('should throw on invalid byte value', () {
-        expect(() => memory.writeByte(0x1000, -1), throwsA(isA<MemoryException>()));
-        expect(() => memory.writeByte(0x1000, 256), throwsA(isA<MemoryException>()));
+        expect(
+          () => memory.writeByte(0x1000, -1),
+          throwsA(isA<MemoryException>()),
+        );
+        expect(
+          () => memory.writeByte(0x1000, 256),
+          throwsA(isA<MemoryException>()),
+        );
       });
     });
 
@@ -53,12 +62,21 @@ void main() {
       test('should throw on invalid word address', () {
         expect(() => memory.readWord(-1), throwsA(isA<MemoryException>()));
         expect(() => memory.readWord(65535), throwsA(isA<MemoryException>()));
-        expect(() => memory.writeWord(65535, 0), throwsA(isA<MemoryException>()));
+        expect(
+          () => memory.writeWord(65535, 0),
+          throwsA(isA<MemoryException>()),
+        );
       });
 
       test('should throw on invalid word value', () {
-        expect(() => memory.writeWord(0x1000, -1), throwsA(isA<MemoryException>()));
-        expect(() => memory.writeWord(0x1000, 0x10000), throwsA(isA<MemoryException>()));
+        expect(
+          () => memory.writeWord(0x1000, -1),
+          throwsA(isA<MemoryException>()),
+        );
+        expect(
+          () => memory.writeWord(0x1000, 0x10000),
+          throwsA(isA<MemoryException>()),
+        );
       });
     });
 
@@ -67,7 +85,10 @@ void main() {
         const testStr = 'HELLO WORLD';
         memory.writeString(0x2000, testStr);
         expect(memory.readString(0x2000), equals(testStr));
-        expect(memory.readByte(0x2000 + testStr.length), equals(0)); // Null terminator
+        expect(
+          memory.readByte(0x2000 + testStr.length),
+          equals(0),
+        ); // Null terminator
       });
 
       test('should handle empty strings', () {
@@ -130,10 +151,22 @@ void main() {
       });
 
       test('should throw on invalid block operations', () {
-        expect(() => memory.copyBlock(-1, 0, 10), throwsA(isA<MemoryException>()));
-        expect(() => memory.copyBlock(0, 65530, 10), throwsA(isA<MemoryException>()));
-        expect(() => memory.fillBlock(65530, 10, 0), throwsA(isA<MemoryException>()));
-        expect(() => memory.fillBlock(0, 10, 256), throwsA(isA<MemoryException>()));
+        expect(
+          () => memory.copyBlock(-1, 0, 10),
+          throwsA(isA<MemoryException>()),
+        );
+        expect(
+          () => memory.copyBlock(0, 65530, 10),
+          throwsA(isA<MemoryException>()),
+        );
+        expect(
+          () => memory.fillBlock(65530, 10, 0),
+          throwsA(isA<MemoryException>()),
+        );
+        expect(
+          () => memory.fillBlock(0, 10, 256),
+          throwsA(isA<MemoryException>()),
+        );
       });
     });
 
@@ -159,7 +192,10 @@ void main() {
 
         final dump = memory.hexDump(0x1000, 16);
         expect(dump, contains('1000:'));
-        expect(dump, contains('48 65 6c 6c 6f 20 57 6f 72 6c 64 21')); // "Hello World!" in hex
+        expect(
+          dump,
+          contains('48 65 6c 6c 6f 20 57 6f 72 6c 64 21'),
+        ); // "Hello World!" in hex
         expect(dump, contains('Hello World!'));
       });
 

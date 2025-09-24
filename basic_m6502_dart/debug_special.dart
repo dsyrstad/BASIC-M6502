@@ -13,7 +13,14 @@ void main() {
   final expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer);
   final programStorage = ProgramStorage(memory);
   final runtimeStack = RuntimeStack(memory, variables);
-  final interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack);
+  final interpreter = Interpreter(
+    memory,
+    tokenizer,
+    variables,
+    expressionEvaluator,
+    programStorage,
+    runtimeStack,
+  );
 
   // Initialize variable storage
   variables.initialize(0x2000);

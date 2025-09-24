@@ -101,8 +101,10 @@ void main() {
         expect(tokens[1], equals(32)); // Space
         expect(tokens[2], equals(34)); // Quote
         // The words inside quotes should not be tokenized
-        expect(String.fromCharCodes(tokens.sublist(3, 16)),
-            equals('FOR NEXT GOTO'));
+        expect(
+          String.fromCharCodes(tokens.sublist(3, 16)),
+          equals('FOR NEXT GOTO'),
+        );
         expect(tokens[16], equals(34)); // Quote
       });
 
@@ -110,15 +112,19 @@ void main() {
         final tokens = tokenizer.tokenizeLine('REM THIS IS A COMMENT FOR NEXT');
         expect(tokens[0], equals(Tokenizer.remToken));
         // Everything after REM should be literal
-        expect(String.fromCharCodes(tokens.sublist(1)),
-            equals(' THIS IS A COMMENT FOR NEXT'));
+        expect(
+          String.fromCharCodes(tokens.sublist(1)),
+          equals(' THIS IS A COMMENT FOR NEXT'),
+        );
       });
 
       test('should not tokenize DATA items until colon', () {
         final tokens = tokenizer.tokenizeLine('DATA FOR,NEXT,GOTO:PRINT');
         expect(tokens[0], equals(Tokenizer.dataToken));
         // Items after DATA should be literal until and including colon
-        final dataSection = String.fromCharCodes(tokens.sublist(1, tokens.length - 1));
+        final dataSection = String.fromCharCodes(
+          tokens.sublist(1, tokens.length - 1),
+        );
         expect(dataSection, equals(' FOR,NEXT,GOTO:'));
         expect(tokens.last, equals(Tokenizer.printToken));
       });
@@ -227,7 +233,10 @@ void main() {
         expect(tokenizer.isSingleArgFunction(Tokenizer.cosToken), isTrue);
         expect(tokenizer.isSingleArgFunction(Tokenizer.absToken), isTrue);
         expect(tokenizer.isSingleArgFunction(Tokenizer.chrDollarToken), isTrue);
-        expect(tokenizer.isSingleArgFunction(Tokenizer.leftDollarToken), isFalse);
+        expect(
+          tokenizer.isSingleArgFunction(Tokenizer.leftDollarToken),
+          isFalse,
+        );
         expect(tokenizer.isSingleArgFunction(Tokenizer.printToken), isFalse);
       });
 

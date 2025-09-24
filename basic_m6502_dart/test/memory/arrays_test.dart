@@ -13,11 +13,11 @@ void main() {
       arrayManager = ArrayManager(memory);
 
       // Set up basic memory layout
-      memory.writeWord(Memory.vartab, 0x0800);  // Variable table at 0x0800
-      memory.writeWord(Memory.arytab, 0x0800);  // Array table starts same place
-      memory.writeWord(Memory.strend, 0x0800);  // String end at array table
-      memory.writeWord(Memory.fretop, 0x8000);  // String space at 32KB
-      memory.writeWord(Memory.memsiz, 0x8000);  // Top of memory at 32KB
+      memory.writeWord(Memory.vartab, 0x0800); // Variable table at 0x0800
+      memory.writeWord(Memory.arytab, 0x0800); // Array table starts same place
+      memory.writeWord(Memory.strend, 0x0800); // String end at array table
+      memory.writeWord(Memory.fretop, 0x8000); // String space at 32KB
+      memory.writeWord(Memory.memsiz, 0x8000); // Top of memory at 32KB
     });
 
     group('Array Creation', () {
@@ -62,7 +62,7 @@ void main() {
 
         expect(
           () => arrayManager.createArray('A', [20]),
-          throwsA(isA<ArrayException>())
+          throwsA(isA<ArrayException>()),
         );
       });
 
@@ -71,24 +71,27 @@ void main() {
 
         expect(
           () => arrayManager.createArray('A', dimensions),
-          throwsA(isA<ArrayException>())
+          throwsA(isA<ArrayException>()),
         );
       });
 
       test('throws error for invalid dimension size', () {
         expect(
           () => arrayManager.createArray('A', [-1]),
-          throwsA(isA<ArrayException>())
+          throwsA(isA<ArrayException>()),
         );
 
         expect(
           () => arrayManager.createArray('A', [100000]),
-          throwsA(isA<ArrayException>())
+          throwsA(isA<ArrayException>()),
         );
       });
 
       test('handles maximum dimensions', () {
-        final dimensions = List.filled(10, 1); // Exactly maxDimensions, smaller size
+        final dimensions = List.filled(
+          10,
+          1,
+        ); // Exactly maxDimensions, smaller size
 
         final descriptor = arrayManager.createArray('A', dimensions);
         expect(descriptor.dimensionCount, equals(10));
@@ -144,7 +147,8 @@ void main() {
         expect(addr00, equals(descriptor.address + descriptor.dataOffset));
 
         // Last element should be at offset (3*5 + 4) * 4 = 76 bytes from start
-        final expectedLast = descriptor.address + descriptor.dataOffset + (19 * 4);
+        final expectedLast =
+            descriptor.address + descriptor.dataOffset + (19 * 4);
         expect(addr34, equals(expectedLast));
       });
 
@@ -154,25 +158,25 @@ void main() {
         // Valid indices
         expect(
           () => arrayManager.getElementAddress(descriptor, [0, 0]),
-          returnsNormally
+          returnsNormally,
         );
         expect(
           () => arrayManager.getElementAddress(descriptor, [5, 10]),
-          returnsNormally
+          returnsNormally,
         );
 
         // Invalid indices
         expect(
           () => arrayManager.getElementAddress(descriptor, [6, 5]),
-          throwsA(isA<ArrayException>())
+          throwsA(isA<ArrayException>()),
         );
         expect(
           () => arrayManager.getElementAddress(descriptor, [-1, 5]),
-          throwsA(isA<ArrayException>())
+          throwsA(isA<ArrayException>()),
         );
         expect(
           () => arrayManager.getElementAddress(descriptor, [3, 11]),
-          throwsA(isA<ArrayException>())
+          throwsA(isA<ArrayException>()),
         );
       });
 
@@ -181,11 +185,11 @@ void main() {
 
         expect(
           () => arrayManager.getElementAddress(descriptor, [1, 2]),
-          throwsA(isA<ArrayException>())
+          throwsA(isA<ArrayException>()),
         );
         expect(
           () => arrayManager.getElementAddress(descriptor, [1, 2, 3, 4]),
-          throwsA(isA<ArrayException>())
+          throwsA(isA<ArrayException>()),
         );
       });
     });
@@ -195,7 +199,10 @@ void main() {
         final descriptor = arrayManager.createArray('N', [3, 3]);
 
         // Set a value
-        arrayManager.setArrayElement(descriptor, [1, 2], const NumericValue(42.5));
+        arrayManager.setArrayElement(descriptor, [
+          1,
+          2,
+        ], const NumericValue(42.5));
 
         // Read it back
         final value = arrayManager.getArrayElement(descriptor, [1, 2]);
@@ -218,18 +225,24 @@ void main() {
 
       test('handles type mismatch errors', () {
         final numericArray = arrayManager.createArray('N', [5]);
-        final stringArray = arrayManager.createArray('S\$', [5], isString: true);
+        final stringArray = arrayManager.createArray('S\$', [
+          5,
+        ], isString: true);
 
         // Try to assign string to numeric array
         expect(
-          () => arrayManager.setArrayElement(numericArray, [0], const StringValue('test')),
-          throwsA(isA<ArrayException>())
+          () => arrayManager.setArrayElement(numericArray, [
+            0,
+          ], const StringValue('test')),
+          throwsA(isA<ArrayException>()),
         );
 
         // Try to assign numeric to string array
         expect(
-          () => arrayManager.setArrayElement(stringArray, [0], const NumericValue(42)),
-          throwsA(isA<ArrayException>())
+          () => arrayManager.setArrayElement(stringArray, [
+            0,
+          ], const NumericValue(42)),
+          throwsA(isA<ArrayException>()),
         );
       });
 
@@ -238,8 +251,10 @@ void main() {
 
         // String array assignment is not fully implemented yet
         expect(
-          () => arrayManager.setArrayElement(descriptor, [0], const StringValue('test')),
-          throwsA(isA<ArrayException>())
+          () => arrayManager.setArrayElement(descriptor, [
+            0,
+          ], const StringValue('test')),
+          throwsA(isA<ArrayException>()),
         );
       });
     });
@@ -257,7 +272,10 @@ void main() {
 
         // Check properties
         expect(arrayManager.findArray('A').descriptor!.dimensions, equals([5]));
-        expect(arrayManager.findArray('B').descriptor!.dimensions, equals([10, 3]));
+        expect(
+          arrayManager.findArray('B').descriptor!.dimensions,
+          equals([10, 3]),
+        );
         expect(arrayManager.findArray('C\$').descriptor!.isString, isTrue);
       });
 
@@ -307,7 +325,7 @@ void main() {
         // Try to create a large array
         expect(
           () => arrayManager.createArray('BIG', [100, 100]),
-          throwsA(isA<ArrayException>())
+          throwsA(isA<ArrayException>()),
         );
       });
     });
@@ -349,13 +367,13 @@ void main() {
         // Should be able to access element [0]
         expect(
           () => arrayManager.getElementAddress(descriptor, [0]),
-          returnsNormally
+          returnsNormally,
         );
 
         // Should not be able to access element [1]
         expect(
           () => arrayManager.getElementAddress(descriptor, [1]),
-          throwsA(isA<ArrayException>())
+          throwsA(isA<ArrayException>()),
         );
       });
 
@@ -370,7 +388,7 @@ void main() {
       test('validates array name format', () {
         expect(
           () => arrayManager.createArray('', [5]),
-          throwsA(isA<ArrayException>())
+          throwsA(isA<ArrayException>()),
         );
 
         // Long names are allowed - only first 2 chars are used
@@ -383,8 +401,14 @@ void main() {
         final descriptor2 = arrayManager.createArray('B', [3, 3]);
 
         // Set values in both arrays
-        arrayManager.setArrayElement(descriptor1, [1, 1], const NumericValue(11));
-        arrayManager.setArrayElement(descriptor2, [1, 1], const NumericValue(22));
+        arrayManager.setArrayElement(descriptor1, [
+          1,
+          1,
+        ], const NumericValue(11));
+        arrayManager.setArrayElement(descriptor2, [
+          1,
+          1,
+        ], const NumericValue(22));
 
         // Check that values are independent
         final value1 = arrayManager.getArrayElement(descriptor1, [1, 1]);

@@ -103,13 +103,19 @@ class ArrayManager {
   }
 
   /// Create a new array (DIM statement)
-  ArrayDescriptor createArray(String name, List<int> dimensions, {bool isString = false}) {
+  ArrayDescriptor createArray(
+    String name,
+    List<int> dimensions, {
+    bool isString = false,
+  }) {
     if (name.isEmpty) {
       throw ArrayException('Invalid array name: $name');
     }
 
     if (dimensions.isEmpty || dimensions.length > maxDimensions) {
-      throw ArrayException('Invalid number of dimensions: ${dimensions.length}');
+      throw ArrayException(
+        'Invalid number of dimensions: ${dimensions.length}',
+      );
     }
 
     // For creation, use first 2 characters of name
@@ -138,7 +144,9 @@ class ArrayManager {
     }
 
     // Calculate storage requirements
-    final elementSize = isString ? 3 : 4; // String descriptors vs numeric values
+    final elementSize = isString
+        ? 3
+        : 4; // String descriptors vs numeric values
     final dataSize = totalElements * elementSize;
     final extentsSize = dimensions.length * dimensionExtentSize;
     final totalSize = descriptorHeaderSize + extentsSize + dataSize;
@@ -169,11 +177,7 @@ class ArrayManager {
     _writeArrayDescriptor(currentEnd, descriptor);
 
     // Initialize array data to zero
-    memory.fillBlock(
-      currentEnd + descriptor.dataOffset,
-      dataSize,
-      0
-    );
+    memory.fillBlock(currentEnd + descriptor.dataOffset, dataSize, 0);
 
     // Update string end pointer
     _stringEnd = newEnd;
@@ -185,7 +189,7 @@ class ArrayManager {
   int getElementAddress(ArrayDescriptor descriptor, List<int> indices) {
     if (indices.length != descriptor.dimensionCount) {
       throw ArrayException(
-        'Wrong number of indices: got ${indices.length}, expected ${descriptor.dimensionCount}'
+        'Wrong number of indices: got ${indices.length}, expected ${descriptor.dimensionCount}',
       );
     }
 
@@ -193,7 +197,7 @@ class ArrayManager {
     for (int i = 0; i < indices.length; i++) {
       if (indices[i] < 0 || indices[i] > descriptor.dimensions[i]) {
         throw ArrayException(
-          'Index out of bounds: ${indices[i]} not in range 0..${descriptor.dimensions[i]}'
+          'Index out of bounds: ${indices[i]} not in range 0..${descriptor.dimensions[i]}',
         );
       }
     }
@@ -207,7 +211,9 @@ class ArrayManager {
       multiplier *= (descriptor.dimensions[i] + 1);
     }
 
-    return descriptor.address + descriptor.dataOffset + (linearIndex * descriptor.elementSize);
+    return descriptor.address +
+        descriptor.dataOffset +
+        (linearIndex * descriptor.elementSize);
   }
 
   /// Read array element value
@@ -244,7 +250,11 @@ class ArrayManager {
   }
 
   /// Set array element value
-  void setArrayElement(ArrayDescriptor descriptor, List<int> indices, VariableValue value) {
+  void setArrayElement(
+    ArrayDescriptor descriptor,
+    List<int> indices,
+    VariableValue value,
+  ) {
     final elementAddr = getElementAddress(descriptor, indices);
 
     if (descriptor.isString && value is StringValue) {
@@ -282,10 +292,7 @@ class ArrayManager {
   /// Read array descriptor from memory
   ArrayDescriptor _readArrayDescriptor(int address) {
     // Read name (2 bytes)
-    final nameBytes = [
-      memory.readByte(address),
-      memory.readByte(address + 1)
-    ];
+    final nameBytes = [memory.readByte(address), memory.readByte(address + 1)];
 
     // Read total size (2 bytes)
     final totalSize = memory.readWord(address + 2);
@@ -304,7 +311,8 @@ class ArrayManager {
     final isString = (nameBytes[1] & 0x80) != 0;
 
     final elementSize = isString ? 3 : 4;
-    final dataOffset = descriptorHeaderSize + (dimensionCount * dimensionExtentSize);
+    final dataOffset =
+        descriptorHeaderSize + (dimensionCount * dimensionExtentSize);
 
     return ArrayDescriptor(
       address: address,
@@ -332,7 +340,8 @@ class ArrayManager {
 
     // Write dimension extents
     for (int i = 0; i < descriptor.dimensionCount; i++) {
-      final extent = descriptor.dimensions[i] + 1; // Convert from max index to extent
+      final extent =
+          descriptor.dimensions[i] + 1; // Convert from max index to extent
       memory.writeWord(address + 5 + (i * 2), extent);
     }
   }
@@ -370,10 +379,8 @@ class ArrayManager {
   /// Convert bytes to double (simplified)
   double _bytesToDouble(List<int> bytes) {
     // TODO: Implement proper Microsoft 5-byte float format
-    final intValue = bytes[0] |
-                    (bytes[1] << 8) |
-                    (bytes[2] << 16) |
-                    (bytes[3] << 24);
+    final intValue =
+        bytes[0] | (bytes[1] << 8) | (bytes[2] << 16) | (bytes[3] << 24);
     return intValue / 1000.0;
   }
 
@@ -428,14 +435,14 @@ class ArrayManager {
 
 /// Array descriptor matching Microsoft BASIC format
 class ArrayDescriptor {
-  final int address;           // Address in memory
-  final List<int> nameBytes;   // Variable name as bytes
-  final int totalSize;         // Total size in memory
-  final int dimensionCount;    // Number of dimensions
-  final List<int> dimensions;  // Size of each dimension (max indices)
-  final bool isString;         // True if string array
-  final int elementSize;       // Size of each element in bytes
-  final int dataOffset;        // Offset to array data
+  final int address; // Address in memory
+  final List<int> nameBytes; // Variable name as bytes
+  final int totalSize; // Total size in memory
+  final int dimensionCount; // Number of dimensions
+  final List<int> dimensions; // Size of each dimension (max indices)
+  final bool isString; // True if string array
+  final int elementSize; // Size of each element in bytes
+  final int dataOffset; // Offset to array data
 
   const ArrayDescriptor({
     required this.address,
@@ -453,7 +460,8 @@ class ArrayDescriptor {
     final buffer = StringBuffer();
     for (int i = 0; i < 2; i++) {
       final byte = nameBytes[i] & 0x7F; // Clear high bit
-      if (byte != 0 && byte != 32) { // Skip null and space
+      if (byte != 0 && byte != 32) {
+        // Skip null and space
         buffer.writeCharCode(byte);
       } else {
         break; // Stop at first space or null
@@ -465,7 +473,7 @@ class ArrayDescriptor {
   @override
   String toString() {
     return 'ArrayDescriptor(name: $name, dimensions: $dimensions, '
-           'isString: $isString, size: $totalSize)';
+        'isString: $isString, size: $totalSize)';
   }
 }
 
@@ -503,7 +511,7 @@ class ArrayMemoryInfo {
   @override
   String toString() {
     return 'ArrayMemoryInfo(arrays: $totalArrays, elements: $totalElements, '
-           'used: $memoryUsed bytes, available: $availableSpace bytes)';
+        'used: $memoryUsed bytes, available: $availableSpace bytes)';
   }
 }
 

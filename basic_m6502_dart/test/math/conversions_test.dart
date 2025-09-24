@@ -261,7 +261,9 @@ void main() {
         for (var value in testValues) {
           var floatBytes = MicrosoftFloat.pack(value);
           var stringResult = NumberConversions.floatToString(floatBytes);
-          var backToFloat = NumberConversions.stringToFloat(stringResult.trim());
+          var backToFloat = NumberConversions.stringToFloat(
+            stringResult.trim(),
+          );
           var finalValue = MicrosoftFloat.unpack(backToFloat);
 
           expect(finalValue, closeTo(value, value.abs() * 1E-6 + 1E-10));

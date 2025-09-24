@@ -26,10 +26,24 @@ void main() {
     programStorage = ProgramStorage(memory);
     runtimeStack = RuntimeStack(memory, variables);
     tokenizer = Tokenizer();
-    expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer, userFunctions);
+    expressionEvaluator = ExpressionEvaluator(
+      memory,
+      variables,
+      tokenizer,
+      userFunctions,
+    );
     screen = Screen();
     userFunctions = UserFunctionStorage();
-    interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen, userFunctions);
+    interpreter = Interpreter(
+      memory,
+      tokenizer,
+      variables,
+      expressionEvaluator,
+      programStorage,
+      runtimeStack,
+      screen,
+      userFunctions,
+    );
   });
 
   group('GOSUB/RETURN Tests', () {
@@ -61,7 +75,10 @@ void main() {
       // Note: We'll need to modify how we capture print output for proper testing
       // For now, just verify the program structure is correct
 
-      expect(programStorage.getAllLineNumbers(), equals([10, 20, 30, 40, 100, 110]));
+      expect(
+        programStorage.getAllLineNumbers(),
+        equals([10, 20, 30, 40, 100, 110]),
+      );
     });
 
     test('Nested GOSUB calls', () {
@@ -89,7 +106,10 @@ void main() {
       interpreter.executeLine('310 RETURN');
 
       // Verify program is stored correctly
-      expect(programStorage.getAllLineNumbers(), equals([10, 20, 30, 40, 200, 210, 220, 230, 300, 310]));
+      expect(
+        programStorage.getAllLineNumbers(),
+        equals([10, 20, 30, 40, 200, 210, 220, 230, 300, 310]),
+      );
     });
 
     test('RETURN without GOSUB should handle error gracefully', () {
@@ -136,7 +156,10 @@ void main() {
       interpreter.executeLine('210 RETURN');
 
       // Verify program structure
-      expect(programStorage.getAllLineNumbers(), equals([10, 20, 30, 100, 110, 200, 210]));
+      expect(
+        programStorage.getAllLineNumbers(),
+        equals([10, 20, 30, 100, 110, 200, 210]),
+      );
     });
 
     test('GOSUB with variables should preserve variable state', () {
@@ -156,7 +179,10 @@ void main() {
       interpreter.executeLine('110 RETURN');
 
       // Verify program structure
-      expect(programStorage.getAllLineNumbers(), equals([10, 20, 30, 40, 100, 110]));
+      expect(
+        programStorage.getAllLineNumbers(),
+        equals([10, 20, 30, 40, 100, 110]),
+      );
     });
 
     test('Stack depth validation', () {
@@ -188,7 +214,10 @@ void main() {
       interpreter.executeLine('110 RETURN');
 
       // Verify program structure
-      expect(programStorage.getAllLineNumbers(), equals([10, 20, 30, 40, 100, 110]));
+      expect(
+        programStorage.getAllLineNumbers(),
+        equals([10, 20, 30, 40, 100, 110]),
+      );
     });
 
     test('RETURN should not interfere with FOR loop stack', () {

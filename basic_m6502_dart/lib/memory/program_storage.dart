@@ -55,7 +55,11 @@ class ProgramStorage {
 
     if (insertInfo.existingLineAddress != -1) {
       // Replace existing line
-      _replaceLine(insertInfo.existingLineAddress, lineNumber, tokenizedContent);
+      _replaceLine(
+        insertInfo.existingLineAddress,
+        lineNumber,
+        tokenizedContent,
+      );
     } else {
       // Insert new line
       _insertLine(insertInfo.insertAddress, lineNumber, tokenizedContent);
@@ -125,7 +129,10 @@ class ProgramStorage {
   }
 
   /// Get formatted line for display (line number + detokenized content)
-  String getLineForDisplay(int lineNumber, String Function(List<int>) detokenizer) {
+  String getLineForDisplay(
+    int lineNumber,
+    String Function(List<int>) detokenizer,
+  ) {
     final content = getLineContent(lineNumber);
     final detokenizedContent = detokenizer(content);
     return '$lineNumber $detokenizedContent';
@@ -365,7 +372,8 @@ class ProgramStorage {
       while (memory.readByte(lineEnd) != 0) {
         lineEnd++;
       }
-      final lineLength = lineEnd - currentAddress + 1; // Include null terminator
+      final lineLength =
+          lineEnd - currentAddress + 1; // Include null terminator
 
       // Write line length (2 bytes)
       programData.add(lineLength & 0xFF);
@@ -406,7 +414,9 @@ class ProgramStorage {
     while (index < programData.length - 1) {
       // Check for buffer overflow
       if (index + 1 >= programData.length) {
-        throw ProgramStorageException('Invalid program format - unexpected end of data');
+        throw ProgramStorageException(
+          'Invalid program format - unexpected end of data',
+        );
       }
 
       // Read line length
@@ -420,7 +430,9 @@ class ProgramStorage {
 
       // Validate line length
       if (lineLength < 4) {
-        throw ProgramStorageException('Invalid program format - line too short');
+        throw ProgramStorageException(
+          'Invalid program format - line too short',
+        );
       }
 
       if (lineLength > 255) {
@@ -429,7 +441,9 @@ class ProgramStorage {
 
       // Check if we have enough data for this line
       if (index + lineLength - 2 > programData.length) {
-        throw ProgramStorageException('Invalid program format - line data exceeds file size');
+        throw ProgramStorageException(
+          'Invalid program format - line data exceeds file size',
+        );
       }
 
       // Read line number
@@ -445,10 +459,13 @@ class ProgramStorage {
       final content = <int>[];
       for (int i = 0; i < lineLength - 4; i++) {
         if (index >= programData.length) {
-          throw ProgramStorageException('Invalid program format - line content truncated');
+          throw ProgramStorageException(
+            'Invalid program format - line content truncated',
+          );
         }
         final byte = programData[index++];
-        if (byte != 0) { // Skip null terminator
+        if (byte != 0) {
+          // Skip null terminator
           content.add(byte);
         }
       }
@@ -481,7 +498,7 @@ class ProgramStorage {
 
 /// Information about where to insert a line
 class _LineInsertionInfo {
-  final int insertAddress;     // Where to insert/replace
+  final int insertAddress; // Where to insert/replace
   final int existingLineAddress; // -1 if new line, address if replacing
 
   _LineInsertionInfo(this.insertAddress, this.existingLineAddress);

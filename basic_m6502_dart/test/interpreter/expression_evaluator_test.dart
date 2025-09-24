@@ -18,7 +18,12 @@ void main() {
       variables = VariableStorage(memory);
       tokenizer = Tokenizer();
       userFunctions = UserFunctionStorage();
-      evaluator = ExpressionEvaluator(memory, variables, tokenizer, userFunctions);
+      evaluator = ExpressionEvaluator(
+        memory,
+        variables,
+        tokenizer,
+        userFunctions,
+      );
 
       // Initialize variable storage
       variables.initialize(0x0800);
@@ -200,7 +205,7 @@ void main() {
       final tokens = tokenizer.tokenizeLine('5 / 0');
       expect(
         () => evaluator.evaluateExpression(tokens, 0),
-        throwsA(isA<ExpressionException>())
+        throwsA(isA<ExpressionException>()),
       );
     });
 
@@ -208,19 +213,19 @@ void main() {
       final tokens = tokenizer.tokenizeLine('"STRING" * 5');
       expect(
         () => evaluator.evaluateExpression(tokens, 0),
-        throwsA(isA<ExpressionException>())
+        throwsA(isA<ExpressionException>()),
       );
     });
 
     test('should handle syntax errors', () {
       expect(
         () => evaluator.evaluateExpression(tokenizer.tokenizeLine('5 +'), 0),
-        throwsA(isA<ExpressionException>())
+        throwsA(isA<ExpressionException>()),
       );
 
       expect(
         () => evaluator.evaluateExpression(tokenizer.tokenizeLine('(5'), 0),
-        throwsA(isA<ExpressionException>())
+        throwsA(isA<ExpressionException>()),
       );
     });
 
@@ -232,7 +237,10 @@ void main() {
       final result = evaluator.evaluateExpression(tokens, 0);
 
       expect(result.value, isA<NumericValue>());
-      expect((result.value as NumericValue).value, equals(11.0)); // 2 * 3 + 10 / 2 = 6 + 5 = 11
+      expect(
+        (result.value as NumericValue).value,
+        equals(11.0),
+      ); // 2 * 3 + 10 / 2 = 6 + 5 = 11
     });
   });
 }

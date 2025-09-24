@@ -25,12 +25,26 @@ void main() {
       memory = Memory();
       tokenizer = Tokenizer();
       variables = VariableStorage(memory);
-      expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer, userFunctions);
+      expressionEvaluator = ExpressionEvaluator(
+        memory,
+        variables,
+        tokenizer,
+        userFunctions,
+      );
       programStorage = ProgramStorage(memory);
       runtimeStack = RuntimeStack(memory, variables);
       screen = Screen();
       userFunctions = UserFunctionStorage();
-      interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen, userFunctions);
+      interpreter = Interpreter(
+        memory,
+        tokenizer,
+        variables,
+        expressionEvaluator,
+        programStorage,
+        runtimeStack,
+        screen,
+        userFunctions,
+      );
 
       // Initialize variable storage
       variables.initialize(0x2000);
@@ -79,7 +93,10 @@ void main() {
       final varA = variables.getVariable('A');
       final varB = variables.getVariable('B\$');
       expect((varA as NumericValue).value, equals(42.0)); // Set by program
-      expect((varB as StringValue).value, equals('')); // Cleared and not set by program
+      expect(
+        (varB as StringValue).value,
+        equals(''),
+      ); // Cleared and not set by program
     });
 
     test('should reset runtime stack before running', () {
@@ -97,7 +114,10 @@ void main() {
       // The FOR loop should have completed successfully
       final varI = variables.getVariable('I');
       expect(varI, isA<NumericValue>());
-      expect((varI as NumericValue).value, equals(4.0)); // After loop completion
+      expect(
+        (varI as NumericValue).value,
+        equals(4.0),
+      ); // After loop completion
     });
 
     test('should run program from specified line number', () {
@@ -115,7 +135,10 @@ void main() {
       // Variable should be set by line 20 and 30, not line 10
       final varA = variables.getVariable('A');
       expect(varA, isA<NumericValue>());
-      expect((varA as NumericValue).value, equals(3.0)); // Set by lines 20 and 30
+      expect(
+        (varA as NumericValue).value,
+        equals(3.0),
+      ); // Set by lines 20 and 30
     });
 
     test('should handle RUN with non-existent line number', () {
@@ -124,7 +147,10 @@ void main() {
       programStorage.storeLine(10, tokens1);
 
       // Try to run from a line that doesn't exist
-      expect(() => interpreter.executeLine('RUN 50'), throwsA(isA<InterpreterException>()));
+      expect(
+        () => interpreter.executeLine('RUN 50'),
+        throwsA(isA<InterpreterException>()),
+      );
     });
 
     test('should handle empty program', () {
@@ -138,7 +164,9 @@ void main() {
       programStorage.storeLine(10, tokens1);
       final tokens2 = tokenizer.tokenizeLine('GOTO 40');
       programStorage.storeLine(20, tokens2);
-      final tokens3 = tokenizer.tokenizeLine('A = 99'); // This should be skipped
+      final tokens3 = tokenizer.tokenizeLine(
+        'A = 99',
+      ); // This should be skipped
       programStorage.storeLine(30, tokens3);
       final tokens4 = tokenizer.tokenizeLine('B = 20');
       programStorage.storeLine(40, tokens4);
@@ -170,7 +198,10 @@ void main() {
       // Run again
       interpreter.executeLine('RUN');
       final varA2 = variables.getVariable('A');
-      expect((varA2 as NumericValue).value, equals(20.0)); // Should use new value
+      expect(
+        (varA2 as NumericValue).value,
+        equals(20.0),
+      ); // Should use new value
     });
   });
 }

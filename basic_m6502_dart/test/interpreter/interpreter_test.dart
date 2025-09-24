@@ -26,11 +26,25 @@ void main() {
       tokenizer = Tokenizer();
       variables = VariableStorage(memory);
       userFunctions = UserFunctionStorage();
-      expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer, userFunctions);
+      expressionEvaluator = ExpressionEvaluator(
+        memory,
+        variables,
+        tokenizer,
+        userFunctions,
+      );
       programStorage = ProgramStorage(memory);
       runtimeStack = RuntimeStack(memory, variables);
       screen = Screen();
-      interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen, userFunctions);
+      interpreter = Interpreter(
+        memory,
+        tokenizer,
+        variables,
+        expressionEvaluator,
+        programStorage,
+        runtimeStack,
+        screen,
+        userFunctions,
+      );
 
       // Initialize variable storage
       variables.initialize(0x2000);
@@ -48,8 +62,10 @@ void main() {
 
     test('should execute REM statement', () {
       // REM should not cause errors and should be ignored
-      expect(() => interpreter.executeLine('REM THIS IS A COMMENT'),
-             returnsNormally);
+      expect(
+        () => interpreter.executeLine('REM THIS IS A COMMENT'),
+        returnsNormally,
+      );
     });
 
     test('should handle empty line', () {
@@ -62,8 +78,10 @@ void main() {
 
     test('should detect program line entry', () {
       // Lines starting with numbers should be stored as program lines
-      expect(() => interpreter.executeLine('10 PRINT "HELLO"'),
-             returnsNormally);
+      expect(
+        () => interpreter.executeLine('10 PRINT "HELLO"'),
+        returnsNormally,
+      );
     });
 
     test('should handle line deletion', () {
@@ -73,8 +91,10 @@ void main() {
 
     test('should handle invalid statement', () {
       // Use a truly invalid syntax - an unknown symbol
-      expect(() => interpreter.executeLine('@#\$%'),
-             throwsA(isA<InterpreterException>()));
+      expect(
+        () => interpreter.executeLine('@#\$%'),
+        throwsA(isA<InterpreterException>()),
+      );
     });
 
     test('should reset to initial state', () {
@@ -88,14 +108,15 @@ void main() {
 
     test('should execute basic PRINT statement', () {
       // Basic PRINT should work (output goes to stdout in this implementation)
-      expect(() => interpreter.executeLine('PRINT "HELLO"'),
-             returnsNormally);
+      expect(() => interpreter.executeLine('PRINT "HELLO"'), returnsNormally);
     });
 
     test('should handle multiple statements on one line', () {
       // Statements separated by colons
-      expect(() => interpreter.executeLine('PRINT "A": PRINT "B"'),
-             returnsNormally);
+      expect(
+        () => interpreter.executeLine('PRINT "A": PRINT "B"'),
+        returnsNormally,
+      );
     });
 
     group('LET statement', () {
@@ -143,13 +164,17 @@ void main() {
       });
 
       test('should error on missing equals sign in LET', () {
-        expect(() => interpreter.executeLine('LET G 42'),
-               throwsA(isA<InterpreterException>()));
+        expect(
+          () => interpreter.executeLine('LET G 42'),
+          throwsA(isA<InterpreterException>()),
+        );
       });
 
       test('should error on invalid variable name', () {
-        expect(() => interpreter.executeLine('LET 123 = 42'),
-               throwsA(isA<InterpreterException>()));
+        expect(
+          () => interpreter.executeLine('LET 123 = 42'),
+          throwsA(isA<InterpreterException>()),
+        );
       });
 
       test('should handle different variable types', () {

@@ -13,7 +13,14 @@ void main() {
   final programStorage = ProgramStorage(memory);
   final expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer);
   final runtimeStack = RuntimeStack(memory, variables);
-  final interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack);
+  final interpreter = Interpreter(
+    memory,
+    tokenizer,
+    variables,
+    expressionEvaluator,
+    programStorage,
+    runtimeStack,
+  );
 
   print('=== Debugging INPUT tokenization ===\n');
 
@@ -32,7 +39,9 @@ void main() {
   }
 
   print('INPUT token value: ${Tokenizer.inputToken}');
-  print('isStatement(${Tokenizer.inputToken}): ${tokenizer.isStatement(Tokenizer.inputToken)}');
+  print(
+    'isStatement(${Tokenizer.inputToken}): ${tokenizer.isStatement(Tokenizer.inputToken)}',
+  );
 
   // Now test the program execution
   interpreter.executeLine('10 $testLine');

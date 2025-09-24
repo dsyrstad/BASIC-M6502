@@ -16,7 +16,14 @@ void main() {
   final runtimeStack = RuntimeStack(memory, variables);
   final tokenizer = Tokenizer();
   final expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer);
-  final interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack);
+  final interpreter = Interpreter(
+    memory,
+    tokenizer,
+    variables,
+    expressionEvaluator,
+    programStorage,
+    runtimeStack,
+  );
 
   print('Demo 1: Simple GOSUB and RETURN');
   print('Program:');

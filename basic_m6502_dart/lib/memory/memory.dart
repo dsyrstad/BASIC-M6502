@@ -38,16 +38,16 @@ class Memory {
   static const int varpnt = 0x47; // Variable pointer (2 bytes)
   static const int forpnt = 0x49; // FOR loop pointer (2 bytes)
   static const int facexp = 0x61; // Floating accumulator exponent
-  static const int facho = 0x62;  // Floating accumulator high order
+  static const int facho = 0x62; // Floating accumulator high order
   static const int facmoh = 0x63; // Floating accumulator middle order high
-  static const int facmo = 0x64;  // Floating accumulator middle order
-  static const int faclo = 0x65;  // Floating accumulator low order
+  static const int facmo = 0x64; // Floating accumulator middle order
+  static const int faclo = 0x65; // Floating accumulator low order
   static const int facsgn = 0x66; // Floating accumulator sign
   static const int argexp = 0x69; // Argument exponent
-  static const int argho = 0x6A;  // Argument high order
+  static const int argho = 0x6A; // Argument high order
   static const int argmoh = 0x6B; // Argument middle order high
-  static const int argmo = 0x6C;  // Argument middle order
-  static const int arglo = 0x6D;  // Argument low order
+  static const int argmo = 0x6C; // Argument middle order
+  static const int arglo = 0x6D; // Argument low order
   static const int argsgn = 0x6E; // Argument sign
 
   final Uint8List _memory;
@@ -68,7 +68,9 @@ class Memory {
   /// Read a single byte from memory
   int readByte(int address) {
     if (address < 0 || address >= memorySize) {
-      throw MemoryException('Invalid memory address: \$${address.toRadixString(16)}');
+      throw MemoryException(
+        'Invalid memory address: \$${address.toRadixString(16)}',
+      );
     }
     return _memory[address];
   }
@@ -76,7 +78,9 @@ class Memory {
   /// Write a single byte to memory
   void writeByte(int address, int value) {
     if (address < 0 || address >= memorySize) {
-      throw MemoryException('Invalid memory address: \$${address.toRadixString(16)}');
+      throw MemoryException(
+        'Invalid memory address: \$${address.toRadixString(16)}',
+      );
     }
     if (value < 0 || value > 255) {
       throw MemoryException('Invalid byte value: $value');
@@ -87,7 +91,9 @@ class Memory {
   /// Read a 16-bit word from memory (little-endian)
   int readWord(int address) {
     if (address < 0 || address >= memorySize - 1) {
-      throw MemoryException('Invalid word address: \$${address.toRadixString(16)}');
+      throw MemoryException(
+        'Invalid word address: \$${address.toRadixString(16)}',
+      );
     }
     return _memory[address] | (_memory[address + 1] << 8);
   }
@@ -95,7 +101,9 @@ class Memory {
   /// Write a 16-bit word to memory (little-endian)
   void writeWord(int address, int value) {
     if (address < 0 || address >= memorySize - 1) {
-      throw MemoryException('Invalid word address: \$${address.toRadixString(16)}');
+      throw MemoryException(
+        'Invalid word address: \$${address.toRadixString(16)}',
+      );
     }
     if (value < 0 || value > 0xFFFF) {
       throw MemoryException('Invalid word value: $value');
@@ -134,8 +142,10 @@ class Memory {
 
   /// Copy a block of memory
   void copyBlock(int source, int destination, int length) {
-    if (source < 0 || source + length > memorySize ||
-        destination < 0 || destination + length > memorySize) {
+    if (source < 0 ||
+        source + length > memorySize ||
+        destination < 0 ||
+        destination + length > memorySize) {
       throw MemoryException('Invalid memory block copy parameters');
     }
 
@@ -189,7 +199,9 @@ class Memory {
       // Hex bytes
       for (int j = 0; j < bytesPerLine; j++) {
         if (i + j < length) {
-          buffer.write('${_memory[address + i + j].toRadixString(16).padLeft(2, '0')} ');
+          buffer.write(
+            '${_memory[address + i + j].toRadixString(16).padLeft(2, '0')} ',
+          );
         } else {
           buffer.write('   ');
         }

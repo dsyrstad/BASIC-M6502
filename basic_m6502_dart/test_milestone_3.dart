@@ -18,11 +18,25 @@ void main() {
   final tokenizer = Tokenizer();
   final variables = VariableStorage(memory);
   final userFunctions = UserFunctionStorage();
-  final expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer, userFunctions);
+  final expressionEvaluator = ExpressionEvaluator(
+    memory,
+    variables,
+    tokenizer,
+    userFunctions,
+  );
   final programStorage = ProgramStorage(memory);
   final runtimeStack = RuntimeStack(memory, variables);
   final screen = Screen();
-  final interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen, userFunctions);
+  final interpreter = Interpreter(
+    memory,
+    tokenizer,
+    variables,
+    expressionEvaluator,
+    programStorage,
+    runtimeStack,
+    screen,
+    userFunctions,
+  );
 
   // Initialize variable storage
   variables.initialize(0x2000);
@@ -110,7 +124,6 @@ void main() {
     print('✓ Most functions work');
     print('✓ Error handling works');
     print('✓ I/O functionality works');
-
   } catch (e) {
     print('❌ Error during testing: $e');
     print('Note: Some advanced features may not be fully implemented yet');

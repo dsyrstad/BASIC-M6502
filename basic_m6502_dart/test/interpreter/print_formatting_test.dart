@@ -37,7 +37,8 @@ class MockScreen extends Screen {
   void tabToNextZone() {
     _buffer.write('<TAB_ZONE>');
     // Manually track tabs for testing
-    final nextTab = ((cursorColumn ~/ Screen.tabZoneWidth) + 1) * Screen.tabZoneWidth;
+    final nextTab =
+        ((cursorColumn ~/ Screen.tabZoneWidth) + 1) * Screen.tabZoneWidth;
     if (nextTab >= Screen.screenWidth) {
       _buffer.write('\n');
     } else {
@@ -87,12 +88,26 @@ void main() {
       memory = Memory();
       tokenizer = Tokenizer();
       variables = VariableStorage(memory);
-      expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer, userFunctions);
+      expressionEvaluator = ExpressionEvaluator(
+        memory,
+        variables,
+        tokenizer,
+        userFunctions,
+      );
       programStorage = ProgramStorage(memory);
       runtimeStack = RuntimeStack(memory, variables);
       screen = MockScreen();
       userFunctions = UserFunctionStorage();
-      interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen, userFunctions);
+      interpreter = Interpreter(
+        memory,
+        tokenizer,
+        variables,
+        expressionEvaluator,
+        programStorage,
+        runtimeStack,
+        screen,
+        userFunctions,
+      );
 
       // Initialize variable storage
       variables.initialize(0x2000);

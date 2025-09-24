@@ -18,7 +18,15 @@ void main() {
   final runtimeStack = RuntimeStack(memory, variables);
   final screen = Screen();
   final expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer);
-  final interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen);
+  final interpreter = Interpreter(
+    memory,
+    tokenizer,
+    variables,
+    expressionEvaluator,
+    programStorage,
+    runtimeStack,
+    screen,
+  );
 
   try {
     // Test 1: Basic POKE and PEEK
@@ -34,7 +42,9 @@ void main() {
     interpreter.executeLine('POKE 2001, 200');
     final result2a = interpreter.evaluateExpression('PEEK(2000)');
     final result2b = interpreter.evaluateExpression('PEEK(2001)');
-    print('POKE 2000,100; POKE 2001,200 then PEEK(2000)=$result2a, PEEK(2001)=$result2b');
+    print(
+      'POKE 2000,100; POKE 2001,200 then PEEK(2000)=$result2a, PEEK(2001)=$result2b',
+    );
     assert(result2a == 100.0, 'Expected 100, got $result2a');
     assert(result2b == 200.0, 'Expected 200, got $result2b');
 
@@ -67,7 +77,9 @@ void main() {
     interpreter.executeLine('POKE 65535, 1');
     final result6a = interpreter.evaluateExpression('PEEK(0)');
     final result6b = interpreter.evaluateExpression('PEEK(65535)');
-    print('POKE 0,255; POKE 65535,1 then PEEK(0)=$result6a, PEEK(65535)=$result6b');
+    print(
+      'POKE 0,255; POKE 65535,1 then PEEK(0)=$result6a, PEEK(65535)=$result6b',
+    );
     assert(result6a == 255.0, 'Expected 255, got $result6a');
     assert(result6b == 1.0, 'Expected 1, got $result6b');
 
@@ -125,7 +137,6 @@ void main() {
     }
 
     print('\n🎉 All tests completed successfully!');
-
   } catch (e) {
     print('❌ Test failed with error: $e');
   }

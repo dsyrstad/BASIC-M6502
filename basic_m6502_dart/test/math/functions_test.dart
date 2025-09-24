@@ -97,7 +97,10 @@ void main() {
       final seeded2 = MathFunctions.rnd(seed);
 
       // After reseeding with same value, should get same sequence
-      expect(MicrosoftFloat.unpack(seeded1), equals(MicrosoftFloat.unpack(seeded2)));
+      expect(
+        MicrosoftFloat.unpack(seeded1),
+        equals(MicrosoftFloat.unpack(seeded2)),
+      );
     });
 
     test('integer and utility functions', () {
@@ -138,7 +141,10 @@ void main() {
 
       final negativeFloat = MicrosoftFloat.pack(-2.7);
       final fixNeg = MathFunctions.fix(negativeFloat);
-      expect(MicrosoftFloat.unpack(fixNeg), equals(-2.0)); // Truncate towards zero
+      expect(
+        MicrosoftFloat.unpack(fixNeg),
+        equals(-2.0),
+      ); // Truncate towards zero
 
       // Test FRAC (fractional part)
       final fracPi = MathFunctions.frac(pi);
@@ -220,7 +226,10 @@ void main() {
       // Test with non-zero value
       final one = MicrosoftFloat.pack(1.0);
       final sinh1 = MathFunctions.sinh(one);
-      expect(MicrosoftFloat.unpack(sinh1), closeTo((math.e - 1/math.e) / 2, 1e-6));
+      expect(
+        MicrosoftFloat.unpack(sinh1),
+        closeTo((math.e - 1 / math.e) / 2, 1e-6),
+      );
     });
 
     test('base-10 logarithm and exponential', () {

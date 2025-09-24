@@ -29,8 +29,22 @@ void main() {
       screen = Screen();
       tokenizer = Tokenizer();
       userFunctions = UserFunctionStorage();
-      expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer, userFunctions);
-      interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen, userFunctions);
+      expressionEvaluator = ExpressionEvaluator(
+        memory,
+        variables,
+        tokenizer,
+        userFunctions,
+      );
+      interpreter = Interpreter(
+        memory,
+        tokenizer,
+        variables,
+        expressionEvaluator,
+        programStorage,
+        runtimeStack,
+        screen,
+        userFunctions,
+      );
     });
 
     test('LIST command processes correctly with empty program', () {
@@ -47,7 +61,10 @@ void main() {
       expect(lineNumbers, contains(10));
 
       // Verify line can be displayed
-      final displayLine = programStorage.getLineForDisplay(10, tokenizer.detokenize);
+      final displayLine = programStorage.getLineForDisplay(
+        10,
+        tokenizer.detokenize,
+      );
       expect(displayLine, contains('10 PRINT "HELLO"'));
     });
 
@@ -59,8 +76,20 @@ void main() {
       final testRuntimeStack = RuntimeStack(testMemory, testVariables);
       final testScreen = Screen();
       final testTokenizer = Tokenizer();
-      final testExpressionEvaluator = ExpressionEvaluator(testMemory, testVariables, testTokenizer);
-      final testInterpreter = Interpreter(testMemory, testTokenizer, testVariables, testExpressionEvaluator, testProgramStorage, testRuntimeStack, testScreen);
+      final testExpressionEvaluator = ExpressionEvaluator(
+        testMemory,
+        testVariables,
+        testTokenizer,
+      );
+      final testInterpreter = Interpreter(
+        testMemory,
+        testTokenizer,
+        testVariables,
+        testExpressionEvaluator,
+        testProgramStorage,
+        testRuntimeStack,
+        testScreen,
+      );
 
       // Add program lines in order first to ensure they work
       testInterpreter.executeLine('10 PRINT "ONE"');
@@ -76,7 +105,10 @@ void main() {
     test('Detokenizer reconstructs simple statements', () {
       interpreter.executeLine('10 LET A = 42');
 
-      final displayLine = programStorage.getLineForDisplay(10, tokenizer.detokenize);
+      final displayLine = programStorage.getLineForDisplay(
+        10,
+        tokenizer.detokenize,
+      );
       expect(displayLine, contains('LET'));
       expect(displayLine, contains('A'));
       expect(displayLine, contains('42'));
@@ -85,14 +117,20 @@ void main() {
     test('Detokenizer handles string literals', () {
       interpreter.executeLine('10 PRINT "HELLO WORLD"');
 
-      final displayLine = programStorage.getLineForDisplay(10, tokenizer.detokenize);
+      final displayLine = programStorage.getLineForDisplay(
+        10,
+        tokenizer.detokenize,
+      );
       expect(displayLine, contains('"HELLO WORLD"'));
     });
 
     test('Detokenizer handles complex expressions', () {
       interpreter.executeLine('10 LET X = (2 + 3) * 4');
 
-      final displayLine = programStorage.getLineForDisplay(10, tokenizer.detokenize);
+      final displayLine = programStorage.getLineForDisplay(
+        10,
+        tokenizer.detokenize,
+      );
       expect(displayLine, contains('('));
       expect(displayLine, contains('+'));
       expect(displayLine, contains(')'));
@@ -106,7 +144,10 @@ void main() {
       final lineNumbers = programStorage.getAllLineNumbers();
       expect(lineNumbers.length, equals(1));
 
-      final displayLine = programStorage.getLineForDisplay(10, tokenizer.detokenize);
+      final displayLine = programStorage.getLineForDisplay(
+        10,
+        tokenizer.detokenize,
+      );
       expect(displayLine, contains('SECOND'));
       expect(displayLine, isNot(contains('FIRST')));
     });

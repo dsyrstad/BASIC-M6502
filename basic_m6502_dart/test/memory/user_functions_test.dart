@@ -27,11 +27,25 @@ void main() {
       tokenizer = Tokenizer();
       variables = VariableStorage(memory);
       userFunctions = UserFunctionStorage();
-      expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer, userFunctions);
+      expressionEvaluator = ExpressionEvaluator(
+        memory,
+        variables,
+        tokenizer,
+        userFunctions,
+      );
       programStorage = ProgramStorage(memory);
       runtimeStack = RuntimeStack(memory, variables);
       screen = Screen();
-      interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen, userFunctions);
+      interpreter = Interpreter(
+        memory,
+        tokenizer,
+        variables,
+        expressionEvaluator,
+        programStorage,
+        runtimeStack,
+        screen,
+        userFunctions,
+      );
 
       variables.initialize(0x2000);
     });
@@ -73,13 +87,18 @@ void main() {
 
       final result = interpreter.evaluateExpressionFromString('FNC(4, 3)');
       expect(result, isA<NumericValue>());
-      expect((result as NumericValue).value, equals(13.0)); // 4*3 + 4 - 3 = 12 + 1 = 13
+      expect(
+        (result as NumericValue).value,
+        equals(13.0),
+      ); // 4*3 + 4 - 3 = 12 + 1 = 13
     });
 
     test('should handle function call within expression', () {
       interpreter.processDirectModeInput('DEF FNA(X) = X * 2');
 
-      final result = interpreter.evaluateExpressionFromString('FNA(3) + FNA(4)');
+      final result = interpreter.evaluateExpressionFromString(
+        'FNA(3) + FNA(4)',
+      );
       expect(result, isA<NumericValue>());
       expect((result as NumericValue).value, equals(14.0)); // 6 + 8 = 14
     });
@@ -90,7 +109,10 @@ void main() {
 
       final result = interpreter.evaluateExpressionFromString('FNA(FNB(2))');
       expect(result, isA<NumericValue>());
-      expect((result as NumericValue).value, equals(6.0)); // FNA(FNB(2)) = FNA(3) = 6
+      expect(
+        (result as NumericValue).value,
+        equals(6.0),
+      ); // FNA(FNB(2)) = FNA(3) = 6
     });
 
     test('should handle function using built-in functions', () {
@@ -98,7 +120,10 @@ void main() {
 
       final result = interpreter.evaluateExpressionFromString('FND(0)');
       expect(result, isA<NumericValue>());
-      expect((result as NumericValue).value, closeTo(1.0, 0.001)); // sin(0) + cos(0) = 0 + 1 = 1
+      expect(
+        (result as NumericValue).value,
+        closeTo(1.0, 0.001),
+      ); // sin(0) + cos(0) = 0 + 1 = 1
     });
 
     test('should handle function redefinition', () {
@@ -107,7 +132,10 @@ void main() {
 
       final result = interpreter.evaluateExpressionFromString('FNA(4)');
       expect(result, isA<NumericValue>());
-      expect((result as NumericValue).value, equals(12.0)); // Should use latest definition
+      expect(
+        (result as NumericValue).value,
+        equals(12.0),
+      ); // Should use latest definition
     });
 
     test('should handle parameter shadowing', () {
@@ -116,7 +144,10 @@ void main() {
 
       final result = interpreter.evaluateExpressionFromString('FNA(5)');
       expect(result, isA<NumericValue>());
-      expect((result as NumericValue).value, equals(10.0)); // Function parameter should shadow global X
+      expect(
+        (result as NumericValue).value,
+        equals(10.0),
+      ); // Function parameter should shadow global X
 
       // Global X should remain unchanged
       final globalX = variables.getVariable('X');
@@ -124,17 +155,24 @@ void main() {
     });
 
     test('should handle string function with string operations', () {
-      interpreter.processDirectModeInput('DEF FNT\$(S\$, N) = LEFT\$(S\$, N) + RIGHT\$(S\$, N)');
+      interpreter.processDirectModeInput(
+        'DEF FNT\$(S\$, N) = LEFT\$(S\$, N) + RIGHT\$(S\$, N)',
+      );
 
       variables.setVariable('T\$', StringValue('HELLO'));
       final result = interpreter.evaluateExpressionFromString('FNT\$(T\$, 2)');
       expect(result, isA<StringValue>());
-      expect((result as StringValue).value, equals('HELO')); // Left 2 + Right 2 = "HE" + "LO"
+      expect(
+        (result as StringValue).value,
+        equals('HELO'),
+      ); // Left 2 + Right 2 = "HE" + "LO"
     });
 
     test('should throw error for undefined function', () {
-      expect(() => interpreter.evaluateExpressionFromString('FNZ(5)'),
-             throwsA(isA<Exception>()));
+      expect(
+        () => interpreter.evaluateExpressionFromString('FNZ(5)'),
+        throwsA(isA<Exception>()),
+      );
     });
 
     test('should handle function with no parameters', () {

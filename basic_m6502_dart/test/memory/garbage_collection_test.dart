@@ -26,14 +26,20 @@ void main() {
 
     test('should initialize with empty string space', () {
       expect(memory.readWord(Memory.fretop), equals(0x8000));
-      expect(memory.readWord(Memory.strend), equals(0x2000)); // String end starts after variables/arrays
+      expect(
+        memory.readWord(Memory.strend),
+        equals(0x2000),
+      ); // String end starts after variables/arrays
     });
 
     test('should allocate string space from top down', () {
       final descriptor = stringManager.createTemporaryString('Hello');
 
       expect(descriptor.length, equals(5));
-      expect(descriptor.pointer, equals(0x8000 - 5)); // Top of memory minus string length
+      expect(
+        descriptor.pointer,
+        equals(0x8000 - 5),
+      ); // Top of memory minus string length
 
       final storedString = stringManager.readString(descriptor);
       expect(storedString, equals('Hello'));
@@ -157,8 +163,12 @@ void main() {
       // Verify all strings are preserved
       for (final entry in originalStrings.entries) {
         final value = variables.getVariable(entry.key) as StringValue;
-        expect(value.value, equals(entry.value),
-               reason: 'String ${entry.key} should be preserved after garbage collection');
+        expect(
+          value.value,
+          equals(entry.value),
+          reason:
+              'String ${entry.key} should be preserved after garbage collection',
+        );
       }
     });
 
@@ -194,8 +204,14 @@ void main() {
       expect(afterCollection, greaterThanOrEqualTo(beforeCollection));
 
       // Remaining strings should still be accessible
-      expect((variables.getVariable('A\$') as StringValue).value, equals('AAAA'));
-      expect((variables.getVariable('C\$') as StringValue).value, equals('CCCCCC'));
+      expect(
+        (variables.getVariable('A\$') as StringValue).value,
+        equals('AAAA'),
+      );
+      expect(
+        (variables.getVariable('C\$') as StringValue).value,
+        equals('CCCCCC'),
+      );
     });
 
     test('should handle maximum length strings', () {
@@ -243,8 +259,10 @@ void main() {
       final newDescriptor = afterGcValue.descriptor;
       if (newDescriptor != null && originalDescriptor != null) {
         // Content should be same even if pointer changed
-        expect(stringManager.readString(newDescriptor),
-               equals(stringManager.readString(originalDescriptor)));
+        expect(
+          stringManager.readString(newDescriptor),
+          equals(stringManager.readString(originalDescriptor)),
+        );
       }
     });
   });

@@ -60,7 +60,9 @@ class StringManager {
     _stringSpaceTop = topOfMemory;
     // Only set _stringEnd if it's not already set (i.e., if it's 0)
     if (memory.readWord(Memory.strend) == 0) {
-      _stringEnd = memory.readWord(Memory.arytab); // String space starts after arrays
+      _stringEnd = memory.readWord(
+        Memory.arytab,
+      ); // String space starts after arrays
     }
     _tempStringPointer = 0;
     _tempStringStack.clear();
@@ -69,7 +71,9 @@ class StringManager {
   /// Create a string descriptor from a Dart string
   StringDescriptor createString(String value) {
     if (value.length > maxStringLength) {
-      throw StringException('String too long: ${value.length} > $maxStringLength');
+      throw StringException(
+        'String too long: ${value.length} > $maxStringLength',
+      );
     }
 
     if (value.isEmpty) {
@@ -225,10 +229,10 @@ class StringManager {
       if ((firstChar & 0x80) != 0) {
         final descriptor = readDescriptor(addr + 2);
         if (descriptor.pointer == oldAddress) {
-          writeDescriptor(addr + 2, StringDescriptor(
-            length: descriptor.length,
-            pointer: newAddress
-          ));
+          writeDescriptor(
+            addr + 2,
+            StringDescriptor(length: descriptor.length, pointer: newAddress),
+          );
         }
       }
     }
@@ -238,7 +242,7 @@ class StringManager {
       if (_tempStringStack[i].pointer == oldAddress) {
         _tempStringStack[i] = StringDescriptor(
           length: _tempStringStack[i].length,
-          pointer: newAddress
+          pointer: newAddress,
         );
       }
     }
@@ -250,7 +254,10 @@ class StringManager {
   }
 
   /// String concatenation (equivalent to string + operator)
-  StringDescriptor concatenateStrings(StringDescriptor left, StringDescriptor right) {
+  StringDescriptor concatenateStrings(
+    StringDescriptor left,
+    StringDescriptor right,
+  ) {
     final leftStr = readString(left);
     final rightStr = readString(right);
     final result = leftStr + rightStr;
@@ -272,7 +279,11 @@ class StringManager {
   }
 
   /// Extract substring (LEFT$, RIGHT$, MID$ functions)
-  StringDescriptor substring(StringDescriptor source, int start, [int? length]) {
+  StringDescriptor substring(
+    StringDescriptor source,
+    int start, [
+    int? length,
+  ]) {
     final sourceStr = readString(source);
 
     if (start < 0 || start >= sourceStr.length) {
@@ -362,13 +373,10 @@ class StringManager {
 
 /// String descriptor matching Microsoft BASIC format
 class StringDescriptor {
-  final int length;    // String length (0-255)
-  final int pointer;   // Pointer to string data in memory
+  final int length; // String length (0-255)
+  final int pointer; // Pointer to string data in memory
 
-  const StringDescriptor({
-    required this.length,
-    required this.pointer,
-  });
+  const StringDescriptor({required this.length, required this.pointer});
 
   /// Check if this represents an empty string
   bool get isEmpty => length == 0 || pointer == 0;
@@ -386,7 +394,8 @@ class StringDescriptor {
   int get hashCode => Object.hash(length, pointer);
 
   @override
-  String toString() => 'StringDescriptor(length: $length, pointer: 0x${pointer.toRadixString(16)})';
+  String toString() =>
+      'StringDescriptor(length: $length, pointer: 0x${pointer.toRadixString(16)})';
 }
 
 /// Exception thrown by string operations

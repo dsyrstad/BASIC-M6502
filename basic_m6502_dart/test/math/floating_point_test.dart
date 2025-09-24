@@ -82,7 +82,13 @@ void main() {
 
     test('normalization of denormalized number', () {
       // Create a manually denormalized number for testing
-      final denormalized = Uint8List.fromList([128, 0x20, 0x00, 0x00, 0x00]); // Exponent 128, no leading bit
+      final denormalized = Uint8List.fromList([
+        128,
+        0x20,
+        0x00,
+        0x00,
+        0x00,
+      ]); // Exponent 128, no leading bit
 
       final normalized = MicrosoftFloat.normalize(denormalized);
       expect(MicrosoftFloat.isNormalized(normalized), isTrue);
@@ -109,7 +115,10 @@ void main() {
     test('special value handling', () {
       // Test infinity handling
       expect(() => MicrosoftFloat.pack(double.infinity), throwsArgumentError);
-      expect(() => MicrosoftFloat.pack(double.negativeInfinity), throwsArgumentError);
+      expect(
+        () => MicrosoftFloat.pack(double.negativeInfinity),
+        throwsArgumentError,
+      );
       expect(() => MicrosoftFloat.pack(double.nan), throwsArgumentError);
     });
 

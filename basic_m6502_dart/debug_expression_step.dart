@@ -12,11 +12,17 @@ void main() {
   variables.initialize(0x2000);
 
   // Create a custom expression evaluator for debugging
-  final expressionEvaluator = DebugExpressionEvaluator(memory, variables, tokenizer);
+  final expressionEvaluator = DebugExpressionEvaluator(
+    memory,
+    variables,
+    tokenizer,
+  );
 
   // Test the problematic expression
   print('=== Testing LEFT\$("HELLO", 3) + RIGHT\$("WORLD", 3) ===');
-  final tokens = tokenizer.tokenizeLine('LEFT\$("HELLO", 3) + RIGHT\$("WORLD", 3)');
+  final tokens = tokenizer.tokenizeLine(
+    'LEFT\$("HELLO", 3) + RIGHT\$("WORLD", 3)',
+  );
   print('Tokens: ${tokens.map((t) => t.toString()).join(' ')}');
 
   try {
@@ -28,13 +34,18 @@ void main() {
 }
 
 class DebugExpressionEvaluator extends ExpressionEvaluator {
-  DebugExpressionEvaluator(memory, variables, tokenizer) : super(memory, variables, tokenizer);
+  DebugExpressionEvaluator(memory, variables, tokenizer)
+    : super(memory, variables, tokenizer);
 
   @override
   ExpressionResult evaluateExpression(List<int> tokens, int startPos) {
-    print('>>> evaluateExpression called with startPos=$startPos, tokens length=${tokens.length}');
+    print(
+      '>>> evaluateExpression called with startPos=$startPos, tokens length=${tokens.length}',
+    );
     final result = super.evaluateExpression(tokens, startPos);
-    print('<<< evaluateExpression returning ${result.value} at position ${result.endPosition}');
+    print(
+      '<<< evaluateExpression returning ${result.value} at position ${result.endPosition}',
+    );
     return result;
   }
 }
