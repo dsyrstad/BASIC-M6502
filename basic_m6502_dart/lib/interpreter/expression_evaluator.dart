@@ -108,6 +108,8 @@ class ExpressionEvaluator {
       _parseVariableOrFunction();
     } else if (tokenizer.isSingleArgFunction(token)) { // Built-in function
       _parseBuiltinFunction(token);
+    } else if (_isMultiArgFunction(token)) { // Multi-argument functions (LEFT$, RIGHT$, MID$)
+      _parseMultiArgFunction(token);
     } else if (token == Tokenizer.tabToken || token == Tokenizer.spcToken) { // TAB() or SPC() function
       _parseTabOrSpcFunction(token);
     } else if (token == Tokenizer.minusToken) { // Unary minus
@@ -232,6 +234,53 @@ class ExpressionEvaluator {
 
     // Apply function
     final result = _applyFunction(functionToken, argResult.value);
+    _stack.add(StackEntry(type: StackEntryType.value, value: result));
+  }
+
+  /// Parse multi-argument function (LEFT$, RIGHT$, MID$)
+  void _parseMultiArgFunction(int functionToken) {
+    _advance(); // Skip function token
+
+    _skipSpaces();
+    if (_position >= _expression.length || _getCurrentToken() != 40) { // Left parenthesis
+      throw ExpressionException('SYNTAX ERROR - Missing ( after function');
+    }
+    _advance(); // Skip opening parenthesis
+
+    // Evaluate first argument (string)
+    final stringArgResult = evaluateExpression(_expression, _position);
+    _position = stringArgResult.endPosition;
+
+    _skipSpaces();
+    if (_position >= _expression.length || _getCurrentToken() != 44) { // Comma
+      throw ExpressionException('SYNTAX ERROR - Missing comma in function');
+    }
+    _advance(); // Skip comma
+
+    // Evaluate second argument (numeric)
+    final numArgResult = evaluateExpression(_expression, _position);
+    _position = numArgResult.endPosition;
+
+    VariableValue? thirdArg;
+    if (functionToken == Tokenizer.midDollarToken) {
+      // MID$ can have an optional third argument
+      _skipSpaces();
+      if (_position < _expression.length && _getCurrentToken() == 44) { // Comma
+        _advance(); // Skip comma
+        final thirdArgResult = evaluateExpression(_expression, _position);
+        _position = thirdArgResult.endPosition;
+        thirdArg = thirdArgResult.value;
+      }
+    }
+
+    _skipSpaces();
+    if (_position >= _expression.length || _getCurrentToken() != 41) { // Right parenthesis
+      throw ExpressionException('SYNTAX ERROR - Missing ) after function');
+    }
+    _advance(); // Skip closing parenthesis
+
+    // Apply function
+    final result = _applyMultiArgFunction(functionToken, stringArgResult.value, numArgResult.value, thirdArg);
     _stack.add(StackEntry(type: StackEntryType.value, value: result));
   }
 
@@ -419,6 +468,31 @@ class ExpressionEvaluator {
         }
         throw ExpressionException('TYPE MISMATCH');
 
+      case Tokenizer.lenToken:
+        if (argument is StringValue) {
+          return NumericValue(argument.value.length.toDouble());
+        }
+        throw ExpressionException('TYPE MISMATCH');
+
+      case Tokenizer.ascToken:
+        if (argument is StringValue) {
+          if (argument.value.isEmpty) {
+            throw ExpressionException('ILLEGAL QUANTITY');
+          }
+          return NumericValue(argument.value.codeUnitAt(0).toDouble());
+        }
+        throw ExpressionException('TYPE MISMATCH');
+
+      case Tokenizer.chrDollarToken:
+        if (argument is NumericValue) {
+          final code = argument.value.round();
+          if (code < 0 || code > 255) {
+            throw ExpressionException('ILLEGAL QUANTITY');
+          }
+          return StringValue(String.fromCharCode(code));
+        }
+        throw ExpressionException('TYPE MISMATCH');
+
       default:
         throw ExpressionException('FUNCTION NOT IMPLEMENTED: ${tokenizer.getTokenName(functionToken)}');
     }
@@ -443,9 +517,75 @@ class ExpressionEvaluator {
     }
   }
 
+  /// Apply a multi-argument function
+  VariableValue _applyMultiArgFunction(int functionToken, VariableValue stringArg, VariableValue numArg, VariableValue? thirdArg) {
+    switch (functionToken) {
+      case Tokenizer.leftDollarToken:
+        if (stringArg is! StringValue || numArg is! NumericValue) {
+          throw ExpressionException('TYPE MISMATCH');
+        }
+        final count = numArg.value.round();
+        if (count < 0) {
+          throw ExpressionException('ILLEGAL QUANTITY');
+        }
+        if (count >= stringArg.value.length) {
+          return StringValue(stringArg.value);
+        }
+        return StringValue(stringArg.value.substring(0, count));
+
+      case Tokenizer.rightDollarToken:
+        if (stringArg is! StringValue || numArg is! NumericValue) {
+          throw ExpressionException('TYPE MISMATCH');
+        }
+        final count = numArg.value.round();
+        if (count < 0) {
+          throw ExpressionException('ILLEGAL QUANTITY');
+        }
+        if (count >= stringArg.value.length) {
+          return StringValue(stringArg.value);
+        }
+        return StringValue(stringArg.value.substring(stringArg.value.length - count));
+
+      case Tokenizer.midDollarToken:
+        if (stringArg is! StringValue || numArg is! NumericValue) {
+          throw ExpressionException('TYPE MISMATCH');
+        }
+        final start = numArg.value.round() - 1; // BASIC uses 1-based indexing
+        if (start < 0) {
+          throw ExpressionException('ILLEGAL QUANTITY');
+        }
+        if (start >= stringArg.value.length) {
+          return StringValue('');
+        }
+        if (thirdArg != null) {
+          if (thirdArg is! NumericValue) {
+            throw ExpressionException('TYPE MISMATCH');
+          }
+          final length = thirdArg.value.round();
+          if (length < 0) {
+            throw ExpressionException('ILLEGAL QUANTITY');
+          }
+          final end = (start + length).clamp(start, stringArg.value.length);
+          return StringValue(stringArg.value.substring(start, end));
+        } else {
+          return StringValue(stringArg.value.substring(start));
+        }
+
+      default:
+        throw ExpressionException('FUNCTION NOT IMPLEMENTED');
+    }
+  }
+
   /// Check if token is an operator
   bool _isOperator(int token) {
     return _operatorPrecedence.containsKey(token) || tokenizer.isOperator(token);
+  }
+
+  /// Check if token is a multi-argument function
+  bool _isMultiArgFunction(int token) {
+    return token == Tokenizer.leftDollarToken ||
+           token == Tokenizer.rightDollarToken ||
+           token == Tokenizer.midDollarToken;
   }
 
   /// Check if character is a digit

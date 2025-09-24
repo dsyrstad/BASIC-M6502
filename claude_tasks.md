@@ -266,14 +266,14 @@
 ## Phase 7: Advanced Features
 
 ### String Functions
-- [ ] Implement LEFT$ function
-- [ ] Implement RIGHT$ function
-- [ ] Implement MID$ function
-- [ ] Implement CHR$ function
-- [ ] Implement ASC function
-- [ ] Implement LEN function
-- [ ] Support string concatenation
-- [ ] Write tests for string functions
+- [x] Implement LEFT$ function
+- [x] Implement RIGHT$ function
+- [x] Implement MID$ function
+- [x] Implement CHR$ function
+- [x] Implement ASC function
+- [x] Implement LEN function
+- [x] Support string concatenation
+- [x] Write tests for string functions
 
 ### Memory Access
 - [ ] Implement PEEK function
