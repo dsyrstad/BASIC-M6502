@@ -114,7 +114,8 @@ class ExpressionEvaluator {
       _parseMultiArgFunction(token);
     } else if (token == Tokenizer.tabToken || token == Tokenizer.spcToken) { // TAB() or SPC() function
       _parseTabOrSpcFunction(token);
-    } else if (token == Tokenizer.fnToken) { // User-defined function
+    } else if (token == Tokenizer.fnToken ||
+               (token == 70 && _position + 1 < _expression.length && _expression[_position + 1] == 78)) { // User-defined function (FN token or F+N chars)
       _parseUserFunction();
     } else if (token == Tokenizer.minusToken) { // Unary minus
       _parseUnaryMinus();
@@ -635,17 +636,33 @@ class ExpressionEvaluator {
 
   /// Parse user-defined function call (FN function)
   void _parseUserFunction() {
-    _advance(); // Skip FN token
+    String functionName = '';
 
-    _skipSpaces();
+    if (_getCurrentToken() == Tokenizer.fnToken) {
+      // Case 1: FN is properly tokenized
+      _advance(); // Skip FN token
+      _skipSpaces();
 
-    // Parse function name - should be a single letter, optionally followed by $
-    if (_position >= _expression.length || !_isLetter(_getCurrentToken())) {
-      throw ExpressionException('SYNTAX ERROR - Invalid function name after FN');
+      if (_position >= _expression.length || !_isLetter(_getCurrentToken())) {
+        throw ExpressionException('SYNTAX ERROR - Invalid function name after FN');
+      }
+
+      functionName = 'FN' + String.fromCharCode(_getCurrentToken()).toUpperCase();
+      _advance();
+    } else if (_getCurrentToken() == 70 && _position + 1 < _expression.length && _expression[_position + 1] == 78) {
+      // Case 2: FN is stored as individual characters
+      _advance(); // Skip 'F'
+      _advance(); // Skip 'N'
+
+      if (_position >= _expression.length || !_isLetter(_getCurrentToken())) {
+        throw ExpressionException('SYNTAX ERROR - Invalid function name after FN');
+      }
+
+      functionName = 'FN' + String.fromCharCode(_getCurrentToken()).toUpperCase();
+      _advance();
+    } else {
+      throw ExpressionException('SYNTAX ERROR - Expected FN token');
     }
-
-    String functionName = String.fromCharCode(_getCurrentToken()).toUpperCase();
-    _advance();
 
     bool isStringFunction = false;
     if (_position < _expression.length && _getCurrentToken() == 36) { // $ character

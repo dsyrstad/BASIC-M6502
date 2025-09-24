@@ -1618,7 +1618,9 @@ class Interpreter {
     _textPointer = 0;
 
     // Evaluate the expression
-    return expressionEvaluator.evaluate();
+    var result = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+    _textPointer = result.endPosition;
+    return result.value;
   }
 
   /// Execute SAVE statement
@@ -1919,21 +1921,37 @@ class Interpreter {
   void _executeDef() {
     _skipSpaces();
 
-    // Expect FN token
-    if (_textPointer >= _currentLine.length || _getCurrentChar() != Tokenizer.fnToken) {
+    // Check if we have "FN" followed by a letter
+    // This could be tokenized as FN token + letter, or as individual letters F + N + letter
+    String functionName = '';
+
+    if (_textPointer < _currentLine.length && _getCurrentChar() == Tokenizer.fnToken) {
+      // Case 1: FN is properly tokenized
+      _advanceTextPointer(); // Skip FN token
+      _skipSpaces();
+
+      if (_textPointer >= _currentLine.length || !_isLetter(_getCurrentChar())) {
+        throw InterpreterException('SYNTAX ERROR - Invalid function name after FN');
+      }
+
+      functionName = 'FN' + String.fromCharCode(_getCurrentChar()).toUpperCase();
+      _advanceTextPointer();
+    } else if (_textPointer + 1 < _currentLine.length &&
+               _getCurrentChar() == 70 && // 'F'
+               _currentLine[_textPointer + 1] == 78) { // 'N'
+      // Case 2: FN is stored as individual characters
+      _advanceTextPointer(); // Skip 'F'
+      _advanceTextPointer(); // Skip 'N'
+
+      if (_textPointer >= _currentLine.length || !_isLetter(_getCurrentChar())) {
+        throw InterpreterException('SYNTAX ERROR - Invalid function name after FN');
+      }
+
+      functionName = 'FN' + String.fromCharCode(_getCurrentChar()).toUpperCase();
+      _advanceTextPointer();
+    } else {
       throw InterpreterException('SYNTAX ERROR - Expected FN after DEF');
     }
-    _advanceTextPointer(); // Skip FN token
-
-    _skipSpaces();
-
-    // Parse function name - should be a single letter, optionally followed by $
-    if (_textPointer >= _currentLine.length || !_isLetter(_getCurrentChar())) {
-      throw InterpreterException('SYNTAX ERROR - Invalid function name');
-    }
-
-    String functionName = String.fromCharCode(_getCurrentChar()).toUpperCase();
-    _advanceTextPointer();
 
     bool isStringFunction = false;
     if (_textPointer < _currentLine.length && _getCurrentChar() == 36) { // $ character

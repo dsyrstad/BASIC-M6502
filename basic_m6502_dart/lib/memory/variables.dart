@@ -52,9 +52,7 @@ class VariableStorage {
 
   /// Find a variable by name (PTRGET equivalent)
   VariableResult findVariable(String name) {
-    // Allow string variables with $ suffix (e.g., A$, S1$)
-    final maxLength = name.endsWith('\$') ? 3 : 2;
-    if (name.isEmpty || name.length > maxLength) {
+    if (name.isEmpty) {
       throw VariableException('Invalid variable name: $name');
     }
 
@@ -164,26 +162,23 @@ class VariableStorage {
   String _normalizeVariableName(String name) {
     String normalized = name.toUpperCase();
 
-    // Remove special suffixes for processing
+    // For string and array variables, preserve original format for display
     if (normalized.endsWith('\$') || normalized.endsWith('(')) {
-      normalized = normalized.substring(0, normalized.length - 1);
+      final suffix = normalized[normalized.length - 1];
+      final baseName = normalized.substring(0, normalized.length - 1);
+
+      // Truncate base name to 2 characters if needed
+      final truncatedBase = baseName.length > 2 ? baseName.substring(0, 2) : baseName;
+
+      return truncatedBase + suffix;
     }
 
-    // Truncate to 2 characters if needed
+    // For regular variables, pad to 2 characters with spaces
     if (normalized.length > 2) {
       normalized = normalized.substring(0, 2);
     }
-
-    // Pad to 2 characters with spaces if needed
     while (normalized.length < 2) {
       normalized += ' ';
-    }
-
-    // Add back suffix if it was a string or array
-    if (name.endsWith('\$')) {
-      normalized = normalized + '\$';
-    } else if (name.endsWith('(')) {
-      normalized = normalized + '(';
     }
 
     return normalized;

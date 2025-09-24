@@ -21,13 +21,12 @@ void main() {
       // Set up string space (from top of memory down)
       final memtop = 0x8000;
       memory.writeWord(Memory.memsiz, memtop);
-      memory.writeWord(Memory.fretop, memtop);
-      memory.writeWord(Memory.strend, memtop);
+      stringManager.initialize(memtop);
     });
 
     test('should initialize with empty string space', () {
       expect(memory.readWord(Memory.fretop), equals(0x8000));
-      expect(memory.readWord(Memory.strend), equals(0x8000));
+      expect(memory.readWord(Memory.strend), equals(0x2000)); // String end starts after variables/arrays
     });
 
     test('should allocate string space from top down', () {
