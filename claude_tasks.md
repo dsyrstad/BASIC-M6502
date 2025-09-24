@@ -226,7 +226,7 @@
 - [x] Implement LIST statement
 - [x] Handle token detokenization
 - [x] Format output properly
-- [ ] Support line range specification
+- [x] Support line range specification
 - [ ] Support LIST to device (if needed)
 - [ ] Write tests for LIST
 
@@ -239,28 +239,28 @@
 - [x] Write tests for NEW/CLEAR
 
 ### LOAD/SAVE Commands
-- [ ] Implement SAVE command
-- [ ] Create program file format
-- [ ] Implement LOAD command
+- [x] Implement SAVE command
+- [x] Create program file format
+- [x] Implement LOAD command
 - [ ] Handle file I/O errors
 - [ ] Support VERIFY command
 - [ ] Write tests for file operations
 
 ### Line Editor
-- [ ] Create `lib/runtime/line_editor.dart`
-- [ ] Implement line insertion
-- [ ] Implement line deletion
-- [ ] Implement line replacement
+- [x] Create `lib/runtime/line_editor.dart` (integrated in interpreter)
+- [x] Implement line insertion
+- [x] Implement line deletion
+- [x] Implement line replacement
 - [ ] Handle immediate mode
 - [ ] Support line editing shortcuts
 - [ ] Write tests for editor
 
 ### RUN Command
-- [ ] Implement RUN statement
-- [ ] Support RUN with line number
-- [ ] Handle variable clearing
-- [ ] Reset stack and pointers
-- [ ] Initialize runtime state
+- [x] Implement RUN statement
+- [x] Support RUN with line number
+- [x] Handle variable clearing
+- [x] Reset stack and pointers
+- [x] Initialize runtime state
 - [ ] Write tests for RUN
 
 ## Phase 7: Advanced Features
