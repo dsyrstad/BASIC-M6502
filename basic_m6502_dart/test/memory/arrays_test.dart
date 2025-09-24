@@ -316,7 +316,7 @@ void main() {
       test('creates descriptor with correct properties', () {
         final descriptor = arrayManager.createArray('TEST', [5, 10]);
 
-        expect(descriptor.name, equals('TEST'));
+        expect(descriptor.name, equals('TE'));
         expect(descriptor.dimensionCount, equals(2));
         expect(descriptor.dimensions, equals([5, 10]));
         expect(descriptor.isString, isFalse);

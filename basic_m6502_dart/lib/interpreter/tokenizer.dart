@@ -93,6 +93,9 @@ class Tokenizer {
   /// Special "GO" token for "GO TO"
   static const int goToken = 201;
 
+  /// CLEAR command token
+  static const int clearToken = 202;
+
   /// Last function that takes one argument
   static const int lastSingleArgFunction = chrDollarToken;
 
@@ -131,6 +134,7 @@ class Tokenizer {
     TokenEntry('CLOSE', closeToken),
     TokenEntry('GET', getToken),
     TokenEntry('NEW', newToken),
+    TokenEntry('CLEAR', clearToken),
     TokenEntry('TAB(', tabToken),
     TokenEntry('TO', toToken),
     TokenEntry('FN', fnToken),
@@ -359,7 +363,7 @@ class Tokenizer {
 
   /// Check if a token is a statement (as opposed to function/operator)
   bool isStatement(int token) {
-    return token >= endToken && token <= newToken;
+    return (token >= endToken && token <= newToken) || token == clearToken;
   }
 
   /// Check if a token is a single-argument function

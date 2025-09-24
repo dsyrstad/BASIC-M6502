@@ -1,4 +1,6 @@
+import 'dart:typed_data';
 import '../memory/memory.dart';
+import '../math/floating_point.dart';
 
 /// Variable storage system matching Microsoft BASIC 6502 format.
 ///
@@ -77,16 +79,25 @@ class VariableStorage {
       ];
 
       if (varNameBytes[0] == nameBytes[0] && varNameBytes[1] == nameBytes[1]) {
-        // Found variable
-        final value = _readVariableValue(addr + nameSize, isString);
-        return VariableResult(
-          found: true,
-          address: addr,
-          name: normalizedName,
-          value: value,
-          isString: isString,
-          isArray: isArray
-        );
+        // Found variable with matching name - but we need to check if it's the right type
+        // In Microsoft BASIC, H and H$ are different variables
+
+        // Check if this is a string variable by looking at the value format
+        final actualIsString = _isStringVariable(addr + nameSize);
+
+        if (actualIsString == isString) {
+          // Found variable with matching name and type
+          final value = _readVariableValue(addr + nameSize, isString);
+          return VariableResult(
+            found: true,
+            address: addr,
+            name: normalizedName,
+            value: value,
+            isString: isString,
+            isArray: isArray
+          );
+        }
+        // Continue searching for the correct type
       }
     }
 
@@ -215,15 +226,14 @@ class VariableStorage {
 
       return StringValue(stringData.toString());
     } else {
-      // Numeric variable - read 4-byte float (simplified for now)
-      final bytes = <int>[];
+      // Numeric variable - read 4-byte Microsoft float format (plus one zero byte to make 5)
+      final bytes = Uint8List(5);
       for (int i = 0; i < 4; i++) {
-        bytes.add(memory.readByte(address + i));
+        bytes[i] = memory.readByte(address + i);
       }
+      bytes[4] = 0; // Add 5th byte as zero for proper Microsoft format
 
-      // TODO: Implement proper Microsoft float format conversion
-      // For now, just use a simple encoding
-      final value = _bytesToDouble(bytes);
+      final value = MicrosoftFloat.unpack(bytes);
       return NumericValue(value);
     }
   }
@@ -252,8 +262,8 @@ class VariableStorage {
         memory.writeByte(address + 3, 0); // Unused
       }
     } else if (!isString && value is NumericValue) {
-      // Numeric variable - write 4-byte float
-      final bytes = _doubleToBytes(value.value);
+      // Numeric variable - write 5-byte Microsoft float format (reduced to 4 bytes for variables)
+      final bytes = MicrosoftFloat.pack(value.value);
       for (int i = 0; i < 4; i++) {
         memory.writeByte(address + i, bytes[i]);
       }
@@ -313,28 +323,32 @@ class VariableStorage {
     memory.writeWord(Memory.strend, vartabStart);
   }
 
-  /// Simple double to bytes conversion (placeholder)
-  List<int> _doubleToBytes(double value) {
-    // TODO: Implement proper Microsoft 5-byte float format
-    // For now, use a simplified 4-byte representation
-    final intValue = (value * 1000).round(); // Store as fixed point
-    return [
-      intValue & 0xFF,
-      (intValue >> 8) & 0xFF,
-      (intValue >> 16) & 0xFF,
-      (intValue >> 24) & 0xFF,
-    ];
-  }
+  /// Check if a variable at the given address is a string variable
+  bool _isStringVariable(int valueAddress) {
+    // In Microsoft BASIC, string variables are stored as 3-byte descriptors:
+    // - 1 byte length
+    // - 2 bytes pointer to string data
+    // Numeric variables are stored as 4-byte Microsoft float format
 
-  /// Simple bytes to double conversion (placeholder)
-  double _bytesToDouble(List<int> bytes) {
-    // TODO: Implement proper Microsoft 5-byte float format
-    // For now, use a simplified 4-byte representation
-    final intValue = bytes[0] |
-                    (bytes[1] << 8) |
-                    (bytes[2] << 16) |
-                    (bytes[3] << 24);
-    return intValue / 1000.0;
+    // Heuristic: if the first byte looks like a reasonable string length (0-255)
+    // and the next two bytes form a valid pointer within our memory space,
+    // it's likely a string variable
+    final firstByte = memory.readByte(valueAddress);
+    final pointer = memory.readWord(valueAddress + 1);
+
+    // Check if this looks like a string descriptor
+    // String length should be reasonable (0-255, which firstByte already is)
+    // Pointer should be within reasonable bounds (not 0, and within memory)
+    if (firstByte <= 255 && (pointer == 0 || (pointer >= 0x2000 && pointer < 0x8000))) {
+      // Additional check: if this is a float, the first byte would be an exponent
+      // Microsoft float exponents are biased by +200, so valid range is roughly 1-255
+      // But string lengths are typically much smaller
+      if (firstByte <= 100) { // Most strings are shorter than 100 chars
+        return true;
+      }
+    }
+
+    return false; // Assume numeric if unsure
   }
 
   /// Initialize variable storage system

@@ -223,20 +223,20 @@
 ## Phase 6: Program Management
 
 ### LIST Command
-- [ ] Implement LIST statement
+- [x] Implement LIST statement
+- [x] Handle token detokenization
+- [x] Format output properly
 - [ ] Support line range specification
-- [ ] Handle token detokenization
-- [ ] Format output properly
 - [ ] Support LIST to device (if needed)
 - [ ] Write tests for LIST
 
 ### NEW/CLEAR Commands
-- [ ] Implement NEW command
-- [ ] Implement CLEAR command
-- [ ] Handle memory initialization
-- [ ] Reset variables and pointers
-- [ ] Clear stack properly
-- [ ] Write tests for NEW/CLEAR
+- [x] Implement NEW command
+- [x] Implement CLEAR command
+- [x] Handle memory initialization
+- [x] Reset variables and pointers
+- [x] Clear stack properly
+- [x] Write tests for NEW/CLEAR
 
 ### LOAD/SAVE Commands
 - [ ] Implement SAVE command

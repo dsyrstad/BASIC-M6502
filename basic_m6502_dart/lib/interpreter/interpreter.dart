@@ -293,6 +293,9 @@ class Interpreter {
       case Tokenizer.newToken:
         _executeNew();
         break;
+      case Tokenizer.clearToken:
+        _executeClear();
+        break;
       case Tokenizer.gotoToken:
         _executeGoto();
         break;
@@ -501,12 +504,15 @@ class Interpreter {
       }
     }
 
+    // Remember original state for exception handling
+    final wasImmediate = _state == ExecutionState.immediate;
+
     // Switch to program mode and start execution
     _state = ExecutionState.program;
     _jumpToLine(firstLine);
 
     // Continue execution until program completes
-    runProgram();
+    runProgram(rethrowExceptions: wasImmediate);
   }
 
   /// Execute LIST statement
@@ -535,6 +541,22 @@ class Interpreter {
 
     // Clear all variables
     variables.clearVariables();
+
+    // Return to immediate mode
+    _state = ExecutionState.immediate;
+    _currentLineNumber = -1;
+
+    print('READY.');
+  }
+
+  /// Execute CLEAR statement
+  void _executeClear() {
+    // CLEAR clears variables but keeps the program in memory
+    // This is different from NEW which clears both program and variables
+    variables.clearVariables();
+
+    // Clear the runtime stack
+    runtimeStack.clear();
 
     // Return to immediate mode
     _state = ExecutionState.immediate;
@@ -1493,7 +1515,7 @@ class Interpreter {
   bool get isRunning => _state != ExecutionState.stopped;
 
   /// Execute program until completion
-  void runProgram() {
+  void runProgram({bool rethrowExceptions = false}) {
     int maxSteps = 10000; // Prevent infinite loops
     int stepCount = 0;
 
@@ -1502,6 +1524,10 @@ class Interpreter {
         _executeNextStatement();
         stepCount++;
       } catch (e) {
+        if (rethrowExceptions && e is InterpreterException) {
+          _state = ExecutionState.immediate;
+          rethrow;
+        }
         _handleError(e);
         break;
       }
