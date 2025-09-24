@@ -1757,10 +1757,7 @@ class Interpreter {
       throw BasicError(errorCode, context: e.message);
     } catch (e) {
       // Convert any other exception to BasicError
-      throw BasicError(
-        BasicErrorCode.syntaxError,
-        context: e.toString(),
-      );
+      throw BasicError(BasicErrorCode.syntaxError, context: e.toString());
     }
   }
 
@@ -1795,10 +1792,7 @@ class Interpreter {
       throw BasicError(errorCode, context: e.message);
     } catch (e) {
       // Convert any other exception to BasicError
-      throw BasicError(
-        BasicErrorCode.syntaxError,
-        context: e.toString(),
-      );
+      throw BasicError(BasicErrorCode.syntaxError, context: e.toString());
     }
   }
 

@@ -267,9 +267,12 @@ class Tokenizer {
             // Check if followed immediately by a letter
             if (pos < line.length) {
               final nextChar = line.codeUnitAt(pos);
-              if ((nextChar >= 65 && nextChar <= 90) || (nextChar >= 97 && nextChar <= 122)) {
+              if ((nextChar >= 65 && nextChar <= 90) ||
+                  (nextChar >= 97 && nextChar <= 122)) {
                 // It's a letter, add it as the next token
-                result.add(nextChar >= 97 ? nextChar - 32 : nextChar); // Convert to uppercase
+                result.add(
+                  nextChar >= 97 ? nextChar - 32 : nextChar,
+                ); // Convert to uppercase
                 pos++;
               }
             }

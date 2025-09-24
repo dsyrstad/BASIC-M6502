@@ -63,7 +63,9 @@ class ArrayManager {
       normalizedName += ' ';
     }
 
-    final nameBytes = _encodeArrayName(normalizedName); // Use normalized name for encoding
+    final nameBytes = _encodeArrayName(
+      normalizedName,
+    ); // Use normalized name for encoding
 
     // Check if it's a string array
     final isString = name.contains('\$');

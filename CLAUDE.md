@@ -78,3 +78,7 @@ This is historical/archival code - not intended for modern compilation or execut
 - Educational purposes regarding language interpreter design
 
 The code cannot be assembled without a PDP-10 MACRO-10 assembler or compatible cross-assembler tools from the 1970s era.
+
+## Rules:
+
+- Before committing, always run the dart formatter and analyzer in @basic_m6502_dart/.

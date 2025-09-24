@@ -63,7 +63,7 @@ class VariableStorage {
     }
 
     if (baseName.length > 2) {
-      throw VariableException('Variable name too long: $name');
+      throw VariableException('Invalid variable name: $name');
     }
 
     // Normalize variable name to 2 characters
