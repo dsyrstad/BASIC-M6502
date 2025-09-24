@@ -213,12 +213,12 @@
 - [x] Write tests for GET
 
 ### Screen Emulation
-- [ ] Create `lib/io/screen.dart`
-- [ ] Implement 40-column mode
-- [ ] Handle cursor positioning
-- [ ] Support screen scrolling
-- [ ] Implement clear screen
-- [ ] Write tests for screen operations
+- [x] Create `lib/io/screen.dart`
+- [x] Implement 40-column mode
+- [x] Handle cursor positioning
+- [x] Support screen scrolling
+- [x] Implement clear screen
+- [x] Write tests for screen operations
 
 ## Phase 6: Program Management
 
