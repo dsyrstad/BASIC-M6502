@@ -301,7 +301,7 @@ void main() {
 
         final finalInfo = arrayManager.getMemoryInfo();
         expect(finalInfo.totalArrays, equals(2));
-        expect(finalInfo.totalElements, equals(6 + 12)); // 6 + 4*3 = 18
+        expect(finalInfo.totalElements, equals(6 + 20)); // 6 + (3+1)*(4+1) = 26
         expect(finalInfo.memoryUsed, greaterThan(0));
       });
 
