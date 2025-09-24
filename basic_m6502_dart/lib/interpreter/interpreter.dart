@@ -3,6 +3,7 @@ import 'dart:io';
 import '../memory/memory.dart';
 import '../memory/variables.dart';
 import '../memory/program_storage.dart';
+import '../memory/user_functions.dart';
 import '../runtime/stack.dart';
 import '../io/screen.dart';
 import 'tokenizer.dart';
@@ -20,6 +21,7 @@ class Interpreter {
   final ProgramStorage programStorage;
   final RuntimeStack runtimeStack;
   final Screen screen;
+  final UserFunctionStorage userFunctions;
 
   /// Current execution state
   ExecutionState _state = ExecutionState.immediate;
@@ -51,7 +53,7 @@ class Interpreter {
   /// Direct mode flag
   bool get isInDirectMode => _state == ExecutionState.immediate;
 
-  Interpreter(this.memory, this.tokenizer, this.variables, this.expressionEvaluator, this.programStorage, this.runtimeStack, this.screen);
+  Interpreter(this.memory, this.tokenizer, this.variables, this.expressionEvaluator, this.programStorage, this.runtimeStack, this.screen, this.userFunctions);
 
   /// Main interpreter loop (NEWSTT equivalent)
   void mainLoop() {
@@ -347,6 +349,9 @@ class Interpreter {
       case Tokenizer.pokeToken:
         _executePoke();
         break;
+      case Tokenizer.defToken:
+        _executeDef();
+        break;
       default:
         throw InterpreterException('SYNTAX ERROR - Unknown statement: ${tokenizer.getTokenName(token)}');
     }
@@ -594,6 +599,9 @@ class Interpreter {
     // Clear all variables
     variables.clearVariables();
 
+    // Clear user-defined functions
+    userFunctions.clear();
+
     // Return to immediate mode
     _state = ExecutionState.immediate;
     _currentLineNumber = -1;
@@ -606,6 +614,9 @@ class Interpreter {
     // CLEAR clears variables but keeps the program in memory
     // This is different from NEW which clears both program and variables
     variables.clearVariables();
+
+    // Clear user-defined functions
+    userFunctions.clear();
 
     // Clear the runtime stack
     runtimeStack.clear();
@@ -1858,6 +1869,92 @@ class Interpreter {
 
     // Write byte to memory
     memory.writeByte(address, value);
+  }
+
+  /// Execute DEF statement - define user function
+  void _executeDef() {
+    _skipSpaces();
+
+    // Expect FN token
+    if (_textPointer >= _currentLine.length || _getCurrentChar() != Tokenizer.fnToken) {
+      throw InterpreterException('SYNTAX ERROR - Expected FN after DEF');
+    }
+    _advanceTextPointer(); // Skip FN token
+
+    _skipSpaces();
+
+    // Parse function name - should be a single letter, optionally followed by $
+    if (_textPointer >= _currentLine.length || !_isLetter(_getCurrentChar())) {
+      throw InterpreterException('SYNTAX ERROR - Invalid function name');
+    }
+
+    String functionName = String.fromCharCode(_getCurrentChar()).toUpperCase();
+    _advanceTextPointer();
+
+    bool isStringFunction = false;
+    if (_textPointer < _currentLine.length && _getCurrentChar() == 36) { // $ character
+      isStringFunction = true;
+      functionName += '\$';
+      _advanceTextPointer();
+    }
+
+    _skipSpaces();
+
+    // Expect opening parenthesis
+    if (_textPointer >= _currentLine.length || _getCurrentChar() != 40) { // (
+      throw InterpreterException('SYNTAX ERROR - Expected ( after function name');
+    }
+    _advanceTextPointer(); // Skip (
+
+    _skipSpaces();
+
+    // Parse parameter name - should be a single letter variable
+    if (_textPointer >= _currentLine.length || !_isLetter(_getCurrentChar())) {
+      throw InterpreterException('SYNTAX ERROR - Invalid parameter name');
+    }
+
+    String parameter = String.fromCharCode(_getCurrentChar()).toUpperCase();
+    _advanceTextPointer();
+
+    // Check for string parameter
+    if (_textPointer < _currentLine.length && _getCurrentChar() == 36) { // $ character
+      parameter += '\$';
+      _advanceTextPointer();
+    }
+
+    _skipSpaces();
+
+    // Expect closing parenthesis
+    if (_textPointer >= _currentLine.length || _getCurrentChar() != 41) { // )
+      throw InterpreterException('SYNTAX ERROR - Expected ) after parameter');
+    }
+    _advanceTextPointer(); // Skip )
+
+    _skipSpaces();
+
+    // Expect equals sign
+    if (_textPointer >= _currentLine.length || _getCurrentChar() != Tokenizer.equalToken) {
+      throw InterpreterException('SYNTAX ERROR - Expected = after parameter list');
+    }
+    _advanceTextPointer(); // Skip =
+
+    _skipSpaces();
+
+    // Capture the rest of the line as the function expression
+    List<int> expression = _currentLine.sublist(_textPointer);
+
+    // Create and store the function
+    final function = UserFunction(
+      name: functionName,
+      parameter: parameter,
+      expression: expression,
+      isStringFunction: isStringFunction,
+    );
+
+    userFunctions.defineFunction(function);
+
+    // Advance to end of line
+    _textPointer = _currentLine.length;
   }
 
   /// Reset interpreter to initial state

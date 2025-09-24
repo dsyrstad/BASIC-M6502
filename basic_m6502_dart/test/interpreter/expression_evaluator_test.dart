@@ -3,19 +3,22 @@ import '../../lib/interpreter/expression_evaluator.dart';
 import '../../lib/interpreter/tokenizer.dart';
 import '../../lib/memory/memory.dart';
 import '../../lib/memory/variables.dart';
+import '../../lib/memory/user_functions.dart';
 
 void main() {
   group('ExpressionEvaluator', () {
     late Memory memory;
     late VariableStorage variables;
     late Tokenizer tokenizer;
+    late UserFunctionStorage userFunctions;
     late ExpressionEvaluator evaluator;
 
     setUp(() {
       memory = Memory();
       variables = VariableStorage(memory);
       tokenizer = Tokenizer();
-      evaluator = ExpressionEvaluator(memory, variables, tokenizer);
+      userFunctions = UserFunctionStorage();
+      evaluator = ExpressionEvaluator(memory, variables, tokenizer, userFunctions);
 
       // Initialize variable storage
       variables.initialize(0x0800);

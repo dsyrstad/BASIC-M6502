@@ -279,31 +279,31 @@
 - [x] Implement PEEK function
 - [x] Implement POKE statement
 - [x] Handle memory boundaries
-- [ ] Support PEEK/POKE of system areas
+- [x] Support PEEK/POKE of system areas
 - [x] Write tests for memory access
 
 ### User-Defined Functions
-- [ ] Implement DEF FN statement
-- [ ] Create function storage
-- [ ] Implement FN calls
-- [ ] Support parameter passing
-- [ ] Handle function scope
+- [x] Implement DEF FN statement
+- [x] Create function storage
+- [x] Implement FN calls
+- [x] Support parameter passing
+- [x] Handle function scope
 - [ ] Write tests for user functions
 
 ### Error Handling
-- [ ] Create `lib/runtime/errors.dart`
-- [ ] Implement all error codes from ERRTAB
-- [ ] Create error messages (2-char and long)
+- [x] Create `lib/runtime/errors.dart`
+- [x] Implement all error codes from ERRTAB
+- [x] Create error messages (2-char and long)
 - [ ] Implement error recovery
 - [ ] Support ON ERROR (if applicable)
 - [ ] Write tests for error handling
 
 ### Garbage Collection
-- [ ] Implement string garbage collection
-- [ ] Handle temporary strings
-- [ ] Implement GARBAG algorithm
-- [ ] Support forced collection
-- [ ] Optimize collection performance
+- [x] Implement string garbage collection
+- [x] Handle temporary strings
+- [x] Implement GARBAG algorithm
+- [x] Support forced collection
+- [x] Optimize collection performance
 - [ ] Write tests for garbage collection
 
 ## Phase 8: Polish & Testing
@@ -315,14 +315,6 @@
 - [ ] Handle screen codes vs ASCII
 - [ ] Implement Commodore-specific features
 - [ ] Write compatibility tests
-
-### Performance Optimization
-- [ ] Profile interpreter performance
-- [ ] Optimize hot paths
-- [ ] Improve memory access patterns
-- [ ] Cache frequently used values
-- [ ] Optimize expression evaluation
-- [ ] Benchmark against targets
 
 ### Test Suite
 - [ ] Create comprehensive unit tests

@@ -2,6 +2,7 @@ import 'dart:math' as dart_math;
 
 import '../memory/memory.dart';
 import '../memory/variables.dart';
+import '../memory/user_functions.dart';
 import 'tokenizer.dart';
 
 /// Expression evaluator implementing FRMEVL algorithm from Microsoft BASIC.
@@ -13,6 +14,7 @@ class ExpressionEvaluator {
   final Memory memory;
   final VariableStorage variables;
   final Tokenizer tokenizer;
+  final UserFunctionStorage userFunctions;
 
   /// Operator precedence table (higher number = higher precedence)
   static const Map<int, int> _operatorPrecedence = {
@@ -38,7 +40,7 @@ class ExpressionEvaluator {
   /// Current expression being evaluated
   List<int> _expression = [];
 
-  ExpressionEvaluator(this.memory, this.variables, this.tokenizer);
+  ExpressionEvaluator(this.memory, this.variables, this.tokenizer, this.userFunctions);
 
   /// Evaluate an expression starting at current position (FRMEVL equivalent)
   ExpressionResult evaluateExpression(List<int> tokens, int startPos) {
@@ -112,6 +114,8 @@ class ExpressionEvaluator {
       _parseMultiArgFunction(token);
     } else if (token == Tokenizer.tabToken || token == Tokenizer.spcToken) { // TAB() or SPC() function
       _parseTabOrSpcFunction(token);
+    } else if (token == Tokenizer.fnToken) { // User-defined function
+      _parseUserFunction();
     } else if (token == Tokenizer.minusToken) { // Unary minus
       _parseUnaryMinus();
     } else if (token == Tokenizer.plusToken) { // Unary plus
@@ -626,6 +630,82 @@ class ExpressionEvaluator {
   void _skipSpaces() {
     while (_position < _expression.length && _getCurrentToken() == 32) { // ASCII space
       _advance();
+    }
+  }
+
+  /// Parse user-defined function call (FN function)
+  void _parseUserFunction() {
+    _advance(); // Skip FN token
+
+    _skipSpaces();
+
+    // Parse function name - should be a single letter, optionally followed by $
+    if (_position >= _expression.length || !_isLetter(_getCurrentToken())) {
+      throw ExpressionException('SYNTAX ERROR - Invalid function name after FN');
+    }
+
+    String functionName = String.fromCharCode(_getCurrentToken()).toUpperCase();
+    _advance();
+
+    bool isStringFunction = false;
+    if (_position < _expression.length && _getCurrentToken() == 36) { // $ character
+      isStringFunction = true;
+      functionName += '\$';
+      _advance();
+    }
+
+    _skipSpaces();
+
+    // Expect opening parenthesis
+    if (_position >= _expression.length || _getCurrentToken() != 40) { // (
+      throw ExpressionException('SYNTAX ERROR - Missing ( after function name');
+    }
+    _advance(); // Skip (
+
+    // Evaluate argument expression
+    final argResult = evaluateExpression(_expression, _position);
+    _position = argResult.endPosition;
+
+    _skipSpaces();
+    if (_position >= _expression.length || _getCurrentToken() != 41) { // )
+      throw ExpressionException('SYNTAX ERROR - Missing ) after function argument');
+    }
+    _advance(); // Skip )
+
+    // Look up the function
+    final function = userFunctions.getFunction(functionName);
+    if (function == null) {
+      throw ExpressionException('UNDEFINED FUNCTION - $functionName not defined');
+    }
+
+    // Evaluate the function by substituting the parameter
+    final result = _evaluateUserFunction(function, argResult.value);
+    _stack.add(StackEntry(type: StackEntryType.value, value: result));
+  }
+
+  /// Evaluate a user-defined function with the given argument
+  VariableValue _evaluateUserFunction(UserFunction function, VariableValue argument) {
+    // Create a temporary variable storage for the function parameter
+    final originalValue = variables.getVariable(function.parameter);
+
+    try {
+      // Set the parameter to the argument value
+      variables.setVariable(function.parameter, argument);
+
+      // Evaluate the function expression
+      final result = evaluateExpression(function.expression, 0);
+
+      // Verify return type matches function type
+      if (function.isStringFunction && result.value is! StringValue) {
+        throw ExpressionException('TYPE MISMATCH - String function must return string');
+      } else if (!function.isStringFunction && result.value is! NumericValue) {
+        throw ExpressionException('TYPE MISMATCH - Numeric function must return number');
+      }
+
+      return result.value;
+    } finally {
+      // Restore original parameter value
+      variables.setVariable(function.parameter, originalValue);
     }
   }
 }
