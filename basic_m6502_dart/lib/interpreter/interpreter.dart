@@ -341,6 +341,9 @@ class Interpreter {
       case Tokenizer.loadToken:
         _executeLoad();
         break;
+      case Tokenizer.pokeToken:
+        _executePoke();
+        break;
       default:
         throw InterpreterException('SYNTAX ERROR - Unknown statement: ${tokenizer.getTokenName(token)}');
     }
@@ -1637,6 +1640,50 @@ class Interpreter {
     }
   }
 
+  /// Execute POKE statement
+  void _executePoke() {
+    _skipSpaces();
+
+    // Evaluate address expression
+    final addressResult = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+    _textPointer = addressResult.endPosition;
+
+    if (addressResult.value is! NumericValue) {
+      throw InterpreterException('TYPE MISMATCH');
+    }
+
+    final address = (addressResult.value as NumericValue).value.round();
+    if (address < 0 || address > 65535) {
+      throw InterpreterException('ILLEGAL QUANTITY');
+    }
+
+    _skipSpaces();
+
+    // Expect comma separator
+    if (_textPointer >= _currentLine.length || _getCurrentChar() != 44) { // comma
+      throw InterpreterException('SYNTAX ERROR - Missing comma in POKE');
+    }
+    _advanceTextPointer(); // Skip comma
+
+    _skipSpaces();
+
+    // Evaluate value expression
+    final valueResult = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+    _textPointer = valueResult.endPosition;
+
+    if (valueResult.value is! NumericValue) {
+      throw InterpreterException('TYPE MISMATCH');
+    }
+
+    final value = (valueResult.value as NumericValue).value.round();
+    if (value < 0 || value > 255) {
+      throw InterpreterException('ILLEGAL QUANTITY');
+    }
+
+    // Write byte to memory
+    memory.writeByte(address, value);
+  }
+
   /// Reset interpreter to initial state
   void reset() {
     _state = ExecutionState.immediate;
@@ -1647,6 +1694,16 @@ class Interpreter {
 
   /// Check if interpreter is running
   bool get isRunning => _state != ExecutionState.stopped;
+
+  /// Evaluate an expression from a string and return the numeric result
+  double evaluateExpression(String expressionString) {
+    final tokens = tokenizer.tokenizeLine(expressionString);
+    final result = expressionEvaluator.evaluateExpression(tokens, 0);
+    if (result.value is NumericValue) {
+      return (result.value as NumericValue).value;
+    }
+    throw InterpreterException('Expected numeric result');
+  }
 
   /// Execute program until completion
   void runProgram({bool rethrowExceptions = false}) {

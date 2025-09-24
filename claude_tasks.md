@@ -276,11 +276,11 @@
 - [x] Write tests for string functions
 
 ### Memory Access
-- [ ] Implement PEEK function
-- [ ] Implement POKE statement
-- [ ] Handle memory boundaries
+- [x] Implement PEEK function
+- [x] Implement POKE statement
+- [x] Handle memory boundaries
 - [ ] Support PEEK/POKE of system areas
-- [ ] Write tests for memory access
+- [x] Write tests for memory access
 
 ### User-Defined Functions
 - [ ] Implement DEF FN statement

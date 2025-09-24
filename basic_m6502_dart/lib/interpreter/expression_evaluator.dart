@@ -493,6 +493,17 @@ class ExpressionEvaluator {
         }
         throw ExpressionException('TYPE MISMATCH');
 
+      case Tokenizer.peekToken:
+        if (argument is NumericValue) {
+          final address = argument.value.round();
+          if (address < 0 || address > 65535) {
+            throw ExpressionException('ILLEGAL QUANTITY');
+          }
+          final value = memory.readByte(address);
+          return NumericValue(value.toDouble());
+        }
+        throw ExpressionException('TYPE MISMATCH');
+
       default:
         throw ExpressionException('FUNCTION NOT IMPLEMENTED: ${tokenizer.getTokenName(functionToken)}');
     }
