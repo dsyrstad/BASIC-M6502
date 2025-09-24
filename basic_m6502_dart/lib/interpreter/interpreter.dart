@@ -2166,7 +2166,7 @@ class Interpreter {
 
     _skipSpaces();
 
-    // Expect opening parenthesis
+    // Must have opening parenthesis (per original Microsoft BASIC 6502 spec)
     if (_textPointer >= _currentLine.length || _getCurrentChar() != 40) {
       // (
       throw InterpreterException(
@@ -2177,15 +2177,16 @@ class Interpreter {
 
     _skipSpaces();
 
-    // Parse parameter name - should be a single letter variable
+    // Parse single parameter name - must be a single letter variable (no strings allowed per original spec)
     if (_textPointer >= _currentLine.length || !_isLetter(_getCurrentChar())) {
-      throw InterpreterException('SYNTAX ERROR - Invalid parameter name');
+      throw InterpreterException('SYNTAX ERROR - Expected parameter name');
     }
 
     String parameter = String.fromCharCode(_getCurrentChar()).toUpperCase();
     _advanceTextPointer();
 
-    // Check for string parameter
+    // Original Microsoft BASIC 6502 does not support string functions
+    // But we'll keep this for compatibility with our extended implementation
     if (_textPointer < _currentLine.length && _getCurrentChar() == 36) {
       // $ character
       parameter += '\$';
@@ -2194,7 +2195,7 @@ class Interpreter {
 
     _skipSpaces();
 
-    // Expect closing parenthesis
+    // Must have closing parenthesis
     if (_textPointer >= _currentLine.length || _getCurrentChar() != 41) {
       // )
       throw InterpreterException('SYNTAX ERROR - Expected ) after parameter');

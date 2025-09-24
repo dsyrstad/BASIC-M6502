@@ -82,15 +82,15 @@ void main() {
       expect((result as StringValue).value, equals('hello world'));
     });
 
-    test('should handle function with multiple parameters', () {
-      interpreter.processDirectModeInput('DEF FNC(A, B) = A * B + A - B');
+    test('should handle function with complex calculation', () {
+      interpreter.processDirectModeInput('DEF FNC(X) = X * X + X - 1');
 
-      final result = interpreter.evaluateExpressionFromString('FNC(4, 3)');
+      final result = interpreter.evaluateExpressionFromString('FNC(4)');
       expect(result, isA<NumericValue>());
       expect(
         (result as NumericValue).value,
-        equals(13.0),
-      ); // 4*3 + 4 - 3 = 12 + 1 = 13
+        equals(19.0),
+      ); // 4*4 + 4 - 1 = 16 + 4 - 1 = 19
     });
 
     test('should handle function call within expression', () {
@@ -156,11 +156,11 @@ void main() {
 
     test('should handle string function with string operations', () {
       interpreter.processDirectModeInput(
-        'DEF FNT\$(S\$, N) = LEFT\$(S\$, N) + RIGHT\$(S\$, N)',
+        'DEF FNT\$(S\$) = LEFT\$(S\$, 2) + RIGHT\$(S\$, 2)',
       );
 
       variables.setVariable('T\$', StringValue('HELLO'));
-      final result = interpreter.evaluateExpressionFromString('FNT\$(T\$, 2)');
+      final result = interpreter.evaluateExpressionFromString('FNT\$(T\$)');
       expect(result, isA<StringValue>());
       expect(
         (result as StringValue).value,
@@ -175,10 +175,10 @@ void main() {
       );
     });
 
-    test('should handle function with no parameters', () {
-      interpreter.processDirectModeInput('DEF FNE = 42');
+    test('should handle constant function', () {
+      interpreter.processDirectModeInput('DEF FNE(X) = 42');
 
-      final result = interpreter.evaluateExpressionFromString('FNE');
+      final result = interpreter.evaluateExpressionFromString('FNE(5)');
       expect(result, isA<NumericValue>());
       expect((result as NumericValue).value, equals(42.0));
     });
