@@ -341,6 +341,87 @@ class ProgramStorage {
   void _invalidateCache() {
     _cacheValid = false;
   }
+
+  /// Export the entire program as bytes for saving to disk
+  List<int> exportProgram() {
+    final programData = <int>[];
+    int currentAddress = _programStart;
+
+    while (true) {
+      final linkPointer = memory.readWord(currentAddress);
+
+      if (linkPointer == 0) {
+        // End of program - write terminator
+        programData.add(0);
+        programData.add(0);
+        break;
+      }
+
+      // Get line data
+      final lineNumber = memory.readWord(currentAddress + 2);
+
+      // Calculate line length
+      int lineEnd = currentAddress + 4;
+      while (memory.readByte(lineEnd) != 0) {
+        lineEnd++;
+      }
+      final lineLength = lineEnd - currentAddress + 1; // Include null terminator
+
+      // Write line length (2 bytes)
+      programData.add(lineLength & 0xFF);
+      programData.add((lineLength >> 8) & 0xFF);
+
+      // Write line number (2 bytes)
+      programData.add(lineNumber & 0xFF);
+      programData.add((lineNumber >> 8) & 0xFF);
+
+      // Write line content (tokens until null)
+      for (int addr = currentAddress + 4; addr <= lineEnd; addr++) {
+        programData.add(memory.readByte(addr));
+      }
+
+      currentAddress = linkPointer;
+    }
+
+    return programData;
+  }
+
+  /// Import a program from bytes loaded from disk
+  void importProgram(List<int> programData) {
+    // Clear current program first
+    clearProgram();
+
+    int index = 0;
+    while (index < programData.length - 1) {
+      // Read line length
+      final lineLength = programData[index] | (programData[index + 1] << 8);
+      index += 2;
+
+      if (lineLength == 0) {
+        // End of program
+        break;
+      }
+
+      // Read line number
+      final lineNumber = programData[index] | (programData[index + 1] << 8);
+      index += 2;
+
+      // Read line content
+      final content = <int>[];
+      for (int i = 0; i < lineLength - 4; i++) {
+        if (index >= programData.length) break;
+        final byte = programData[index++];
+        if (byte != 0) { // Skip null terminator
+          content.add(byte);
+        }
+      }
+
+      // Store the line
+      storeLine(lineNumber, content);
+    }
+
+    _invalidateCache();
+  }
 }
 
 /// Information about where to insert a line

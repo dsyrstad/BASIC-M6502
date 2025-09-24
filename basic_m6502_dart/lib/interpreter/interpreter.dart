@@ -335,6 +335,12 @@ class Interpreter {
       case Tokenizer.getToken:
         _executeGet();
         break;
+      case Tokenizer.saveToken:
+        _executeSave();
+        break;
+      case Tokenizer.loadToken:
+        _executeLoad();
+        break;
       default:
         throw InterpreterException('SYNTAX ERROR - Unknown statement: ${tokenizer.getTokenName(token)}');
     }
@@ -524,7 +530,47 @@ class Interpreter {
       return;
     }
 
-    for (final lineNumber in lineNumbers) {
+    // Check for line range specification
+    int? startLine;
+    int? endLine;
+
+    _skipSpaces();
+    if (_textPointer < _currentLine.length && _isDigit(_currentLine[_textPointer])) {
+      // Parse start line number
+      startLine = _parseLineNumber();
+
+      _skipSpaces();
+      // Check for dash indicating range
+      if (_textPointer < _currentLine.length && _currentLine[_textPointer] == '-') {
+        _textPointer++;
+        _skipSpaces();
+
+        // Parse end line number if present
+        if (_textPointer < _currentLine.length && _isDigit(_currentLine[_textPointer])) {
+          endLine = _parseLineNumber();
+        }
+      } else {
+        // Single line specified
+        endLine = startLine;
+      }
+    }
+
+    // Filter line numbers based on range
+    List<int> linesToList;
+    if (startLine != null) {
+      if (endLine != null) {
+        // Range specified
+        linesToList = lineNumbers.where((ln) => ln >= startLine! && ln <= endLine!).toList();
+      } else {
+        // Open-ended range (LIST 100-)
+        linesToList = lineNumbers.where((ln) => ln >= startLine!).toList();
+      }
+    } else {
+      // No range specified, list all
+      linesToList = lineNumbers;
+    }
+
+    for (final lineNumber in linesToList) {
       try {
         final line = programStorage.getLineForDisplay(lineNumber, tokenizer.detokenize);
         print(line);
@@ -1500,6 +1546,94 @@ class Interpreter {
       while (_textPointer < _currentLine.length) {
         _executeNextStatement();
       }
+    }
+  }
+
+  /// Execute SAVE statement
+  void _executeSave() {
+    _skipSpaces();
+
+    // Parse filename string
+    if (_getCurrentChar() != 34) { // Not a quote
+      throw InterpreterException('SYNTAX ERROR - Filename must be in quotes');
+    }
+
+    _textPointer++; // Skip opening quote
+    final filenameStart = _textPointer;
+
+    // Find closing quote
+    while (_textPointer < _currentLine.length && _getCurrentChar() != 34) {
+      _textPointer++;
+    }
+
+    if (_textPointer >= _currentLine.length) {
+      throw InterpreterException('SYNTAX ERROR - Missing closing quote');
+    }
+
+    // Extract filename
+    final filenameBytes = _currentLine.sublist(filenameStart, _textPointer);
+    final filename = String.fromCharCodes(filenameBytes);
+    _textPointer++; // Skip closing quote
+
+    // Save the program
+    try {
+      final programData = programStorage.exportProgram();
+      final file = File(filename);
+      file.writeAsBytesSync(programData);
+      print('SAVED');
+    } catch (e) {
+      throw InterpreterException('FILE ERROR - Cannot save to $filename');
+    }
+  }
+
+  /// Execute LOAD statement
+  void _executeLoad() {
+    _skipSpaces();
+
+    // Parse filename string
+    if (_getCurrentChar() != 34) { // Not a quote
+      throw InterpreterException('SYNTAX ERROR - Filename must be in quotes');
+    }
+
+    _textPointer++; // Skip opening quote
+    final filenameStart = _textPointer;
+
+    // Find closing quote
+    while (_textPointer < _currentLine.length && _getCurrentChar() != 34) {
+      _textPointer++;
+    }
+
+    if (_textPointer >= _currentLine.length) {
+      throw InterpreterException('SYNTAX ERROR - Missing closing quote');
+    }
+
+    // Extract filename
+    final filenameBytes = _currentLine.sublist(filenameStart, _textPointer);
+    final filename = String.fromCharCodes(filenameBytes);
+    _textPointer++; // Skip closing quote
+
+    // Load the program
+    try {
+      final file = File(filename);
+      if (!file.existsSync()) {
+        throw InterpreterException('FILE NOT FOUND - $filename');
+      }
+
+      final programData = file.readAsBytesSync();
+
+      // Clear current program and variables
+      programStorage.clearProgram();
+      variables.clearVariables();
+
+      // Import the new program
+      programStorage.importProgram(programData);
+
+      print('LOADED');
+    } catch (e) {
+      if (e is InterpreterException) {
+        throw e;
+      }
+      throw InterpreterException('FILE ERROR - Cannot load from $filename');
     }
   }
 
