@@ -1550,12 +1550,41 @@ class Interpreter {
 
   /// Handle runtime errors
   void _handleError(dynamic error) {
+    // Enhanced error recovery system
     if (error is InterpreterException) {
       print(error.message);
     } else {
       print('RUNTIME ERROR: $error');
     }
-    _state = ExecutionState.immediate; // Return to direct mode
+
+    // Perform error recovery
+    _recoverFromError();
+  }
+
+  /// Recover from error by resetting system state appropriately
+  void _recoverFromError() {
+    // Reset text pointer to safe state
+    _textPointer = 0;
+    _currentLine = [];
+
+    // Clear any partial expression evaluation state
+    expressionEvaluator.reset();
+
+    // If we were in program mode, return to immediate mode
+    if (_state == ExecutionState.program) {
+      print('READY.');
+      _state = ExecutionState.immediate;
+      _currentLineNumber = -1;
+    }
+
+    // Clear any temporary strings that might have been created
+    // during the failed operation
+    // Note: Full garbage collection might be too expensive here,
+    // but we should at least clear any temps from the failed operation
+
+    // Stack remains intact for FOR/GOSUB unless specifically corrupted
+    // Variables remain intact - this is standard BASIC behavior
+    // Program lines remain intact
   }
 
   /// Execute a line of BASIC code

@@ -708,6 +708,13 @@ class ExpressionEvaluator {
       variables.setVariable(function.parameter, originalValue);
     }
   }
+
+  /// Reset expression evaluator state for error recovery
+  void reset() {
+    _stack.clear();
+    _position = 0;
+    _expression = [];
+  }
 }
 
 /// Stack entry for expression evaluation
