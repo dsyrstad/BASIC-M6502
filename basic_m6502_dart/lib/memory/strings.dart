@@ -342,6 +342,11 @@ class StringManager {
     }
   }
 
+  /// Release a temporary string (remove from temporary stack if present)
+  void releaseTemporary(StringDescriptor descriptor) {
+    _tempStringStack.remove(descriptor);
+  }
+
   /// Reset string management to initial state
   void reset() {
     _tempStringStack.clear();

@@ -403,8 +403,9 @@ class NumericValue extends VariableValue {
 /// String variable value
 class StringValue extends VariableValue {
   final String value;
+  final dynamic descriptor; // StringDescriptor from strings.dart
 
-  const StringValue(this.value);
+  const StringValue(this.value, [this.descriptor]);
 
   @override
   String toString() => value;

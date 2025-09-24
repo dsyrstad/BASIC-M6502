@@ -253,7 +253,7 @@
 - [x] Implement line replacement
 - [x] Handle immediate mode
 - [x] Support line editing shortcuts
-- [ ] Write tests for editor
+- [x] Write tests for editor
 
 ### RUN Command
 - [x] Implement RUN statement
@@ -288,15 +288,15 @@
 - [x] Implement FN calls
 - [x] Support parameter passing
 - [x] Handle function scope
-- [ ] Write tests for user functions
+- [x] Write tests for user functions
 
 ### Error Handling
 - [x] Create `lib/runtime/errors.dart`
 - [x] Implement all error codes from ERRTAB
 - [x] Create error messages (2-char and long)
-- [ ] Implement error recovery
+- [x] Implement error recovery
 - [ ] Support ON ERROR (if applicable)
-- [ ] Write tests for error handling
+- [x] Write tests for error handling
 
 ### Garbage Collection
 - [x] Implement string garbage collection
@@ -304,7 +304,7 @@
 - [x] Implement GARBAG algorithm
 - [x] Support forced collection
 - [x] Optimize collection performance
-- [ ] Write tests for garbage collection
+- [x] Write tests for garbage collection
 
 ## Phase 8: Polish & Testing
 
@@ -368,16 +368,16 @@
 ## Testing Milestones
 
 ### Milestone 1: Basic Programs Run
-- [ ] "HELLO WORLD" program works
-- [ ] Simple calculations work
-- [ ] Variable assignment works
-- [ ] Basic PRINT formatting works
+- [x] "HELLO WORLD" program works
+- [x] Simple calculations work
+- [x] Variable assignment works
+- [x] Basic PRINT formatting works
 
 ### Milestone 2: Control Flow Works
-- [ ] Loops execute correctly
-- [ ] Conditionals branch properly
-- [ ] Subroutines work
-- [ ] Line numbers resolve
+- [x] Loops execute correctly
+- [x] Conditionals branch properly
+- [x] Subroutines work
+- [x] Line numbers resolve
 
 ### Milestone 3: Full Compatibility
 - [ ] All statements implemented

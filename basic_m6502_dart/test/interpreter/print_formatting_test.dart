@@ -8,6 +8,7 @@ import '../../lib/memory/variables.dart';
 import '../../lib/memory/program_storage.dart';
 import '../../lib/runtime/stack.dart';
 import '../../lib/io/screen.dart';
+import '../../lib/memory/user_functions.dart';
 
 /// Mock screen that captures output for testing
 class MockScreen extends Screen {
@@ -79,17 +80,19 @@ void main() {
     late ProgramStorage programStorage;
     late RuntimeStack runtimeStack;
     late MockScreen screen;
+    late UserFunctionStorage userFunctions;
     late Interpreter interpreter;
 
     setUp(() {
       memory = Memory();
       tokenizer = Tokenizer();
       variables = VariableStorage(memory);
-      expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer);
+      expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer, userFunctions);
       programStorage = ProgramStorage(memory);
       runtimeStack = RuntimeStack(memory, variables);
       screen = MockScreen();
-      interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen);
+      userFunctions = UserFunctionStorage();
+      interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen, userFunctions);
 
       // Initialize variable storage
       variables.initialize(0x2000);

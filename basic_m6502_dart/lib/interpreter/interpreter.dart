@@ -1606,6 +1606,21 @@ class Interpreter {
     }
   }
 
+  /// Process direct mode input (alias for executeLine)
+  void processDirectModeInput(String line) {
+    executeLine(line);
+  }
+
+  /// Evaluate an expression from a string and return the result
+  VariableValue evaluateExpressionFromString(String expression) {
+    // Tokenize the expression
+    _currentLine = tokenizer.tokenizeLine(expression);
+    _textPointer = 0;
+
+    // Evaluate the expression
+    return expressionEvaluator.evaluate();
+  }
+
   /// Execute SAVE statement
   void _executeSave() {
     _skipSpaces();

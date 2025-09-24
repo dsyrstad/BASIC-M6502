@@ -7,6 +7,7 @@ import '../../lib/io/screen.dart';
 import '../../lib/interpreter/tokenizer.dart';
 import '../../lib/interpreter/expression_evaluator.dart';
 import '../../lib/interpreter/interpreter.dart';
+import '../../lib/memory/user_functions.dart';
 
 void main() {
   group('LIST Command Tests', () {
@@ -18,6 +19,7 @@ void main() {
     late Screen screen;
     late Tokenizer tokenizer;
     late ExpressionEvaluator expressionEvaluator;
+    late UserFunctionStorage userFunctions;
 
     setUp(() {
       memory = Memory();
@@ -26,8 +28,9 @@ void main() {
       runtimeStack = RuntimeStack(memory, variables);
       screen = Screen();
       tokenizer = Tokenizer();
-      expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer);
-      interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen);
+      userFunctions = UserFunctionStorage();
+      expressionEvaluator = ExpressionEvaluator(memory, variables, tokenizer, userFunctions);
+      interpreter = Interpreter(memory, tokenizer, variables, expressionEvaluator, programStorage, runtimeStack, screen, userFunctions);
     });
 
     test('LIST command processes correctly with empty program', () {
