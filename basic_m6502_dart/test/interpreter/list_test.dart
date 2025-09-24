@@ -76,10 +76,12 @@ void main() {
       final testRuntimeStack = RuntimeStack(testMemory, testVariables);
       final testScreen = Screen();
       final testTokenizer = Tokenizer();
+      final testUserFunctions = UserFunctionStorage();
       final testExpressionEvaluator = ExpressionEvaluator(
         testMemory,
         testVariables,
         testTokenizer,
+        testUserFunctions,
       );
       final testInterpreter = Interpreter(
         testMemory,
@@ -89,6 +91,7 @@ void main() {
         testProgramStorage,
         testRuntimeStack,
         testScreen,
+        testUserFunctions,
       );
 
       // Add program lines in order first to ensure they work

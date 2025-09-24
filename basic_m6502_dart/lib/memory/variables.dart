@@ -56,6 +56,16 @@ class VariableStorage {
       throw VariableException('Invalid variable name: $name');
     }
 
+    // Check for variable names that are too long (excluding $ and ( suffixes)
+    String baseName = name;
+    if (name.endsWith('\$') || name.endsWith('(')) {
+      baseName = name.substring(0, name.length - 1);
+    }
+
+    if (baseName.length > 2) {
+      throw VariableException('Variable name too long: $name');
+    }
+
     // Normalize variable name to 2 characters
     final normalizedName = _normalizeVariableName(name);
     final nameBytes = _encodeVariableName(normalizedName);

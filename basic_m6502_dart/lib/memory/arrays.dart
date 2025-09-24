@@ -63,7 +63,7 @@ class ArrayManager {
       normalizedName += ' ';
     }
 
-    final nameBytes = _encodeArrayName(name); // Use original name for encoding
+    final nameBytes = _encodeArrayName(normalizedName); // Use normalized name for encoding
 
     // Check if it's a string array
     final isString = name.contains('\$');
@@ -118,8 +118,9 @@ class ArrayManager {
       );
     }
 
-    // For creation, use first 2 characters of name
-    final arrayName = name.length > 2 ? name.substring(0, 2) : name;
+    // For creation, use first 2 characters of name and normalize to uppercase
+    String arrayName = name.length > 2 ? name.substring(0, 2) : name;
+    arrayName = arrayName.toUpperCase();
 
     // Check if array already exists
     final existing = findArray(arrayName);

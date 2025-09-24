@@ -261,6 +261,19 @@ class Tokenizer {
               pos = tempPos + 2;
             }
           }
+
+          // Special handling for "FN" followed by a letter (user function names)
+          if (entry.token == fnToken) {
+            // Check if followed immediately by a letter
+            if (pos < line.length) {
+              final nextChar = line.codeUnitAt(pos);
+              if ((nextChar >= 65 && nextChar <= 90) || (nextChar >= 97 && nextChar <= 122)) {
+                // It's a letter, add it as the next token
+                result.add(nextChar >= 97 ? nextChar - 32 : nextChar); // Convert to uppercase
+                pos++;
+              }
+            }
+          }
           break;
         }
       }
@@ -304,12 +317,18 @@ class Tokenizer {
 
     // Make sure we're not matching a prefix of a longer word
     // (e.g., don't match "TO" in "TOP")
+    // Exception: Allow "FN" to match even when followed by a letter
+    // because "FNA", "FNB" etc. are valid user function names
     if (pos + word.length < text.length) {
       final nextChar = text.codeUnitAt(pos + word.length);
       // If the word ends with a letter and next char is also a letter,
-      // this is not a complete match
+      // this is not a complete match (except for "FN")
       final lastWordChar = word.codeUnitAt(word.length - 1);
       if (_isLetter(lastWordChar) && _isLetter(nextChar)) {
+        // Special exception for "FN" - allow it to match when followed by a letter
+        if (word == 'FN') {
+          return true;
+        }
         return false;
       }
     }

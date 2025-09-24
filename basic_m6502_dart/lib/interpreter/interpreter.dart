@@ -5,6 +5,7 @@ import '../memory/variables.dart';
 import '../memory/program_storage.dart';
 import '../memory/user_functions.dart';
 import '../runtime/stack.dart';
+import '../runtime/errors.dart';
 import '../io/screen.dart';
 import 'tokenizer.dart';
 import 'expression_evaluator.dart';
@@ -1739,22 +1740,66 @@ class Interpreter {
 
   /// Process direct mode input (alias for executeLine)
   void processDirectModeInput(String line) {
-    executeLine(line);
+    try {
+      executeLine(line);
+    } on InterpreterException catch (e) {
+      // Convert InterpreterException to BasicError
+      BasicErrorCode errorCode;
+      if (e.message.contains('SYNTAX ERROR')) {
+        errorCode = BasicErrorCode.syntaxError;
+      } else if (e.message.contains('RETURN WITHOUT GOSUB')) {
+        errorCode = BasicErrorCode.returnWithoutGosub;
+      } else if (e.message.contains('OUT OF DATA')) {
+        errorCode = BasicErrorCode.outOfData;
+      } else {
+        errorCode = BasicErrorCode.syntaxError; // Default for unknown errors
+      }
+      throw BasicError(errorCode, context: e.message);
+    } catch (e) {
+      // Convert any other exception to BasicError
+      throw BasicError(
+        BasicErrorCode.syntaxError,
+        context: e.toString(),
+      );
+    }
   }
 
   /// Evaluate an expression from a string and return the result
   VariableValue evaluateExpressionFromString(String expression) {
-    // Tokenize the expression
-    _currentLine = tokenizer.tokenizeLine(expression);
-    _textPointer = 0;
+    try {
+      // Tokenize the expression
+      _currentLine = tokenizer.tokenizeLine(expression);
+      _textPointer = 0;
 
-    // Evaluate the expression
-    var result = expressionEvaluator.evaluateExpression(
-      _currentLine,
-      _textPointer,
-    );
-    _textPointer = result.endPosition;
-    return result.value;
+      // Evaluate the expression
+      var result = expressionEvaluator.evaluateExpression(
+        _currentLine,
+        _textPointer,
+      );
+      _textPointer = result.endPosition;
+      return result.value;
+    } on ExpressionException catch (e) {
+      // Convert ExpressionException to BasicError
+      BasicErrorCode errorCode;
+      if (e.message.contains('DIVISION BY ZERO')) {
+        errorCode = BasicErrorCode.divisionByZero;
+      } else if (e.message.contains('TYPE MISMATCH')) {
+        errorCode = BasicErrorCode.typeMismatch;
+      } else if (e.message.contains('OVERFLOW')) {
+        errorCode = BasicErrorCode.overflow;
+      } else if (e.message.contains('UNDEFINED FUNCTION')) {
+        errorCode = BasicErrorCode.undefinedFunction;
+      } else {
+        errorCode = BasicErrorCode.syntaxError; // Default
+      }
+      throw BasicError(errorCode, context: e.message);
+    } catch (e) {
+      // Convert any other exception to BasicError
+      throw BasicError(
+        BasicErrorCode.syntaxError,
+        context: e.toString(),
+      );
+    }
   }
 
   /// Execute SAVE statement
