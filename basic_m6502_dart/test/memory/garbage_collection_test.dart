@@ -147,10 +147,10 @@ void main() {
     test('should preserve strings during garbage collection', () {
       // Create multiple string variables
       final originalStrings = <String, String>{
-        'NAME\$': 'John Doe',
-        'CITY\$': 'New York',
-        'STATE\$': 'NY',
-        'COUNTRY\$': 'USA',
+        'N\$': 'John Doe',
+        'C\$': 'New York',
+        'S\$': 'NY',
+        'U\$': 'USA',
       };
 
       for (final entry in originalStrings.entries) {
@@ -173,13 +173,13 @@ void main() {
     });
 
     test('should handle empty strings in garbage collection', () {
-      variables.setVariable('EMPTY\$', StringValue(''));
-      variables.setVariable('FULL\$', StringValue('Content'));
+      variables.setVariable('E\$', StringValue(''));
+      variables.setVariable('F\$', StringValue('Content'));
 
       stringManager.garbageCollect();
 
-      final empty = variables.getVariable('EMPTY\$') as StringValue;
-      final full = variables.getVariable('FULL\$') as StringValue;
+      final empty = variables.getVariable('E\$') as StringValue;
+      final full = variables.getVariable('F\$') as StringValue;
 
       expect(empty.value, equals(''));
       expect(full.value, equals('Content'));
@@ -238,21 +238,21 @@ void main() {
 
     test('should update references during garbage collection', () {
       // Create a string variable
-      variables.setVariable('TEST\$', StringValue('Original'));
+      variables.setVariable('T\$', StringValue('Original'));
 
       // Get original pointer
-      final originalValue = variables.getVariable('TEST\$') as StringValue;
+      final originalValue = variables.getVariable('T\$') as StringValue;
       final originalDescriptor = originalValue.descriptor;
       final originalPointer = originalDescriptor?.pointer ?? 0;
 
       // Create another string to cause movement during GC
-      variables.setVariable('OTHER\$', StringValue('Other string'));
+      variables.setVariable('O\$', StringValue('Other string'));
 
       // Force garbage collection
       stringManager.garbageCollect();
 
       // String should still be accessible with same content
-      final afterGcValue = variables.getVariable('TEST\$') as StringValue;
+      final afterGcValue = variables.getVariable('T\$') as StringValue;
       expect(afterGcValue.value, equals('Original'));
 
       // Pointer may have changed due to compaction
