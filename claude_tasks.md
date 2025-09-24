@@ -139,7 +139,7 @@
 - [x] Implement GOTO statement
 - [x] Create line search algorithm
 - [x] Handle undefined line errors
-- [ ] Support computed GOTO
+- [x] Support computed GOTO
 - [x] Write tests for GOTO
 
 ### IF/THEN Statement
@@ -147,7 +147,7 @@
 - [x] Support relational operators (<, >, =, <=, >=, <>)
 - [x] Implement THEN clause
 - [x] Support IF without THEN (implicit)
-- [ ] Handle nested IF statements
+- [x] Handle nested IF statements
 - [x] Write tests for conditionals
 
 ### FOR/NEXT Loops
@@ -192,7 +192,7 @@
 - [x] Implement comma separator (tab zones)
 - [x] Implement TAB() function
 - [x] Implement SPC() function
-- [ ] Support PRINT USING (if applicable)
+- [x] Support PRINT USING (not applicable - not in original Microsoft BASIC 6502)
 - [x] Handle 40-column formatting
 - [x] Write tests for PRINT formatting
 
@@ -227,8 +227,8 @@
 - [x] Handle token detokenization
 - [x] Format output properly
 - [x] Support line range specification
-- [ ] Support LIST to device (if needed)
-- [ ] Write tests for LIST
+- [x] Support LIST to device (not applicable - original Microsoft BASIC 6502 only supported console output)
+- [x] Write tests for LIST
 
 ### NEW/CLEAR Commands
 - [x] Implement NEW command
@@ -242,17 +242,17 @@
 - [x] Implement SAVE command
 - [x] Create program file format
 - [x] Implement LOAD command
-- [ ] Handle file I/O errors
-- [ ] Support VERIFY command
-- [ ] Write tests for file operations
+- [x] Handle file I/O errors
+- [x] Support VERIFY command
+- [x] Write tests for file operations
 
 ### Line Editor
 - [x] Create `lib/runtime/line_editor.dart` (integrated in interpreter)
 - [x] Implement line insertion
 - [x] Implement line deletion
 - [x] Implement line replacement
-- [ ] Handle immediate mode
-- [ ] Support line editing shortcuts
+- [x] Handle immediate mode
+- [x] Support line editing shortcuts
 - [ ] Write tests for editor
 
 ### RUN Command
@@ -261,7 +261,7 @@
 - [x] Handle variable clearing
 - [x] Reset stack and pointers
 - [x] Initialize runtime state
-- [ ] Write tests for RUN
+- [x] Write tests for RUN
 
 ## Phase 7: Advanced Features
 

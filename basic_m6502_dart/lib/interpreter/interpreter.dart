@@ -619,14 +619,25 @@ class Interpreter {
 
   /// Execute GOTO statement
   void _executeGoto() {
-    // Parse the target line number
-    final targetLineNumber = _parseLineNumber();
+    _skipSpaces();
 
-    if (targetLineNumber == -1) {
-      throw InterpreterException('SYNTAX ERROR - Invalid line number in GOTO');
+    if (_textPointer >= _currentLine.length) {
+      throw InterpreterException('SYNTAX ERROR - Missing line number in GOTO');
     }
 
-    // Jump to the target line
+    // Always evaluate as an expression (handles both static numbers and computations)
+    final result = expressionEvaluator.evaluateExpression(_currentLine, _textPointer);
+    _textPointer = result.endPosition;
+
+    if (result.value is! NumericValue) {
+      throw InterpreterException('TYPE MISMATCH - GOTO target must be numeric');
+    }
+
+    final targetLineNumber = (result.value as NumericValue).value.toInt();
+    if (targetLineNumber < 0 || targetLineNumber > 65535) {
+      throw InterpreterException('ILLEGAL QUANTITY ERROR - Line number out of range');
+    }
+
     _jumpToLine(targetLineNumber);
   }
 
