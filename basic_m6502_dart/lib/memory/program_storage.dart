@@ -388,11 +388,27 @@ class ProgramStorage {
 
   /// Import a program from bytes loaded from disk
   void importProgram(List<int> programData) {
+    // Validate program data
+    if (programData.isEmpty) {
+      throw ProgramStorageException('Empty program data');
+    }
+
+    if (programData.length < 2) {
+      throw ProgramStorageException('Invalid program format - too short');
+    }
+
     // Clear current program first
     clearProgram();
 
     int index = 0;
+    int lineCount = 0;
+
     while (index < programData.length - 1) {
+      // Check for buffer overflow
+      if (index + 1 >= programData.length) {
+        throw ProgramStorageException('Invalid program format - unexpected end of data');
+      }
+
       // Read line length
       final lineLength = programData[index] | (programData[index + 1] << 8);
       index += 2;
@@ -402,22 +418,61 @@ class ProgramStorage {
         break;
       }
 
+      // Validate line length
+      if (lineLength < 4) {
+        throw ProgramStorageException('Invalid program format - line too short');
+      }
+
+      if (lineLength > 255) {
+        throw ProgramStorageException('Invalid program format - line too long');
+      }
+
+      // Check if we have enough data for this line
+      if (index + lineLength - 2 > programData.length) {
+        throw ProgramStorageException('Invalid program format - line data exceeds file size');
+      }
+
       // Read line number
       final lineNumber = programData[index] | (programData[index + 1] << 8);
       index += 2;
 
+      // Validate line number
+      if (lineNumber < 0 || lineNumber > 65535) {
+        throw ProgramStorageException('Invalid line number: $lineNumber');
+      }
+
       // Read line content
       final content = <int>[];
       for (int i = 0; i < lineLength - 4; i++) {
-        if (index >= programData.length) break;
+        if (index >= programData.length) {
+          throw ProgramStorageException('Invalid program format - line content truncated');
+        }
         final byte = programData[index++];
         if (byte != 0) { // Skip null terminator
           content.add(byte);
         }
       }
 
+      // Skip null terminator if present
+      if (index < programData.length && programData[index] == 0) {
+        index++;
+      }
+
       // Store the line
-      storeLine(lineNumber, content);
+      try {
+        storeLine(lineNumber, content);
+        lineCount++;
+
+        // Prevent programs with too many lines
+        if (lineCount > 1000) {
+          throw ProgramStorageException('Program too large - too many lines');
+        }
+      } catch (e) {
+        if (e is ProgramStorageException) {
+          throw e;
+        }
+        throw ProgramStorageException('Failed to store line $lineNumber: $e');
+      }
     }
 
     _invalidateCache();

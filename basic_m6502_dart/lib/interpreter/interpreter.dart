@@ -341,6 +341,9 @@ class Interpreter {
       case Tokenizer.loadToken:
         _executeLoad();
         break;
+      case Tokenizer.verifyToken:
+        _executeVerify();
+        break;
       case Tokenizer.pokeToken:
         _executePoke();
         break;
@@ -1578,14 +1581,40 @@ class Interpreter {
     final filename = String.fromCharCodes(filenameBytes);
     _textPointer++; // Skip closing quote
 
+    // Validate filename
+    if (filename.isEmpty) {
+      throw InterpreterException('SYNTAX ERROR - Empty filename');
+    }
+
+    // Check if program exists
+    if (programStorage.isEmpty) {
+      throw InterpreterException('PROGRAM ERROR - No program to save');
+    }
+
     // Save the program
     try {
       final programData = programStorage.exportProgram();
       final file = File(filename);
+
+      // Check if directory exists and is writable
+      final directory = file.parent;
+      if (!directory.existsSync()) {
+        throw InterpreterException('DEVICE NOT PRESENT - Directory does not exist');
+      }
+
+      // Check for disk space (basic check - if file exists, we should be able to write)
       file.writeAsBytesSync(programData);
       print('SAVED');
+    } on FileSystemException catch (e) {
+      if (e.osError?.errorCode == 28) { // ENOSPC - No space left on device
+        throw InterpreterException('DEVICE FULL - Insufficient disk space');
+      } else if (e.osError?.errorCode == 13) { // EACCES - Permission denied
+        throw InterpreterException('WRITE PROTECT - Cannot write to file');
+      } else {
+        throw InterpreterException('DEVICE ERROR - ${e.message}');
+      }
     } catch (e) {
-      throw InterpreterException('FILE ERROR - Cannot save to $filename');
+      throw InterpreterException('FILE ERROR - Cannot save to $filename: $e');
     }
   }
 
@@ -1615,28 +1644,164 @@ class Interpreter {
     final filename = String.fromCharCodes(filenameBytes);
     _textPointer++; // Skip closing quote
 
+    // Validate filename
+    if (filename.isEmpty) {
+      throw InterpreterException('SYNTAX ERROR - Empty filename');
+    }
+
     // Load the program
     try {
       final file = File(filename);
+
+      // Check if file exists
       if (!file.existsSync()) {
         throw InterpreterException('FILE NOT FOUND - $filename');
       }
 
+      // Check if file is readable
+      final stat = file.statSync();
+      if (stat.type == FileSystemEntityType.directory) {
+        throw InterpreterException('DEVICE ERROR - $filename is a directory');
+      }
+
+      // Check file size - prevent loading huge files
+      if (stat.size > 65536) { // 64KB limit for BASIC programs
+        throw InterpreterException('PROGRAM TOO LARGE - File exceeds 64KB');
+      }
+
+      // Try to read the file
       final programData = file.readAsBytesSync();
+
+      // Validate file format (basic check)
+      if (programData.isEmpty) {
+        throw InterpreterException('BAD FORMAT - File is empty');
+      }
 
       // Clear current program and variables
       programStorage.clearProgram();
       variables.clearVariables();
 
       // Import the new program
-      programStorage.importProgram(programData);
+      try {
+        programStorage.importProgram(programData);
+        print('LOADED');
+      } catch (e) {
+        // Restore clean state if import fails
+        programStorage.clearProgram();
+        variables.clearVariables();
+        throw InterpreterException('BAD FORMAT - Invalid program file');
+      }
 
-      print('LOADED');
+    } on FileSystemException catch (e) {
+      if (e.osError?.errorCode == 2) { // ENOENT - No such file or directory
+        throw InterpreterException('FILE NOT FOUND - $filename');
+      } else if (e.osError?.errorCode == 13) { // EACCES - Permission denied
+        throw InterpreterException('READ PROTECTED - Cannot read file');
+      } else if (e.osError?.errorCode == 21) { // EISDIR - Is a directory
+        throw InterpreterException('DEVICE ERROR - $filename is a directory');
+      } else {
+        throw InterpreterException('DEVICE ERROR - ${e.message}');
+      }
     } catch (e) {
       if (e is InterpreterException) {
         throw e;
       }
-      throw InterpreterException('FILE ERROR - Cannot load from $filename');
+      throw InterpreterException('FILE ERROR - Cannot load from $filename: $e');
+    }
+  }
+
+  /// Execute VERIFY statement
+  void _executeVerify() {
+    _skipSpaces();
+
+    // Parse filename string
+    if (_getCurrentChar() != 34) { // Not a quote
+      throw InterpreterException('SYNTAX ERROR - Filename must be in quotes');
+    }
+
+    _textPointer++; // Skip opening quote
+    final filenameStart = _textPointer;
+
+    // Find closing quote
+    while (_textPointer < _currentLine.length && _getCurrentChar() != 34) {
+      _textPointer++;
+    }
+
+    if (_textPointer >= _currentLine.length) {
+      throw InterpreterException('SYNTAX ERROR - Missing closing quote');
+    }
+
+    // Extract filename
+    final filenameBytes = _currentLine.sublist(filenameStart, _textPointer);
+    final filename = String.fromCharCodes(filenameBytes);
+    _textPointer++; // Skip closing quote
+
+    // Validate filename
+    if (filename.isEmpty) {
+      throw InterpreterException('SYNTAX ERROR - Empty filename');
+    }
+
+    // Verify the program
+    try {
+      final file = File(filename);
+
+      // Check if file exists
+      if (!file.existsSync()) {
+        throw InterpreterException('FILE NOT FOUND - $filename');
+      }
+
+      // Check if file is readable
+      final stat = file.statSync();
+      if (stat.type == FileSystemEntityType.directory) {
+        throw InterpreterException('DEVICE ERROR - $filename is a directory');
+      }
+
+      // Check file size
+      if (stat.size > 65536) { // 64KB limit for BASIC programs
+        throw InterpreterException('PROGRAM TOO LARGE - File exceeds 64KB');
+      }
+
+      // Try to read the file
+      final programData = file.readAsBytesSync();
+
+      // Validate file format (basic check)
+      if (programData.isEmpty) {
+        throw InterpreterException('BAD FORMAT - File is empty');
+      }
+
+      // Export current program for comparison
+      final currentData = programStorage.exportProgram();
+
+      // Compare the programs
+      if (programData.length != currentData.length) {
+        print('VERIFY ERROR - Program length differs');
+        return;
+      }
+
+      for (int i = 0; i < programData.length; i++) {
+        if (programData[i] != currentData[i]) {
+          print('VERIFY ERROR - Program content differs at byte $i');
+          return;
+        }
+      }
+
+      print('VERIFIED');
+
+    } on FileSystemException catch (e) {
+      if (e.osError?.errorCode == 2) { // ENOENT - No such file or directory
+        throw InterpreterException('FILE NOT FOUND - $filename');
+      } else if (e.osError?.errorCode == 13) { // EACCES - Permission denied
+        throw InterpreterException('READ PROTECTED - Cannot read file');
+      } else if (e.osError?.errorCode == 21) { // EISDIR - Is a directory
+        throw InterpreterException('DEVICE ERROR - $filename is a directory');
+      } else {
+        throw InterpreterException('DEVICE ERROR - ${e.message}');
+      }
+    } catch (e) {
+      if (e is InterpreterException) {
+        throw e;
+      }
+      throw InterpreterException('FILE ERROR - Cannot verify $filename: $e');
     }
   }
 
