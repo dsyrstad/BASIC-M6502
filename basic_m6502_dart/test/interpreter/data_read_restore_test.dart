@@ -25,6 +25,7 @@ void main() {
     memory = Memory();
     tokenizer = Tokenizer();
     variables = VariableStorage(memory);
+    userFunctions = UserFunctionStorage();
     expressionEvaluator = ExpressionEvaluator(
       memory,
       variables,
@@ -34,7 +35,6 @@ void main() {
     programStorage = ProgramStorage(memory);
     runtimeStack = RuntimeStack(memory, variables);
     screen = Screen();
-    userFunctions = UserFunctionStorage();
     interpreter = Interpreter(
       memory,
       tokenizer,
