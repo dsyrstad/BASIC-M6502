@@ -370,6 +370,33 @@ class Interpreter {
       case Tokenizer.defToken:
         _executeDef();
         break;
+      case Tokenizer.dimToken:
+        _executeDim();
+        break;
+      case Tokenizer.stopToken:
+        _executeStop();
+        break;
+      case Tokenizer.waitToken:
+        _executeWait();
+        break;
+      case Tokenizer.contToken:
+        _executeCont();
+        break;
+      case Tokenizer.clrToken:
+        _executeClr();
+        break;
+      case Tokenizer.cmdToken:
+        _executeCmd();
+        break;
+      case Tokenizer.sysToken:
+        _executeSys();
+        break;
+      case Tokenizer.openToken:
+        _executeOpen();
+        break;
+      case Tokenizer.closeToken:
+        _executeClose();
+        break;
       default:
         throw InterpreterException(
           'SYNTAX ERROR - Unknown statement: ${tokenizer.getTokenName(token)}',
@@ -2230,6 +2257,136 @@ class Interpreter {
 
     // Advance to end of line
     _textPointer = _currentLine.length;
+  }
+
+  /// Execute DIM statement - dimension arrays
+  void _executeDim() {
+    _skipSpaces();
+
+    // Parse one or more array declarations separated by commas
+    while (_textPointer < _currentLine.length) {
+      final currentChar = _getCurrentChar();
+      if (currentChar == 0 || currentChar == 58) {
+        // null or colon (end of statement)
+        break;
+      }
+
+      // Parse variable name
+      if (!_isLetter(_getCurrentChar())) {
+        throw InterpreterException('SYNTAX ERROR - Expected variable name');
+      }
+
+      final variableName = _parseVariableName();
+
+      _skipSpaces();
+
+      // Expect opening parenthesis
+      if (_textPointer >= _currentLine.length || _getCurrentChar() != 40) {
+        // (
+        throw InterpreterException(
+          'SYNTAX ERROR - Expected ( after array name',
+        );
+      }
+      _advanceTextPointer(); // Skip (
+
+      // Parse dimensions
+      List<int> dimensions = [];
+
+      while (true) {
+        _skipSpaces();
+
+        // Evaluate dimension expression
+        final result = expressionEvaluator.evaluateExpression(
+          _currentLine,
+          _textPointer,
+        );
+        _textPointer = result.endPosition;
+
+        if (result.value is! NumericValue) {
+          throw InterpreterException('TYPE MISMATCH');
+        }
+
+        final dimension = (result.value as NumericValue).value.round();
+        if (dimension < 0) {
+          throw InterpreterException('ILLEGAL QUANTITY');
+        }
+
+        dimensions.add(dimension);
+
+        _skipSpaces();
+
+        final nextChar = _getCurrentChar();
+        if (nextChar == 44) {
+          // comma - more dimensions
+          _advanceTextPointer();
+          continue;
+        } else if (nextChar == 41) {
+          // ) - end of dimensions
+          _advanceTextPointer();
+          break;
+        } else {
+          throw InterpreterException('SYNTAX ERROR - Expected , or ) in DIM');
+        }
+      }
+
+      // Dimension the array - simplified implementation
+      // For now, just ensure the variable exists as an array marker
+      // TODO: Implement proper array storage with ArrayManager
+      print('DIM $variableName(${dimensions.join(',')}) - not fully implemented');
+
+      _skipSpaces();
+
+      // Check for comma (more arrays) or end
+      if (_textPointer < _currentLine.length && _getCurrentChar() == 44) {
+        // comma
+        _advanceTextPointer();
+        _skipSpaces();
+        continue;
+      } else {
+        break;
+      }
+    }
+  }
+
+  /// Execute STOP statement - halt program execution
+  void _executeStop() {
+    _state = ExecutionState.stopped;
+    print('BREAK');
+  }
+
+  /// Execute WAIT statement - wait for memory condition (stub)
+  void _executeWait() {
+    throw InterpreterException('FUNCTION NOT IMPLEMENTED');
+  }
+
+  /// Execute CONT statement - continue from STOP
+  void _executeCont() {
+    throw InterpreterException('FUNCTION NOT IMPLEMENTED');
+  }
+
+  /// Execute CLR statement - clear screen (stub)
+  void _executeClr() {
+    screen.clearScreen();
+  }
+
+  /// Execute CMD statement - command device (stub)
+  void _executeCmd() {
+    throw InterpreterException('FUNCTION NOT IMPLEMENTED');
+  }
+
+  /// Execute SYS statement - system call (stub)
+  void _executeSys() {
+    throw InterpreterException('FUNCTION NOT IMPLEMENTED');
+  }
+
+  /// Execute OPEN statement - open file (stub)
+  void _executeOpen() {
+    throw InterpreterException('FUNCTION NOT IMPLEMENTED');
+  }
+
+  /// Execute CLOSE statement - close file (stub)
+  void _executeClose() {
+    throw InterpreterException('FUNCTION NOT IMPLEMENTED');
   }
 
   /// Reset interpreter to initial state

@@ -572,6 +572,72 @@ class ExpressionEvaluator {
         }
         throw ExpressionException('TYPE MISMATCH');
 
+      case Tokenizer.sinToken:
+        if (argument is NumericValue) {
+          return NumericValue(dart_math.sin(argument.value));
+        }
+        throw ExpressionException('TYPE MISMATCH');
+
+      case Tokenizer.cosToken:
+        if (argument is NumericValue) {
+          return NumericValue(dart_math.cos(argument.value));
+        }
+        throw ExpressionException('TYPE MISMATCH');
+
+      case Tokenizer.tanToken:
+        if (argument is NumericValue) {
+          return NumericValue(dart_math.tan(argument.value));
+        }
+        throw ExpressionException('TYPE MISMATCH');
+
+      case Tokenizer.atnToken:
+        if (argument is NumericValue) {
+          return NumericValue(dart_math.atan(argument.value));
+        }
+        throw ExpressionException('TYPE MISMATCH');
+
+      case Tokenizer.logToken:
+        if (argument is NumericValue) {
+          if (argument.value <= 0) {
+            throw ExpressionException('ILLEGAL QUANTITY');
+          }
+          return NumericValue(dart_math.log(argument.value));
+        }
+        throw ExpressionException('TYPE MISMATCH');
+
+      case Tokenizer.expToken:
+        if (argument is NumericValue) {
+          return NumericValue(dart_math.exp(argument.value));
+        }
+        throw ExpressionException('TYPE MISMATCH');
+
+      case Tokenizer.sqrToken:
+        if (argument is NumericValue) {
+          if (argument.value < 0) {
+            throw ExpressionException('ILLEGAL QUANTITY');
+          }
+          return NumericValue(dart_math.sqrt(argument.value));
+        }
+        throw ExpressionException('TYPE MISMATCH');
+
+      case Tokenizer.rndToken:
+        if (argument is NumericValue) {
+          if (argument.value > 0) {
+            // Positive argument: return random number 0 to argument
+            return NumericValue(
+              dart_math.Random().nextDouble() * argument.value,
+            );
+          } else if (argument.value == 0) {
+            // Zero: return last random number (simplified - just return new random)
+            return NumericValue(dart_math.Random().nextDouble());
+          } else {
+            // Negative: seed random number generator and return random
+            final seed = argument.value.round().abs();
+            return NumericValue(dart_math.Random(seed).nextDouble());
+          }
+        }
+        throw ExpressionException('TYPE MISMATCH');
+
       default:
         throw ExpressionException(
           'FUNCTION NOT IMPLEMENTED: ${tokenizer.getTokenName(functionToken)}',
