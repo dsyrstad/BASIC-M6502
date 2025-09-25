@@ -590,7 +590,7 @@ class Interpreter {
     _jumpToLine(firstLine);
 
     // Continue execution until program completes
-    runProgram(rethrowExceptions: wasImmediate);
+    runProgram(rethrowExceptions: false);
   }
 
   /// Execute LIST statement
@@ -2332,7 +2332,9 @@ class Interpreter {
       // Dimension the array - simplified implementation
       // For now, just ensure the variable exists as an array marker
       // TODO: Implement proper array storage with ArrayManager
-      print('DIM $variableName(${dimensions.join(',')}) - not fully implemented');
+      print(
+        'DIM $variableName(${dimensions.join(',')}) - not fully implemented',
+      );
 
       _skipSpaces();
 

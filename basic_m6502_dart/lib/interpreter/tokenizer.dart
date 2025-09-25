@@ -383,6 +383,16 @@ class Tokenizer {
     return entry?.word ?? 'UNKNOWN(\${token.toRadixString(16)})';
   }
 
+  /// Get the token value for a given keyword
+  int getTokenValue(String keyword) {
+    for (final entry in _reservedWords) {
+      if (entry.word == keyword.toUpperCase()) {
+        return entry.token;
+      }
+    }
+    throw ArgumentError('Unknown token keyword: $keyword');
+  }
+
   /// Check if a token is a statement (as opposed to function/operator)
   bool isStatement(int token) {
     return (token >= endToken && token <= newToken) || token == clearToken;

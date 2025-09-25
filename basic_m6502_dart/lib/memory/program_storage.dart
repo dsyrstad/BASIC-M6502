@@ -118,6 +118,69 @@ class ProgramStorage {
     return lineNumbers;
   }
 
+  /// Get all lines as a map of line number to tokenized content
+  Map<int, List<int>> getAllLines() {
+    if (!_cacheValid) {
+      _rebuildCache();
+    }
+
+    final result = <int, List<int>>{};
+    for (final lineNumber in _lineAddressCache.keys) {
+      final lineAddress = _lineAddressCache[lineNumber]!;
+      result[lineNumber] = _readLineContent(lineAddress);
+    }
+    return result;
+  }
+
+  /// Check if a line exists
+  bool hasLine(int lineNumber) {
+    return findLineAddress(lineNumber) != -1;
+  }
+
+  /// Add a line from a tokenized line (for testing)
+  void addLine(dynamic line) {
+    if (line is String) {
+      // Parse line number and tokenize the content
+      final trimmed = line.trim();
+      final spaceIndex = trimmed.indexOf(' ');
+      if (spaceIndex == -1) {
+        throw ProgramStorageException('Invalid line format: missing content');
+      }
+
+      final lineNumberStr = trimmed.substring(0, spaceIndex);
+      final content = trimmed.substring(spaceIndex + 1);
+
+      final lineNumber = int.tryParse(lineNumberStr);
+      if (lineNumber == null) {
+        throw ProgramStorageException('Invalid line number: $lineNumberStr');
+      }
+
+      // For testing, we'll create a simple tokenized version
+      // In reality, this would use the tokenizer
+      final tokenizedContent =
+          content.codeUnits + [0]; // Simple ASCII + null terminator
+
+      storeLine(lineNumber, tokenizedContent);
+    } else if (line is List<int>) {
+      // Handle pre-tokenized line format
+      if (line.length < 4) {
+        throw ProgramStorageException('Invalid tokenized line format');
+      }
+
+      // Extract line number from tokenized line (bytes 2-3, little-endian)
+      final lineNumber = line[2] | (line[3] << 8);
+
+      // Extract content (skip link pointer and line number)
+      final content = line.sublist(4);
+
+      storeLine(lineNumber, content);
+    } else {
+      throw ProgramStorageException(
+        'Invalid line type: expected String or List<int>',
+      );
+    }
+  }
+
   /// Get tokenized content of a line
   List<int> getLineContent(int lineNumber) {
     final lineAddress = findLineAddress(lineNumber);
