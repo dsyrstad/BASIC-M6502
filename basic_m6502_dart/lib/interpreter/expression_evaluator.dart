@@ -148,7 +148,7 @@ class ExpressionEvaluator {
     _advance(); // Skip opening parenthesis
 
     // Recursively evaluate the sub-expression
-    final result = evaluateExpression(_expression, _position);
+    final result = _safeEvaluateExpression(_expression, _position);
     _position = result.endPosition;
 
     _skipSpaces();
@@ -257,7 +257,7 @@ class ExpressionEvaluator {
     _advance(); // Skip opening parenthesis
 
     // Evaluate argument
-    final argResult = evaluateExpression(_expression, _position);
+    final argResult = _safeEvaluateExpression(_expression, _position);
     _position = argResult.endPosition;
 
     _skipSpaces();
@@ -284,7 +284,7 @@ class ExpressionEvaluator {
     _advance(); // Skip opening parenthesis
 
     // Evaluate first argument (string)
-    final stringArgResult = evaluateExpression(_expression, _position);
+    final stringArgResult = _safeEvaluateExpression(_expression, _position);
     _position = stringArgResult.endPosition;
 
     _skipSpaces();
@@ -295,7 +295,7 @@ class ExpressionEvaluator {
     _advance(); // Skip comma
 
     // Evaluate second argument (numeric)
-    final numArgResult = evaluateExpression(_expression, _position);
+    final numArgResult = _safeEvaluateExpression(_expression, _position);
     _position = numArgResult.endPosition;
 
     VariableValue? thirdArg;
@@ -305,7 +305,7 @@ class ExpressionEvaluator {
       if (_position < _expression.length && _getCurrentToken() == 44) {
         // Comma
         _advance(); // Skip comma
-        final thirdArgResult = evaluateExpression(_expression, _position);
+        final thirdArgResult = _safeEvaluateExpression(_expression, _position);
         _position = thirdArgResult.endPosition;
         thirdArg = thirdArgResult.value;
       }
@@ -333,7 +333,7 @@ class ExpressionEvaluator {
     _advance(); // Skip TAB( or SPC( token (includes opening parenthesis)
 
     // Evaluate argument
-    final argResult = evaluateExpression(_expression, _position);
+    final argResult = _safeEvaluateExpression(_expression, _position);
     _position = argResult.endPosition;
 
     _skipSpaces();
@@ -764,7 +764,7 @@ class ExpressionEvaluator {
     _advance(); // Skip (
 
     // Evaluate argument expression
-    final argResult = evaluateExpression(_expression, _position);
+    final argResult = _safeEvaluateExpression(_expression, _position);
     _position = argResult.endPosition;
 
     _skipSpaces();
@@ -802,7 +802,7 @@ class ExpressionEvaluator {
       variables.setVariable(function.parameter, argument);
 
       // Evaluate the function expression
-      final result = evaluateExpression(function.expression, 0);
+      final result = _safeEvaluateExpression(function.expression, 0);
 
       // Verify return type matches function type
       if (function.isStringFunction && result.value is! StringValue) {
@@ -827,6 +827,25 @@ class ExpressionEvaluator {
     _stack.clear();
     _position = 0;
     _expression = [];
+  }
+
+  /// Safely evaluate a sub-expression without corrupting the current state
+  ExpressionResult _safeEvaluateExpression(List<int> tokens, int startPos) {
+    // Save current state to avoid corruption during recursive call
+    final savedExpression = _expression;
+    final savedPosition = _position;
+    final savedStack = List<StackEntry>.from(_stack);
+
+    // Evaluate the sub-expression
+    final result = evaluateExpression(tokens, startPos);
+
+    // Restore the saved state
+    _expression = savedExpression;
+    _position = savedPosition;
+    _stack.clear();
+    _stack.addAll(savedStack);
+
+    return result;
   }
 }
 
