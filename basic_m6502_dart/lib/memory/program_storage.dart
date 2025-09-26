@@ -302,13 +302,13 @@ class ProgramStorage {
   void _replaceLine(int lineAddress, int lineNumber, List<int> content) {
     final oldLineSize = _getLineSize(lineAddress);
     final newLineSize = _calculateLineSize(content);
+    final nextAddress = memory.readWord(lineAddress);
 
     if (newLineSize == oldLineSize) {
       // Same size, just replace content in place
-      _writeLineContent(lineAddress, lineNumber, content);
+      _writeLineContent(lineAddress, lineNumber, content, nextAddress);
     } else {
       // Different size, remove old line and insert new one
-      final nextAddress = memory.readWord(lineAddress);
       _removeLine(lineAddress);
 
       // Find new insertion point (might have changed)
@@ -321,14 +321,41 @@ class ProgramStorage {
   void _insertLine(int insertAddress, int lineNumber, List<int> content) {
     final lineSize = _calculateLineSize(content);
 
-    // Make space for the new line
-    _makeSpace(insertAddress, lineSize);
+    // Check if we're inserting at the end of the program
+    final isAtEnd = memory.readWord(insertAddress) == 0;
 
-    // Write the new line
-    _writeLineContent(insertAddress, lineNumber, content);
+    if (isAtEnd) {
+      // Inserting at the end - simple case
+      // Write the new line
+      _writeLineContent(
+        insertAddress,
+        lineNumber,
+        content,
+        insertAddress + lineSize,
+      );
 
-    // Update program end pointer
-    _programEnd += lineSize;
+      // Write end-of-program marker after the new line
+      memory.writeWord(insertAddress + lineSize, 0);
+
+      // Update program end pointer
+      _programEnd = insertAddress + lineSize + 2; // +2 for end marker
+    } else {
+      // Inserting before existing lines
+      // Save what comes after the insertion point
+      final nextLineAddress = memory.readWord(insertAddress);
+
+      // Make space for the new line
+      _makeSpace(insertAddress, lineSize);
+
+      // The lines that were at insertAddress are now at insertAddress + lineSize
+      final newNextAddress = insertAddress + lineSize;
+
+      // Write the new line with link to the moved lines
+      _writeLineContent(insertAddress, lineNumber, content, newNextAddress);
+
+      // Update program end pointer
+      _programEnd += lineSize;
+    }
   }
 
   /// Remove a line from memory
@@ -354,6 +381,31 @@ class ProgramStorage {
     final moveSize = _programEnd - address;
     if (moveSize > 0) {
       memory.copyBlock(address, address + size, moveSize);
+
+      // Update link pointers in the moved block to point to new addresses
+      _updateLinksAfterMove(address + size, moveSize, size);
+    }
+  }
+
+  /// Update link pointers after moving a block of memory
+  void _updateLinksAfterMove(int blockStart, int blockSize, int offset) {
+    int currentAddress = blockStart;
+    final blockEnd = blockStart + blockSize;
+
+    while (currentAddress < blockEnd) {
+      final linkPointer = memory.readWord(currentAddress);
+
+      if (linkPointer == 0) {
+        // End of program marker, we're done
+        break;
+      }
+
+      // Update the link pointer to point to the new location
+      final newLinkPointer = linkPointer + offset;
+      memory.writeWord(currentAddress, newLinkPointer);
+
+      // Move to the next line
+      currentAddress = newLinkPointer;
     }
   }
 
@@ -373,12 +425,14 @@ class ProgramStorage {
   }
 
   /// Write line content to memory
-  void _writeLineContent(int address, int lineNumber, List<int> content) {
-    final lineSize = _calculateLineSize(content);
-    final nextAddress = address + lineSize;
-
+  void _writeLineContent(
+    int address,
+    int lineNumber,
+    List<int> content,
+    int nextLineAddress,
+  ) {
     // Write link pointer to next line
-    memory.writeWord(address, nextAddress);
+    memory.writeWord(address, nextLineAddress);
 
     // Write line number
     memory.writeWord(address + 2, lineNumber);
