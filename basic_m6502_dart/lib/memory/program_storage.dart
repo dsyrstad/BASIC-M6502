@@ -403,14 +403,15 @@ class ProgramStorage {
         break;
       }
 
+      // Calculate the line size before updating the link pointer
+      // The current link pointer is already pointing to the original next line location
+      final lineSize = linkPointer - (currentAddress - offset);
+
       // Update the link pointer to point to the new location
       final newLinkPointer = linkPointer + offset;
       memory.writeWord(currentAddress, newLinkPointer);
 
-      // Move to the next line in the original block (before the offset)
-      // We need to calculate the line size to find the next line
-      final originalLinkPointer = linkPointer - offset;
-      final lineSize = originalLinkPointer - currentAddress;
+      // Move to the next line in the moved block
       currentAddress += lineSize;
     }
   }
