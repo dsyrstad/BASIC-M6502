@@ -367,6 +367,9 @@ class ProgramStorage {
     if (nextAddress != 0) {
       final moveSize = _programEnd - nextAddress;
       memory.copyBlock(nextAddress, lineAddress, moveSize);
+
+      // Update link pointers in the moved block to reflect new addresses
+      _updateLinksAfterMove(lineAddress, moveSize, -lineSize);
     }
 
     // Update program end pointer
@@ -404,8 +407,11 @@ class ProgramStorage {
       final newLinkPointer = linkPointer + offset;
       memory.writeWord(currentAddress, newLinkPointer);
 
-      // Move to the next line
-      currentAddress = newLinkPointer;
+      // Move to the next line in the original block (before the offset)
+      // We need to calculate the line size to find the next line
+      final originalLinkPointer = linkPointer - offset;
+      final lineSize = originalLinkPointer - currentAddress;
+      currentAddress += lineSize;
     }
   }
 
