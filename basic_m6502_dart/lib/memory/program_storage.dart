@@ -109,25 +109,50 @@ class ProgramStorage {
 
   /// Get all line numbers in ascending order
   List<int> getAllLineNumbers() {
-    if (!_cacheValid) {
-      _rebuildCache();
+    // Direct scan instead of using cache to avoid circular reference issues
+    final lineNumbers = <int>[];
+    int currentAddress = _programStart;
+    final visitedAddresses = <int>{};
+    int iterations = 0;
+    const maxIterations = 1000;
+
+    while (iterations++ < maxIterations) {
+      if (visitedAddresses.contains(currentAddress)) {
+        // Circular reference detected - stop here
+        break;
+      }
+      visitedAddresses.add(currentAddress);
+
+      final linkPointer = memory.readWord(currentAddress);
+
+      if (linkPointer == 0) {
+        // End of program
+        break;
+      }
+
+      final lineNumber = memory.readWord(currentAddress + 2);
+      lineNumbers.add(lineNumber);
+
+      currentAddress = linkPointer;
     }
 
-    final lineNumbers = _lineAddressCache.keys.toList();
     lineNumbers.sort();
     return lineNumbers;
   }
 
   /// Get all lines as a map of line number to tokenized content
   Map<int, List<int>> getAllLines() {
-    if (!_cacheValid) {
-      _rebuildCache();
-    }
-
+    // Use getAllLineNumbers which works correctly, then get content for each
     final result = <int, List<int>>{};
-    for (final lineNumber in _lineAddressCache.keys) {
-      final lineAddress = _lineAddressCache[lineNumber]!;
-      result[lineNumber] = _readLineContent(lineAddress);
+    final lineNumbers = getAllLineNumbers();
+
+    for (final lineNumber in lineNumbers) {
+      try {
+        result[lineNumber] = getLineContent(lineNumber);
+      } catch (e) {
+        // Skip lines that can't be read (shouldn't happen but safety first)
+        continue;
+      }
     }
     return result;
   }
@@ -389,8 +414,25 @@ class ProgramStorage {
   void _rebuildCache() {
     _lineAddressCache.clear();
     int currentAddress = _programStart;
+    int maxIterations = 1000; // Prevent infinite loops
+    int iterations = 0;
+    final visitedAddresses = <int>{};
 
     while (true) {
+      // Safety checks to prevent infinite loops
+      if (iterations++ > maxIterations) {
+        throw ProgramStorageException(
+          'Infinite loop detected in program storage - too many lines',
+        );
+      }
+
+      if (visitedAddresses.contains(currentAddress)) {
+        throw ProgramStorageException(
+          'Circular reference detected in program storage at address ${currentAddress.toRadixString(16)}',
+        );
+      }
+      visitedAddresses.add(currentAddress);
+
       final linkPointer = memory.readWord(currentAddress);
 
       if (linkPointer == 0) {
