@@ -115,20 +115,33 @@ void main() {
     test('RETURN without GOSUB should handle error gracefully', () {
       interpreter.executeLine('10 RETURN');
 
-      // This should not throw - errors are handled internally
-      // The interpreter should return to immediate mode after error
-      interpreter.executeLine('RUN');
-
-      expect(interpreter.isInDirectMode, isTrue);
+      // Should throw an error when executing RETURN without GOSUB
+      expect(
+        () => interpreter.executeLine('RUN'),
+        throwsA(
+          isA<InterpreterException>().having(
+            (e) => e.message,
+            'message',
+            contains('RETURN WITHOUT GOSUB'),
+          ),
+        ),
+      );
     });
 
     test('GOSUB to undefined line should handle error gracefully', () {
       interpreter.executeLine('10 GOSUB 999');
 
-      // This should not throw - errors are handled internally
-      interpreter.executeLine('RUN');
-
-      expect(interpreter.isInDirectMode, isTrue);
+      // Should throw an error when trying to GOSUB to undefined line
+      expect(
+        () => interpreter.executeLine('RUN'),
+        throwsA(
+          isA<InterpreterException>().having(
+            (e) => e.message,
+            'message',
+            contains('Line 999 not found'),
+          ),
+        ),
+      );
     });
 
     test('GOSUB with invalid line number should throw error', () {
@@ -189,10 +202,8 @@ void main() {
       // Create a deeply nested GOSUB scenario to test stack limits
       interpreter.executeLine('10 GOSUB 10'); // Infinite recursion
 
-      // This should not throw - errors are handled internally
-      interpreter.executeLine('RUN');
-
-      expect(interpreter.isInDirectMode, isTrue);
+      // Should throw an error for stack overflow or similar
+      expect(() => interpreter.executeLine('RUN'), throwsA(isA<Exception>()));
     });
   });
 

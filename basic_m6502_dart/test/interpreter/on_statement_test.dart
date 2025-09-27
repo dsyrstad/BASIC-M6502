@@ -242,10 +242,17 @@ void main() {
     test('ON GOSUB to undefined line should handle error gracefully', () {
       interpreter.executeLine('10 ON 1 GOSUB 999');
 
-      // This should not throw - errors are handled internally
-      interpreter.executeLine('RUN');
-
-      expect(interpreter.isInDirectMode, isTrue);
+      // Should throw an error when trying to GOSUB to undefined line
+      expect(
+        () => interpreter.executeLine('RUN'),
+        throwsA(
+          isA<InterpreterException>().having(
+            (e) => e.message,
+            'message',
+            contains('Line 999 not found'),
+          ),
+        ),
+      );
     });
 
     test('ON with negative value should do nothing', () {

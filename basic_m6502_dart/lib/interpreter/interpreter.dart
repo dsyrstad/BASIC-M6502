@@ -48,6 +48,9 @@ class Interpreter {
   /// Flag to track if we need to find first DATA statement
   bool _dataInitialized = false;
 
+  /// Whether to rethrow exceptions in runProgram (for tests)
+  bool _shouldRethrowExceptions = false;
+
   /// Program mode flag
   bool get isInProgramMode => _state == ExecutionState.program;
 
@@ -590,7 +593,9 @@ class Interpreter {
     _jumpToLine(firstLine);
 
     // Continue execution until program completes
-    runProgram(rethrowExceptions: false);
+    // When called from executeLine (typically in tests), we want exceptions to propagate
+    // When called from interactive mode, exceptions should be caught and printed
+    runProgram(rethrowExceptions: _shouldRethrowExceptions);
   }
 
   /// Execute LIST statement
@@ -1747,21 +1752,29 @@ class Interpreter {
 
   /// Execute a line of BASIC code
   void executeLine(String line) {
-    // Tokenize the line
-    _currentLine = tokenizer.tokenizeLine(line);
-    _textPointer = 0;
+    // Set flag to rethrow exceptions (for test compatibility)
+    _shouldRethrowExceptions = true;
 
-    // If line starts with a number, it's a program line
-    if (_currentLine.isNotEmpty && _isDigit(_currentLine[0])) {
-      _state =
-          ExecutionState.immediate; // Stay in immediate mode for line entry
-      _handleLineNumberEntry();
-    } else {
-      // Direct mode execution
-      _state = ExecutionState.immediate;
-      while (_textPointer < _currentLine.length) {
-        _executeNextStatement();
+    try {
+      // Tokenize the line
+      _currentLine = tokenizer.tokenizeLine(line);
+      _textPointer = 0;
+
+      // If line starts with a number, it's a program line
+      if (_currentLine.isNotEmpty && _isDigit(_currentLine[0])) {
+        _state =
+            ExecutionState.immediate; // Stay in immediate mode for line entry
+        _handleLineNumberEntry();
+      } else {
+        // Direct mode execution
+        _state = ExecutionState.immediate;
+        while (_textPointer < _currentLine.length) {
+          _executeNextStatement();
+        }
       }
+    } finally {
+      // Reset the flag after execution
+      _shouldRethrowExceptions = false;
     }
   }
 
