@@ -403,9 +403,11 @@ class ProgramStorage {
         break;
       }
 
-      // Calculate the line size before updating the link pointer
-      // The current link pointer is already pointing to the original next line location
-      final lineSize = linkPointer - (currentAddress - offset);
+      // The link pointer currently points to the old address of the next line
+      // We need to calculate the line size using the original relationship
+      // Original address of current line = currentAddress - offset
+      final originalAddress = currentAddress - offset;
+      final lineSize = linkPointer - originalAddress;
 
       // Update the link pointer to point to the new location
       final newLinkPointer = linkPointer + offset;
