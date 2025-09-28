@@ -20,7 +20,7 @@ void main() {
   late Interpreter interpreter;
   late Screen screen;
   late UserFunctionStorage userFunctions;
-    late ArrayManager arrays;
+  late ArrayManager arrays;
 
   setUp(() {
     memory = Memory();
@@ -29,7 +29,7 @@ void main() {
     runtimeStack = RuntimeStack(memory, variables);
     tokenizer = Tokenizer();
     userFunctions = UserFunctionStorage();
-      arrays = ArrayManager(memory);
+    arrays = ArrayManager(memory);
     expressionEvaluator = ExpressionEvaluator(
       memory,
       variables,
@@ -38,16 +38,16 @@ void main() {
     );
     screen = Screen();
     interpreter = Interpreter(
-        memory,
-        tokenizer,
-        variables,
-        expressionEvaluator,
-        programStorage,
-        runtimeStack,
-        screen,
-        userFunctions,
-        arrays,
-      );
+      memory,
+      tokenizer,
+      variables,
+      expressionEvaluator,
+      programStorage,
+      runtimeStack,
+      screen,
+      userFunctions,
+      arrays,
+    );
   });
 
   group('ON Statement Tests', () {

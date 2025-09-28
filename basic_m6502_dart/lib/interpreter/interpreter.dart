@@ -227,12 +227,16 @@ class Interpreter {
       _textPointer = result.endPosition;
 
       if (result.value is! NumericValue) {
-        throw InterpreterException('TYPE MISMATCH - Array index must be numeric');
+        throw InterpreterException(
+          'TYPE MISMATCH - Array index must be numeric',
+        );
       }
 
       final index = (result.value as NumericValue).value.round();
       if (index < 0) {
-        throw InterpreterException('ILLEGAL QUANTITY - Array index cannot be negative');
+        throw InterpreterException(
+          'ILLEGAL QUANTITY - Array index cannot be negative',
+        );
       }
 
       indices.add(index);
@@ -494,10 +498,16 @@ class Interpreter {
           if (arrayIndices != null) {
             final arrayResult = arrays.findArray(variableName);
             if (!arrayResult.found || arrayResult.descriptor == null) {
-              throw InterpreterException('BS ERROR - Array $variableName not dimensioned');
+              throw InterpreterException(
+                'BS ERROR - Array $variableName not dimensioned',
+              );
             }
             try {
-              arrays.setArrayElement(arrayResult.descriptor!, arrayIndices, result.value);
+              arrays.setArrayElement(
+                arrayResult.descriptor!,
+                arrayIndices,
+                result.value,
+              );
             } catch (e) {
               if (e is ArrayException) {
                 throw InterpreterException(e.message);
@@ -865,10 +875,16 @@ class Interpreter {
     if (arrayIndices != null) {
       final arrayResult = arrays.findArray(variableName);
       if (!arrayResult.found || arrayResult.descriptor == null) {
-        throw InterpreterException('BS ERROR - Array $variableName not dimensioned');
+        throw InterpreterException(
+          'BS ERROR - Array $variableName not dimensioned',
+        );
       }
       try {
-        arrays.setArrayElement(arrayResult.descriptor!, arrayIndices, result.value);
+        arrays.setArrayElement(
+          arrayResult.descriptor!,
+          arrayIndices,
+          result.value,
+        );
       } catch (e) {
         if (e is ArrayException) {
           throw InterpreterException(e.message);

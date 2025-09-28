@@ -251,14 +251,15 @@ void main() {
 
       expect(programStorage.getAllLines(), hasLength(1));
 
-      // Try to replace with invalid syntax
-      expect(
-        () => interpreter.processDirectModeInput('10 BADCOMMAND'),
-        throwsA(isA<Exception>()),
-      );
+      // Replace with invalid syntax - BASIC stores it without error
+      // (error only occurs when trying to RUN the program)
+      interpreter.processDirectModeInput('10 BADCOMMAND');
 
-      // Original line should still be there if error handling preserves it
-      // (depends on implementation - might be removed if parsing fails)
+      // The invalid line should replace the original
+      expect(programStorage.getAllLines(), hasLength(1));
+
+      // Error should occur when trying to RUN the program
+      expect(() => interpreter.executeLine('RUN'), throwsA(isA<Exception>()));
     });
 
     test('should handle line replacement with different statement types', () {

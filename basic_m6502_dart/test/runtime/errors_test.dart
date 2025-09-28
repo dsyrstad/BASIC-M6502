@@ -12,6 +12,28 @@ import '../../lib/runtime/stack.dart';
 import '../../lib/io/screen.dart';
 import '../../lib/memory/values.dart';
 
+// Mock screen for testing
+class MockScreen extends Screen {
+  final StringBuffer _buffer = StringBuffer();
+
+  String get output => _buffer.toString();
+
+  void clearOutput() {
+    _buffer.clear();
+  }
+
+  @override
+  void printWithoutNewline(String text) {
+    _buffer.write(text);
+  }
+
+  @override
+  void printLine(String text) {
+    _buffer.write(text);
+    _buffer.write('\n');
+  }
+}
+
 void main() {
   group('Error Handling', () {
     late Memory memory;
@@ -22,7 +44,7 @@ void main() {
     late ExpressionEvaluator expressionEvaluator;
     late ProgramStorage programStorage;
     late RuntimeStack runtimeStack;
-    late Screen screen;
+    late MockScreen screen;
     late Interpreter interpreter;
 
     setUp(() {
@@ -39,7 +61,7 @@ void main() {
       );
       programStorage = ProgramStorage(memory);
       runtimeStack = RuntimeStack(memory, variables);
-      screen = Screen();
+      screen = MockScreen();
       interpreter = Interpreter(
         memory,
         tokenizer,
@@ -333,10 +355,15 @@ void main() {
         }
 
         // Should still be able to use GOSUB/RETURN normally
-        programStorage.storeLine(100, tokenizer.tokenizeLine('RETURN'));
-        interpreter.processDirectModeInput('GOSUB 100');
+        interpreter.processDirectModeInput('10 GOSUB 30');
+        interpreter.processDirectModeInput('20 END');
+        interpreter.processDirectModeInput('30 PRINT "IN SUBROUTINE"');
+        interpreter.processDirectModeInput('40 RETURN');
 
-        // Should return successfully without error
+        // Run the program - should work without error
+        screen.clearOutput();
+        interpreter.executeLine('RUN');
+        expect(screen.output, contains('IN SUBROUTINE'));
       });
     });
   });

@@ -19,7 +19,7 @@ void main() {
   late ExpressionEvaluator expressionEvaluator;
   late Screen screen;
   late UserFunctionStorage userFunctions;
-    late ArrayManager arrays;
+  late ArrayManager arrays;
   late Interpreter interpreter;
 
   setUp(() {
@@ -28,7 +28,7 @@ void main() {
     programStorage = ProgramStorage(memory);
     tokenizer = Tokenizer();
     userFunctions = UserFunctionStorage();
-      arrays = ArrayManager(memory);
+    arrays = ArrayManager(memory);
     expressionEvaluator = ExpressionEvaluator(
       memory,
       variables,
@@ -38,21 +38,21 @@ void main() {
     runtimeStack = RuntimeStack(memory, variables);
     screen = Screen();
     interpreter = Interpreter(
-        memory,
-        tokenizer,
-        variables,
-        expressionEvaluator,
-        programStorage,
-        runtimeStack,
-        screen,
-        userFunctions,
-        arrays,
-      );
+      memory,
+      tokenizer,
+      variables,
+      expressionEvaluator,
+      programStorage,
+      runtimeStack,
+      screen,
+      userFunctions,
+      arrays,
+    );
 
     // Initialize variable storage
     variables.initialize(0x2000);
-      // Initialize string space top for arrays
-      memory.writeWord(Memory.fretop, 0x8000);
+    // Initialize string space top for arrays
+    memory.writeWord(Memory.fretop, 0x8000);
   });
 
   group('INPUT Statement Tests', () {
