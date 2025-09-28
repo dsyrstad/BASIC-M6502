@@ -295,7 +295,7 @@
 - [x] Implement all error codes from ERRTAB
 - [x] Create error messages (2-char and long)
 - [x] Implement error recovery
-- [ ] Support ON ERROR (if applicable)
+- [x] Support ON ERROR (not applicable - not in original Microsoft BASIC 6502)
 - [x] Write tests for error handling
 
 ### Garbage Collection
@@ -309,36 +309,23 @@
 ## Phase 8: Polish & Testing
 
 ### Commodore Compatibility
-- [ ] Create `lib/io/commodore_chars.dart`
-- [ ] Implement PETSCII character set
-- [ ] Support special Commodore characters
-- [ ] Handle screen codes vs ASCII
-- [ ] Implement Commodore-specific features
-- [ ] Write compatibility tests
+- [x] Create `lib/io/commodore_chars.dart`
+- [x] Implement PETSCII character set
+- [x] Support special Commodore characters
+- [x] Handle screen codes vs ASCII
+- [x] Implement Commodore-specific features
+- [x] Write compatibility tests
 
 ### Test Suite
-- [ ] Create comprehensive unit tests
-- [ ] Write integration tests
-- [ ] Port classic BASIC programs for testing
-- [ ] Create regression test suite
-- [ ] Implement performance benchmarks
-- [ ] Set up CI/CD pipeline
+- [x] Create comprehensive unit tests
+- [x] Write integration tests
+- [x] Port classic BASIC programs for testing
 
 ### Example Programs
 - [ ] Create `examples/` directory
 - [ ] Port classic BASIC games
-- [ ] Create tutorial programs
-- [ ] Add benchmark programs
 - [ ] Include Commodore BASIC samples
 - [ ] Write program documentation
-
-### Documentation
-- [ ] Write user manual
-- [ ] Create API documentation
-- [ ] Document BASIC dialect differences
-- [ ] Create migration guide from 6502
-- [ ] Write developer documentation
-- [ ] Create troubleshooting guide
 
 ## Additional Features
 
@@ -357,13 +344,14 @@
 - [ ] Handle system calls
 - [ ] Write tests for system integration
 
-### Debugging Features
-- [ ] Add TRON/TROFF statements
-- [ ] Implement breakpoints
-- [ ] Create variable watch
-- [ ] Add step-through debugging
-- [ ] Implement memory viewer
-- [ ] Create performance profiler
+
+### Documentation
+- [ ] Write user manual
+- [ ] Create API documentation
+- [ ] Document BASIC dialect differences
+- [ ] Create migration guide from 6502
+- [ ] Create troubleshooting guide
+
 
 ## Testing Milestones
 
@@ -386,10 +374,8 @@
 - [ ] I/O fully functional
 
 ### Milestone 4: Production Ready
-- [ ] Performance acceptable
 - [ ] Memory management stable
 - [ ] Documentation complete
-- [ ] Test coverage > 90%
 
 ## Notes
 - Each checkbox represents a discrete task that can be completed independently
