@@ -2557,7 +2557,8 @@ class Interpreter {
         _executeNextStatement();
         stepCount++;
       } catch (e) {
-        if (rethrowExceptions && e is InterpreterException) {
+        if (rethrowExceptions &&
+            (e is InterpreterException || e is StackException)) {
           _state = ExecutionState.immediate;
           rethrow;
         }

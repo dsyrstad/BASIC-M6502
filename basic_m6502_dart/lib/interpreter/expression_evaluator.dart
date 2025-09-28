@@ -2,7 +2,9 @@ import 'dart:math' as dart_math;
 
 import '../memory/memory.dart';
 import '../memory/variables.dart';
+import '../memory/strings.dart';
 import '../memory/user_functions.dart';
+import '../runtime/errors.dart';
 import 'tokenizer.dart';
 
 /// Expression evaluator implementing FRMEVL algorithm from Microsoft BASIC.
@@ -470,7 +472,11 @@ class ExpressionEvaluator {
         if (left is NumericValue && right is NumericValue) {
           return NumericValue(left.value + right.value);
         } else if (left is StringValue && right is StringValue) {
-          return StringValue(left.value + right.value);
+          final concatenated = left.value + right.value;
+          if (concatenated.length > StringManager.maxStringLength) {
+            throw ErrorHandler.stringTooLong();
+          }
+          return StringValue(concatenated);
         }
         throw ExpressionException('TYPE MISMATCH');
 
