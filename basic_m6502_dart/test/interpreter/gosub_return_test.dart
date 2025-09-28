@@ -8,6 +8,7 @@ import '../../lib/interpreter/expression_evaluator.dart';
 import '../../lib/interpreter/interpreter.dart';
 import '../../lib/io/screen.dart';
 import '../../lib/memory/user_functions.dart';
+import '../../lib/memory/arrays.dart';
 
 void main() {
   late Memory memory;
@@ -19,6 +20,7 @@ void main() {
   late Interpreter interpreter;
   late Screen screen;
   late UserFunctionStorage userFunctions;
+    late ArrayManager arrays;
 
   setUp(() {
     memory = Memory();
@@ -27,6 +29,7 @@ void main() {
     runtimeStack = RuntimeStack(memory, variables);
     tokenizer = Tokenizer();
     userFunctions = UserFunctionStorage();
+      arrays = ArrayManager(memory);
     expressionEvaluator = ExpressionEvaluator(
       memory,
       variables,
@@ -35,15 +38,16 @@ void main() {
     );
     screen = Screen();
     interpreter = Interpreter(
-      memory,
-      tokenizer,
-      variables,
-      expressionEvaluator,
-      programStorage,
-      runtimeStack,
-      screen,
-      userFunctions,
-    );
+        memory,
+        tokenizer,
+        variables,
+        expressionEvaluator,
+        programStorage,
+        runtimeStack,
+        screen,
+        userFunctions,
+        arrays,
+      );
   });
 
   group('GOSUB/RETURN Tests', () {

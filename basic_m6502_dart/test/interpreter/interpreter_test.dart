@@ -6,6 +6,7 @@ import '../../lib/memory/memory.dart';
 import '../../lib/memory/variables.dart';
 import '../../lib/memory/program_storage.dart';
 import '../../lib/memory/user_functions.dart';
+import '../../lib/memory/arrays.dart';
 import '../../lib/runtime/stack.dart';
 import '../../lib/io/screen.dart';
 
@@ -19,6 +20,7 @@ void main() {
     late RuntimeStack runtimeStack;
     late Screen screen;
     late UserFunctionStorage userFunctions;
+    late ArrayManager arrays;
     late Interpreter interpreter;
 
     setUp(() {
@@ -26,6 +28,7 @@ void main() {
       tokenizer = Tokenizer();
       variables = VariableStorage(memory);
       userFunctions = UserFunctionStorage();
+      arrays = ArrayManager(memory);
       expressionEvaluator = ExpressionEvaluator(
         memory,
         variables,
@@ -44,10 +47,13 @@ void main() {
         runtimeStack,
         screen,
         userFunctions,
+        arrays,
       );
 
       // Initialize variable storage
       variables.initialize(0x2000);
+      // Initialize string space top for arrays
+      memory.writeWord(Memory.fretop, 0x8000);
     });
 
     test('should initialize in direct mode', () {

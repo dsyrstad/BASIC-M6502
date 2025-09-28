@@ -9,6 +9,7 @@ import '../../lib/memory/program_storage.dart';
 import '../../lib/runtime/stack.dart';
 import '../../lib/io/screen.dart';
 import '../../lib/memory/user_functions.dart';
+import '../../lib/memory/arrays.dart';
 
 /// Mock screen that captures output for testing
 class MockScreen extends Screen {
@@ -82,6 +83,7 @@ void main() {
     late RuntimeStack runtimeStack;
     late MockScreen screen;
     late UserFunctionStorage userFunctions;
+    late ArrayManager arrays;
     late Interpreter interpreter;
 
     setUp(() {
@@ -89,6 +91,7 @@ void main() {
       tokenizer = Tokenizer();
       variables = VariableStorage(memory);
       userFunctions = UserFunctionStorage();
+      arrays = ArrayManager(memory);
       expressionEvaluator = ExpressionEvaluator(
         memory,
         variables,
@@ -107,10 +110,13 @@ void main() {
         runtimeStack,
         screen,
         userFunctions,
+        arrays,
       );
 
       // Initialize variable storage
       variables.initialize(0x2000);
+      // Initialize string space top for arrays
+      memory.writeWord(Memory.fretop, 0x8000);
     });
 
     test('should print numbers with leading space for positive values', () {

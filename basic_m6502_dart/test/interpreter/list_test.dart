@@ -8,6 +8,7 @@ import '../../lib/interpreter/tokenizer.dart';
 import '../../lib/interpreter/expression_evaluator.dart';
 import '../../lib/interpreter/interpreter.dart';
 import '../../lib/memory/user_functions.dart';
+import '../../lib/memory/arrays.dart';
 
 void main() {
   group('LIST Command Tests', () {
@@ -20,6 +21,7 @@ void main() {
     late Tokenizer tokenizer;
     late ExpressionEvaluator expressionEvaluator;
     late UserFunctionStorage userFunctions;
+    late ArrayManager arrays;
 
     setUp(() {
       memory = Memory();
@@ -29,6 +31,7 @@ void main() {
       screen = Screen();
       tokenizer = Tokenizer();
       userFunctions = UserFunctionStorage();
+      arrays = ArrayManager(memory);
       expressionEvaluator = ExpressionEvaluator(
         memory,
         variables,
@@ -44,6 +47,7 @@ void main() {
         runtimeStack,
         screen,
         userFunctions,
+        arrays,
       );
     });
 

@@ -6,6 +6,7 @@ import '../../lib/memory/memory.dart';
 import '../../lib/memory/variables.dart';
 import '../../lib/memory/program_storage.dart';
 import '../../lib/memory/user_functions.dart';
+import '../../lib/memory/arrays.dart';
 import '../../lib/runtime/stack.dart';
 import '../../lib/io/screen.dart';
 
@@ -15,6 +16,7 @@ void main() {
     late Tokenizer tokenizer;
     late VariableStorage variables;
     late UserFunctionStorage userFunctions;
+    late ArrayManager arrays;
     late ExpressionEvaluator expressionEvaluator;
     late ProgramStorage programStorage;
     late RuntimeStack runtimeStack;
@@ -26,6 +28,7 @@ void main() {
       tokenizer = Tokenizer();
       variables = VariableStorage(memory);
       userFunctions = UserFunctionStorage();
+      arrays = ArrayManager(memory);
       expressionEvaluator = ExpressionEvaluator(
         memory,
         variables,
@@ -44,9 +47,12 @@ void main() {
         runtimeStack,
         screen,
         userFunctions,
+        arrays,
       );
 
       variables.initialize(0x2000);
+      // Initialize string space top for arrays
+      memory.writeWord(Memory.fretop, 0x8000);
     });
 
     test('should add new line to program', () {

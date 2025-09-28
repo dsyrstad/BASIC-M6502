@@ -9,6 +9,7 @@ import '../../lib/interpreter/tokenizer.dart';
 import '../../lib/interpreter/expression_evaluator.dart';
 import '../../lib/interpreter/interpreter.dart';
 import '../../lib/memory/user_functions.dart';
+import '../../lib/memory/arrays.dart';
 
 void main() {
   group('File Operations Tests', () {
@@ -21,6 +22,7 @@ void main() {
     late Tokenizer tokenizer;
     late ExpressionEvaluator expressionEvaluator;
     late UserFunctionStorage userFunctions;
+    late ArrayManager arrays;
     late String testFileName;
     late Directory tempDir;
 
@@ -32,6 +34,7 @@ void main() {
       screen = Screen();
       tokenizer = Tokenizer();
       userFunctions = UserFunctionStorage();
+      arrays = ArrayManager(memory);
       expressionEvaluator = ExpressionEvaluator(
         memory,
         variables,
@@ -47,6 +50,7 @@ void main() {
         runtimeStack,
         screen,
         userFunctions,
+        arrays,
       );
 
       // Create temporary directory for test files

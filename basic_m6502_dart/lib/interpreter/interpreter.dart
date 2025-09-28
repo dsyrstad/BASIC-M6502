@@ -4,6 +4,7 @@ import '../memory/memory.dart';
 import '../memory/variables.dart';
 import '../memory/program_storage.dart';
 import '../memory/user_functions.dart';
+import '../memory/arrays.dart';
 import '../runtime/stack.dart';
 import '../runtime/errors.dart';
 import '../io/screen.dart';
@@ -23,6 +24,7 @@ class Interpreter {
   final RuntimeStack runtimeStack;
   final Screen screen;
   final UserFunctionStorage userFunctions;
+  final ArrayManager arrays;
 
   /// Current execution state
   ExecutionState _state = ExecutionState.immediate;
@@ -66,6 +68,7 @@ class Interpreter {
     this.runtimeStack,
     this.screen,
     this.userFunctions,
+    this.arrays,
   );
 
   /// Main interpreter loop (NEWSTT equivalent)
@@ -196,14 +199,61 @@ class Interpreter {
       _advanceTextPointer();
     }
 
-    // Check for array variable suffix '(' (we'll handle this later)
-    if (_textPointer < _currentLine.length && _getCurrentChar() == 40) {
-      // '('
-      throw InterpreterException('ARRAY NOT YET IMPLEMENTED');
-    }
+    // Array variable suffix '(' is handled separately by calling code
+    // Don't consume the '(' here - let the caller handle array indexing
 
     final nameBytes = _currentLine.sublist(nameStart, _textPointer);
     return String.fromCharCodes(nameBytes);
+  }
+
+  /// Parse array indices (e.g., "(1,2,3)")
+  List<int> _parseArrayIndices() {
+    final indices = <int>[];
+
+    // Expect opening parenthesis
+    if (_getCurrentChar() != 40) {
+      throw InterpreterException('SYNTAX ERROR - Expected (');
+    }
+    _advanceTextPointer(); // Skip '('
+
+    while (true) {
+      _skipSpaces();
+
+      // Evaluate the index expression
+      final result = expressionEvaluator.evaluateExpression(
+        _currentLine,
+        _textPointer,
+      );
+      _textPointer = result.endPosition;
+
+      if (result.value is! NumericValue) {
+        throw InterpreterException('TYPE MISMATCH - Array index must be numeric');
+      }
+
+      final index = (result.value as NumericValue).value.round();
+      if (index < 0) {
+        throw InterpreterException('ILLEGAL QUANTITY - Array index cannot be negative');
+      }
+
+      indices.add(index);
+
+      _skipSpaces();
+      final currentChar = _getCurrentChar();
+
+      if (currentChar == 41) {
+        // ')'
+        _advanceTextPointer(); // Skip ')'
+        break;
+      } else if (currentChar == 44) {
+        // ','
+        _advanceTextPointer(); // Skip ','
+        continue;
+      } else {
+        throw InterpreterException('SYNTAX ERROR - Expected , or )');
+      }
+    }
+
+    return indices;
   }
 
   /// Handle line number entry (program editing)
@@ -417,6 +467,15 @@ class Interpreter {
         // Try to parse variable name
         final variableName = _parseVariableName();
 
+        _skipSpaces();
+
+        // Check if this is an array assignment
+        List<int>? arrayIndices;
+        if (_textPointer < _currentLine.length && _getCurrentChar() == 40) {
+          // Parse array indices
+          arrayIndices = _parseArrayIndices();
+        }
+
         // Skip spaces and check for equals sign
         _skipSpaces();
         if (_getCurrentChar() == Tokenizer.equalToken) {
@@ -431,13 +490,31 @@ class Interpreter {
           );
           _textPointer = result.endPosition;
 
-          // Store the value in the variable
-          variables.setVariable(variableName, result.value);
+          // Store the value in the variable or array element
+          if (arrayIndices != null) {
+            final arrayResult = arrays.findArray(variableName);
+            if (!arrayResult.found || arrayResult.descriptor == null) {
+              throw InterpreterException('BS ERROR - Array $variableName not dimensioned');
+            }
+            try {
+              arrays.setArrayElement(arrayResult.descriptor!, arrayIndices, result.value);
+            } catch (e) {
+              if (e is ArrayException) {
+                throw InterpreterException(e.message);
+              }
+              rethrow;
+            }
+          } else {
+            variables.setVariable(variableName, result.value);
+          }
           return;
         }
-      } catch (e) {
-        // Not a valid assignment, restore position and fall through
+      } on FormatException catch (e) {
+        // Parsing failed - not a valid assignment, restore position and fall through
         _textPointer = savedPosition;
+      } catch (e) {
+        // Runtime error during assignment (like array bounds) - re-throw
+        rethrow;
       }
     }
 
@@ -760,6 +837,15 @@ class Interpreter {
     // Parse variable name on left side of assignment
     final variableName = _parseVariableName();
 
+    _skipSpaces();
+
+    // Check if this is an array assignment
+    List<int>? arrayIndices;
+    if (_textPointer < _currentLine.length && _getCurrentChar() == 40) {
+      // Parse array indices
+      arrayIndices = _parseArrayIndices();
+    }
+
     // Skip spaces and look for equals sign
     _skipSpaces();
     if (_getCurrentChar() != Tokenizer.equalToken) {
@@ -775,8 +861,23 @@ class Interpreter {
     );
     _textPointer = result.endPosition;
 
-    // Store the value in the variable
-    variables.setVariable(variableName, result.value);
+    // Store the value in the variable or array element
+    if (arrayIndices != null) {
+      final arrayResult = arrays.findArray(variableName);
+      if (!arrayResult.found || arrayResult.descriptor == null) {
+        throw InterpreterException('BS ERROR - Array $variableName not dimensioned');
+      }
+      try {
+        arrays.setArrayElement(arrayResult.descriptor!, arrayIndices, result.value);
+      } catch (e) {
+        if (e is ArrayException) {
+          throw InterpreterException(e.message);
+        }
+        rethrow;
+      }
+    } else {
+      variables.setVariable(variableName, result.value);
+    }
   }
 
   /// Execute IF statement
@@ -1791,6 +1892,8 @@ class Interpreter {
         errorCode = BasicErrorCode.returnWithoutGosub;
       } else if (e.message.contains('OUT OF DATA')) {
         errorCode = BasicErrorCode.outOfData;
+      } else if (e.message.contains('Index out of bounds')) {
+        errorCode = BasicErrorCode.subscriptOutOfRange;
       } else {
         errorCode = BasicErrorCode.syntaxError; // Default for unknown errors
       }
@@ -2342,12 +2445,15 @@ class Interpreter {
         }
       }
 
-      // Dimension the array - simplified implementation
-      // For now, just ensure the variable exists as an array marker
-      // TODO: Implement proper array storage with ArrayManager
-      print(
-        'DIM $variableName(${dimensions.join(',')}) - not fully implemented',
-      );
+      // Dimension the array using ArrayManager
+      try {
+        arrays.createArray(variableName, dimensions);
+      } catch (e) {
+        if (e is ArrayException) {
+          throw InterpreterException(e.message);
+        }
+        rethrow;
+      }
 
       _skipSpaces();
 
