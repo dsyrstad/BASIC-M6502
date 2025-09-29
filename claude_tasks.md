@@ -323,7 +323,7 @@
 
 ## Additional Features
 
-### Extended I/O (if time permits)
+### Extended I/O
 - [ ] Implement OPEN statement
 - [ ] Implement CLOSE statement
 - [ ] Implement PRINT# statement
@@ -388,8 +388,8 @@
 - [ ] I/O fully functional
 
 ### Milestone 4: Production Ready
-- [ ] Memory management stable
 - [ ] Documentation complete
+- [x] Performance benchmarks created
 
 ## Notes
 - Each checkbox represents a discrete task that can be completed independently
