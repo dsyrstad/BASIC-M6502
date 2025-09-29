@@ -7,6 +7,7 @@ import '../../lib/interpreter/tokenizer.dart';
 import '../../lib/interpreter/expression_evaluator.dart';
 import '../../lib/interpreter/interpreter.dart';
 import '../../lib/io/screen.dart';
+import '../../lib/io/file_io.dart';
 import '../../lib/memory/user_functions.dart';
 import '../../lib/memory/arrays.dart';
 
@@ -17,6 +18,7 @@ void main() {
   late RuntimeStack runtimeStack;
   late Tokenizer tokenizer;
   late ExpressionEvaluator expressionEvaluator;
+  late FileIOManager fileIO;
   late Interpreter interpreter;
   late Screen screen;
   late UserFunctionStorage userFunctions;
@@ -37,6 +39,7 @@ void main() {
       userFunctions,
     );
     screen = Screen();
+    fileIO = FileIOManager();
     interpreter = Interpreter(
       memory,
       tokenizer,
@@ -47,6 +50,7 @@ void main() {
       screen,
       userFunctions,
       arrays,
+      fileIO,
     );
   });
 

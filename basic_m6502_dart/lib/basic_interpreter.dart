@@ -8,9 +8,13 @@ import 'memory/arrays.dart';
 import 'runtime/stack.dart';
 import 'runtime/errors.dart';
 import 'io/screen.dart';
+import 'io/file_io.dart';
 import 'interpreter/tokenizer.dart';
 import 'interpreter/expression_evaluator.dart';
 import 'interpreter/interpreter.dart';
+
+// Export FileIOManager for use in tests
+export 'io/file_io.dart' show FileIOManager;
 
 /// Test screen that captures output instead of printing to stdout
 class TestScreen extends Screen {
@@ -46,6 +50,7 @@ class BasicInterpreter {
   late final TestScreen _screen;
   late final UserFunctionStorage _userFunctions;
   late final ArrayManager _arrays;
+  late final FileIOManager _fileIO;
   late final Interpreter _interpreter;
 
   /// Constructor - initializes all components
@@ -57,6 +62,7 @@ class BasicInterpreter {
     _arrays = ArrayManager(_memory);
     _runtimeStack = RuntimeStack(_memory, _variables);
     _screen = TestScreen();
+    _fileIO = FileIOManager();
     _expressionEvaluator = ExpressionEvaluator(
       _memory,
       _variables,
@@ -75,6 +81,7 @@ class BasicInterpreter {
       _screen,
       _userFunctions,
       _arrays,
+      _fileIO,
     );
 
     // Initialize memory layout for BASIC
@@ -144,6 +151,22 @@ class BasicInterpreter {
     _screen.clearOutput();
   }
 
+  /// Execute a complete BASIC program and return result
+  ProgramResult executeProgram(String programText) {
+    try {
+      loadProgram(programText);
+      final output = run();
+      return ProgramResult(success: true, output: output);
+    } catch (e) {
+      return ProgramResult(success: false, error: e.toString());
+    }
+  }
+
+  /// Get current screen output
+  String getOutput() {
+    return _screen.getOutput();
+  }
+
   /// List the current program
   String list() {
     _screen.clearOutput();
@@ -161,45 +184,23 @@ class BasicInterpreter {
     _interpreter.executeLine('LOAD "$filename"');
   }
 
-  /// Get current output buffer contents
-  String getOutput() {
-    return _screen.getOutput();
-  }
-
   /// Clear output buffer
   void clearOutput() {
     _screen.clearOutput();
   }
 
-  /// Get variable value (for testing)
-  dynamic getVariable(String name) {
-    return _variables.getVariable(name);
-  }
+  /// Get the interpreter instance (for advanced usage and testing)
+  Interpreter get interpreter => _interpreter;
 
-  /// Set variable value (for testing)
-  void setVariable(String name, dynamic value) {
-    _variables.setVariable(name, value);
-  }
+  /// Get the memory instance (for advanced usage and testing)
+  Memory get memory => _memory;
+}
 
-  /// Get memory contents at address (for testing)
-  int peek(int address) {
-    return _memory.readByte(address);
-  }
+/// Result of executing a BASIC program
+class ProgramResult {
+  final bool success;
+  final String? output;
+  final String? error;
 
-  /// Set memory contents at address (for testing)
-  void poke(int address, int value) {
-    _memory.writeByte(address, value);
-  }
-
-  /// Check if program is currently running
-  bool get isRunning => _interpreter.isRunning;
-
-  /// Get current line number being executed (simplified for testing)
-  int get currentLineNumber => -1; // Private field access not available
-
-  /// Get program size in bytes
-  int get programSize => _programStorage.programSize;
-
-  /// Get available memory (simplified for testing)
-  int get freeMemory => 65536; // Fixed value for testing
+  ProgramResult({required this.success, this.output, this.error});
 }

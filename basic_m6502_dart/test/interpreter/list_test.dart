@@ -4,6 +4,7 @@ import '../../lib/memory/variables.dart';
 import '../../lib/memory/program_storage.dart';
 import '../../lib/runtime/stack.dart';
 import '../../lib/io/screen.dart';
+import '../../lib/io/file_io.dart';
 import '../../lib/interpreter/tokenizer.dart';
 import '../../lib/interpreter/expression_evaluator.dart';
 import '../../lib/interpreter/interpreter.dart';
@@ -12,6 +13,7 @@ import '../../lib/memory/arrays.dart';
 
 void main() {
   group('LIST Command Tests', () {
+    late FileIOManager fileIO;
     late Interpreter interpreter;
     late Memory memory;
     late VariableStorage variables;
@@ -29,6 +31,7 @@ void main() {
       programStorage = ProgramStorage(memory);
       runtimeStack = RuntimeStack(memory, variables);
       screen = Screen();
+      fileIO = FileIOManager();
       tokenizer = Tokenizer();
       userFunctions = UserFunctionStorage();
       arrays = ArrayManager(memory);
@@ -48,6 +51,7 @@ void main() {
         screen,
         userFunctions,
         arrays,
+        fileIO,
       );
     });
 
@@ -88,6 +92,7 @@ void main() {
         testTokenizer,
         testUserFunctions,
       );
+      final testFileIO = FileIOManager();
       final testInterpreter = Interpreter(
         testMemory,
         testTokenizer,
@@ -98,6 +103,7 @@ void main() {
         testScreen,
         testUserFunctions,
         testArrays,
+        testFileIO,
       );
 
       // Add program lines in order first to ensure they work

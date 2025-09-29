@@ -18,6 +18,10 @@ class ExpressionEvaluator {
   final Tokenizer tokenizer;
   final UserFunctionStorage userFunctions;
 
+  /// USR function hook - called when USR() function is invoked
+  /// Takes the argument as parameter and returns a result.
+  double Function(double argument)? usrFunctionHook;
+
   /// Operator precedence table (higher number = higher precedence)
   static const Map<int, int> _operatorPrecedence = {
     Tokenizer.orToken: 1,
@@ -575,6 +579,19 @@ class ExpressionEvaluator {
           }
           final value = memory.readByte(address);
           return NumericValue(value.toDouble());
+        }
+        throw ExpressionException('TYPE MISMATCH');
+
+      case Tokenizer.usrToken:
+        if (argument is NumericValue) {
+          // Call USR function hook if available, otherwise return the argument
+          if (usrFunctionHook != null) {
+            final result = usrFunctionHook!(argument.value);
+            return NumericValue(result);
+          }
+          // Default behavior: return the argument unchanged
+          // This simulates a machine code routine that does nothing
+          return NumericValue(argument.value);
         }
         throw ExpressionException('TYPE MISMATCH');
 

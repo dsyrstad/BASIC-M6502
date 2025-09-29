@@ -8,6 +8,7 @@ import '../memory/arrays.dart';
 import '../runtime/stack.dart';
 import '../runtime/errors.dart';
 import '../io/screen.dart';
+import '../io/file_io.dart';
 import 'tokenizer.dart';
 import 'expression_evaluator.dart';
 
@@ -25,6 +26,7 @@ class Interpreter {
   final Screen screen;
   final UserFunctionStorage userFunctions;
   final ArrayManager arrays;
+  final FileIOManager fileIO;
 
   /// Current execution state
   ExecutionState _state = ExecutionState.immediate;
@@ -53,6 +55,32 @@ class Interpreter {
   /// Whether to rethrow exceptions in runProgram (for tests)
   bool _shouldRethrowExceptions = false;
 
+  /// System call hook - called when SYS statement is executed
+  /// Takes the address as parameter. Allows custom system routine implementation.
+  void Function(int address)? _systemCallHook;
+
+  /// USR function hook - called when USR() function is invoked
+  /// Takes the argument as parameter and returns a result.
+  /// Allows custom machine code function implementation.
+  double Function(double argument)? _usrFunctionHook;
+
+  /// Getter for system call hook
+  void Function(int address)? get systemCallHook => _systemCallHook;
+
+  /// Setter for system call hook
+  set systemCallHook(void Function(int address)? hook) {
+    _systemCallHook = hook;
+  }
+
+  /// Getter for USR function hook
+  double Function(double argument)? get usrFunctionHook => _usrFunctionHook;
+
+  /// Setter for USR function hook - also synchronizes with expression evaluator
+  set usrFunctionHook(double Function(double argument)? hook) {
+    _usrFunctionHook = hook;
+    expressionEvaluator.usrFunctionHook = hook;
+  }
+
   /// Program mode flag
   bool get isInProgramMode => _state == ExecutionState.program;
 
@@ -69,6 +97,7 @@ class Interpreter {
     this.screen,
     this.userFunctions,
     this.arrays,
+    this.fileIO,
   );
 
   /// Main interpreter loop (NEWSTT equivalent)
@@ -559,13 +588,51 @@ class Interpreter {
 
   /// Execute PRINT statement
   void _executePrint() {
+    // Check for PRINT# (output to file)
+    _skipSpaces();
+    int? targetFile;
+    if (_getCurrentChar() == 35) {
+      // ASCII 35 is '#'
+      _textPointer++;
+      _skipSpaces();
+      // Get file number
+      final result = expressionEvaluator.evaluateExpression(
+        _currentLine,
+        _textPointer,
+      );
+      _textPointer = result.endPosition;
+      if (result.value is! NumericValue) {
+        throw InterpreterException(
+          'TYPE MISMATCH ERROR - File number must be numeric',
+        );
+      }
+      targetFile = (result.value as NumericValue).value.toInt();
+      if (targetFile! < 1 || targetFile! > 255) {
+        throw InterpreterException(
+          'ILLEGAL QUANTITY ERROR - Invalid file number',
+        );
+      }
+      // Expect comma or semicolon
+      _skipSpaces();
+      if (_getCurrentChar() != 44 && _getCurrentChar() != 59) {
+        throw InterpreterException(
+          'SYNTAX ERROR - Expected comma or semicolon after file number',
+        );
+      }
+      _textPointer++;
+    }
+
     // Handle PRINT with expressions
     _skipSpaces();
 
     // Check if there's anything to print
     if (_textPointer >= _currentLine.length || _getCurrentChar() == 0) {
       // Empty PRINT - just print newline
-      screen.printLine('');
+      if (targetFile != null) {
+        fileIO.write(targetFile, '\n');
+      } else {
+        screen.printLine('');
+      }
       return;
     }
 
@@ -582,7 +649,15 @@ class Interpreter {
       // Check for print separators
       if (currentChar == 44) {
         // comma - tab to next zone
-        screen.tabToNextZone();
+        if (targetFile != null) {
+          fileIO.write(targetFile, '\t');
+        } else {
+          // TODO: Handle CMD redirection
+          // } else if (fileIO.currentOutputDevice != 0) {
+          //   fileIO.write(fileIO.currentOutputDevice, '\t');
+          // } else {
+          screen.tabToNextZone();
+        }
         _advanceTextPointer();
         _skipSpaces();
         needNewline = false;
@@ -619,18 +694,52 @@ class Interpreter {
           if (numValue >= 0) {
             formatted = ' $formatted';
           }
-          screen.printWithoutNewline(formatted);
+          if (targetFile != null) {
+            fileIO.write(targetFile, formatted);
+          } else {
+            // TODO: Handle CMD redirection
+            // } else if (fileIO.currentOutputDevice != 0) {
+            //   fileIO.write(fileIO.currentOutputDevice, formatted);
+            // } else {
+            screen.printWithoutNewline(formatted);
+          }
         } else if (result.value is StringValue) {
           final strValue = (result.value as StringValue).value;
-          screen.printWithoutNewline(strValue);
+          if (targetFile != null) {
+            fileIO.write(targetFile, strValue);
+          } else {
+            // TODO: Handle CMD redirection
+            // } else if (fileIO.currentOutputDevice != 0) {
+            //   fileIO.write(fileIO.currentOutputDevice, strValue);
+            // } else {
+            screen.printWithoutNewline(strValue);
+          }
         } else if (result.value is TabValue) {
           final tabValue = (result.value as TabValue);
           screen.tabToColumn(tabValue.column);
         } else if (result.value is SpcValue) {
           final spcValue = (result.value as SpcValue);
-          screen.printSpaces(spcValue.spaces);
+          final spaces = ' ' * spcValue.spaces;
+          if (targetFile != null) {
+            fileIO.write(targetFile, spaces);
+          } else {
+            // TODO: Handle CMD redirection
+            // } else if (fileIO.currentOutputDevice != 0) {
+            //   fileIO.write(fileIO.currentOutputDevice, spaces);
+            // } else {
+            screen.printSpaces(spcValue.spaces);
+          }
         } else {
-          screen.printWithoutNewline(result.value.toString());
+          final output = result.value.toString();
+          if (targetFile != null) {
+            fileIO.write(targetFile, output);
+          } else {
+            // TODO: Handle CMD redirection
+            // } else if (fileIO.currentOutputDevice != 0) {
+            //   fileIO.write(fileIO.currentOutputDevice, output);
+            // } else {
+            screen.printWithoutNewline(output);
+          }
         }
 
         needNewline = true;
@@ -647,7 +756,15 @@ class Interpreter {
 
     // Print final newline if needed
     if (needNewline) {
-      screen.printLine('');
+      if (targetFile != null) {
+        fileIO.write(targetFile, '\n');
+      } else {
+        // TODO: Handle CMD redirection
+        // } else if (fileIO.currentOutputDevice != 0) {
+        //   fileIO.write(fileIO.currentOutputDevice, '\n');
+        // } else {
+        screen.printLine('');
+      }
     }
   }
 
@@ -1266,44 +1383,80 @@ class Interpreter {
 
   /// Execute INPUT statement
   void _executeInput() {
-    // Parse optional prompt string
-    String prompt = "";
+    // Check for INPUT# (input from file)
     _skipSpaces();
-
-    // Check for quoted prompt string
-    if (_getCurrentChar() == 34) {
-      // Double quote
-      _advanceTextPointer(); // Skip opening quote
-      final promptStart = _textPointer;
-
-      // Find closing quote
-      while (_textPointer < _currentLine.length && _getCurrentChar() != 34) {
-        _advanceTextPointer();
-      }
-
-      if (_textPointer >= _currentLine.length) {
-        throw InterpreterException(
-          'SYNTAX ERROR - Unterminated string in INPUT',
-        );
-      }
-
-      // Extract prompt string
-      prompt = String.fromCharCodes(
-        _currentLine.sublist(promptStart, _textPointer),
+    int? sourceFile;
+    if (_getCurrentChar() == 35) {
+      // ASCII 35 is '#'
+      _textPointer++;
+      _skipSpaces();
+      // Get file number
+      final result = expressionEvaluator.evaluateExpression(
+        _currentLine,
+        _textPointer,
       );
-
-      _advanceTextPointer(); // Skip closing quote
-      _skipSpaces();
-
-      // Check for required semicolon after prompt
-      if (_getCurrentChar() != 59) {
-        // Semicolon
+      _textPointer = result.endPosition;
+      if (result.value is! NumericValue) {
         throw InterpreterException(
-          'SYNTAX ERROR - Missing semicolon after INPUT prompt',
+          'TYPE MISMATCH ERROR - File number must be numeric',
         );
       }
-      _advanceTextPointer(); // Skip semicolon
+      sourceFile = (result.value as NumericValue).value.toInt();
+      if (sourceFile! < 1 || sourceFile! > 255) {
+        throw InterpreterException(
+          'ILLEGAL QUANTITY ERROR - Invalid file number',
+        );
+      }
+      // Expect comma
       _skipSpaces();
+      if (_getCurrentChar() != 44) {
+        throw InterpreterException(
+          'SYNTAX ERROR - Expected comma after file number',
+        );
+      }
+      _textPointer++;
+      _skipSpaces();
+    }
+
+    // Parse optional prompt string (only for regular INPUT, not INPUT#)
+    String prompt = "";
+    if (sourceFile == null) {
+      _skipSpaces();
+      // Check for quoted prompt string
+      if (_getCurrentChar() == 34) {
+        // Double quote
+        _advanceTextPointer(); // Skip opening quote
+        final promptStart = _textPointer;
+
+        // Find closing quote
+        while (_textPointer < _currentLine.length && _getCurrentChar() != 34) {
+          _advanceTextPointer();
+        }
+
+        if (_textPointer >= _currentLine.length) {
+          throw InterpreterException(
+            'SYNTAX ERROR - Unterminated string in INPUT',
+          );
+        }
+
+        // Extract prompt string
+        prompt = String.fromCharCodes(
+          _currentLine.sublist(promptStart, _textPointer),
+        );
+
+        _advanceTextPointer(); // Skip closing quote
+        _skipSpaces();
+
+        // Check for required semicolon after prompt
+        if (_getCurrentChar() != 59) {
+          // Semicolon
+          throw InterpreterException(
+            'SYNTAX ERROR - Missing semicolon after INPUT prompt',
+          );
+        }
+        _advanceTextPointer(); // Skip semicolon
+        _skipSpaces();
+      }
     }
 
     // Parse variable list
@@ -1324,18 +1477,25 @@ class Interpreter {
       _skipSpaces();
     }
 
-    // Get input from user
+    // Get input from user or file
     bool inputSuccess = false;
     while (!inputSuccess) {
-      // Display prompt (use "? " if no custom prompt)
-      if (prompt.isEmpty) {
-        stdout.write('? ');
-      } else {
-        stdout.write(prompt);
-      }
+      String inputLine;
 
-      // Read line from stdin
-      final inputLine = stdin.readLineSync() ?? '';
+      if (sourceFile != null) {
+        // Read from file
+        inputLine = fileIO.read(sourceFile);
+      } else {
+        // Display prompt (use "? " if no custom prompt)
+        if (prompt.isEmpty) {
+          stdout.write('? ');
+        } else {
+          stdout.write(prompt);
+        }
+
+        // Read line from stdin
+        inputLine = stdin.readLineSync() ?? '';
+      }
 
       // Parse input values separated by commas
       final values = <String>[];
@@ -1361,9 +1521,15 @@ class Interpreter {
           }
 
           if (pos >= inputLine.length) {
-            print('?REDO FROM START');
-            parseError = true;
-            break; // Break out of parsing loop to restart input
+            if (sourceFile != null) {
+              throw InterpreterException(
+                'FILE DATA ERROR - Unterminated quoted string',
+              );
+            } else {
+              print('?REDO FROM START');
+              parseError = true;
+              break; // Break out of parsing loop to restart input
+            }
           }
 
           values.add(inputLine.substring(startPos, pos));
@@ -1385,19 +1551,28 @@ class Interpreter {
         }
       }
 
-      // If there was a parse error, restart input
+      // If there was a parse error, restart input (unless reading from file)
       if (parseError) {
+        if (sourceFile != null) {
+          throw InterpreterException('FILE DATA ERROR - Parse error');
+        }
         continue; // Restart input loop
       }
 
       // If no values entered and we need at least one
       if (values.isEmpty && variableNames.isNotEmpty) {
+        if (sourceFile != null) {
+          throw InterpreterException('FILE DATA ERROR - No values found');
+        }
         print('?REDO FROM START');
         continue; // Restart input loop
       }
 
       // Check if we have the right number of values
       if (values.length < variableNames.length) {
+        if (sourceFile != null) {
+          throw InterpreterException('FILE DATA ERROR - Insufficient values');
+        }
         // Too few values - ask for remaining values individually
         for (int i = values.length; i < variableNames.length; i++) {
           stdout.write('? ');
@@ -2506,24 +2681,250 @@ class Interpreter {
     screen.clearScreen();
   }
 
-  /// Execute CMD statement - command device (stub)
+  /// Execute CMD statement - redirect output to device
+  /// Syntax: CMD [logical#]
   void _executeCmd() {
-    throw InterpreterException('FUNCTION NOT IMPLEMENTED');
+    _skipSpaces();
+
+    // If no argument, reset to screen
+    if (_textPointer >= _currentLine.length ||
+        _getCurrentChar() == 0 ||
+        _getCurrentChar() == 58) {
+      try {
+        fileIO.redirectOutput(0); // Reset to screen
+      } catch (e) {
+        if (e is FileIOException) {
+          throw InterpreterException(e.message);
+        }
+        rethrow;
+      }
+      return;
+    }
+
+    // Get logical file number
+    final logicalResult = expressionEvaluator.evaluateExpression(
+      _currentLine,
+      _textPointer,
+    );
+    _textPointer = logicalResult.endPosition;
+    if (logicalResult.value is! NumericValue) {
+      throw InterpreterException(
+        'TYPE MISMATCH ERROR - Logical file number must be numeric',
+      );
+    }
+    final logicalFile = (logicalResult.value as NumericValue).value.toInt();
+    if (logicalFile < 0 || logicalFile > 255) {
+      throw InterpreterException(
+        'ILLEGAL QUANTITY ERROR - Invalid logical file number',
+      );
+    }
+
+    // Redirect output
+    try {
+      fileIO.redirectOutput(logicalFile);
+    } catch (e) {
+      if (e is FileIOException) {
+        throw InterpreterException(e.message);
+      }
+      rethrow;
+    }
   }
 
   /// Execute SYS statement - system call (stub)
+  /// Execute SYS statement - simulated system call
+  /// Syntax: SYS address
+  ///
+  /// In the original BASIC, SYS would call 6502 machine code at the given address.
+  /// This implementation simulates the call by invoking a hook if configured,
+  /// otherwise it's a no-op. This allows users to implement custom system routines.
   void _executeSys() {
-    throw InterpreterException('FUNCTION NOT IMPLEMENTED');
+    _skipSpaces();
+
+    // Evaluate the address expression
+    final result = expressionEvaluator.evaluateExpression(
+      _currentLine,
+      _textPointer,
+    );
+    _textPointer = result.endPosition;
+
+    if (result.value is! NumericValue) {
+      throw InterpreterException(
+        'TYPE MISMATCH ERROR - Address must be numeric',
+      );
+    }
+
+    final address = (result.value as NumericValue).value.round();
+
+    // Validate address range (0-65535 for 6502)
+    if (address < 0 || address > 65535) {
+      throw InterpreterException('ILLEGAL QUANTITY ERROR - Invalid address');
+    }
+
+    // Call system hook if available
+    if (systemCallHook != null) {
+      systemCallHook!(address);
+    }
+    // Otherwise, this is a no-op (simulated machine code call that does nothing)
   }
 
-  /// Execute OPEN statement - open file (stub)
+  /// Execute OPEN statement - open file
+  /// Syntax: OPEN logical#, device# [, secondary#] [,"filename"]
   void _executeOpen() {
-    throw InterpreterException('FUNCTION NOT IMPLEMENTED');
+    _skipSpaces();
+
+    // Get logical file number
+    final logicalResult = expressionEvaluator.evaluateExpression(
+      _currentLine,
+      _textPointer,
+    );
+    _textPointer = logicalResult.endPosition;
+    if (logicalResult.value is! NumericValue) {
+      throw InterpreterException(
+        'TYPE MISMATCH ERROR - Logical file number must be numeric',
+      );
+    }
+    final logicalFile = (logicalResult.value as NumericValue).value.toInt();
+    if (logicalFile < 1 || logicalFile > 255) {
+      throw InterpreterException(
+        'ILLEGAL QUANTITY ERROR - Invalid logical file number',
+      );
+    }
+
+    // Expect comma
+    _skipSpaces();
+    if (_getCurrentChar() != 44) {
+      // ASCII 44 is ','
+      throw InterpreterException(
+        'SYNTAX ERROR - Expected comma after logical file',
+      );
+    }
+    _textPointer++;
+
+    // Get device number
+    _skipSpaces();
+    final deviceResult = expressionEvaluator.evaluateExpression(
+      _currentLine,
+      _textPointer,
+    );
+    _textPointer = deviceResult.endPosition;
+    if (deviceResult.value is! NumericValue) {
+      throw InterpreterException(
+        'TYPE MISMATCH ERROR - Device number must be numeric',
+      );
+    }
+    final deviceNumber = (deviceResult.value as NumericValue).value.toInt();
+    if (deviceNumber < 0 || deviceNumber > 31) {
+      throw InterpreterException('DEVICE NOT PRESENT');
+    }
+
+    // Optional secondary address
+    int secondaryAddress = 0;
+    _skipSpaces();
+    if (_getCurrentChar() == 44) {
+      // ASCII 44 is ','
+      _textPointer++;
+      _skipSpaces();
+      final secondaryResult = expressionEvaluator.evaluateExpression(
+        _currentLine,
+        _textPointer,
+      );
+      _textPointer = secondaryResult.endPosition;
+      if (secondaryResult.value is! NumericValue) {
+        throw InterpreterException(
+          'TYPE MISMATCH ERROR - Secondary address must be numeric',
+        );
+      }
+      secondaryAddress = (secondaryResult.value as NumericValue).value.toInt();
+      if (secondaryAddress < 0 || secondaryAddress > 15) {
+        throw InterpreterException(
+          'ILLEGAL QUANTITY ERROR - Invalid secondary address',
+        );
+      }
+    }
+
+    // Optional filename
+    String? filename;
+    _skipSpaces();
+    if (_getCurrentChar() == 44) {
+      // ASCII 44 is ','
+      _textPointer++;
+      _skipSpaces();
+      final filenameResult = expressionEvaluator.evaluateExpression(
+        _currentLine,
+        _textPointer,
+      );
+      _textPointer = filenameResult.endPosition;
+      if (filenameResult.value is! StringValue) {
+        throw InterpreterException(
+          'TYPE MISMATCH ERROR - Filename must be string',
+        );
+      }
+      filename = (filenameResult.value as StringValue).value;
+    }
+
+    // Open the file
+    try {
+      fileIO.open(
+        logicalFile,
+        deviceNumber,
+        secondaryAddress: secondaryAddress,
+        filename: filename,
+      );
+    } catch (e) {
+      if (e is FileIOException) {
+        throw InterpreterException(e.message);
+      }
+      rethrow;
+    }
   }
 
-  /// Execute CLOSE statement - close file (stub)
+  /// Execute CLOSE statement - close file
+  /// Syntax: CLOSE [logical#]
   void _executeClose() {
-    throw InterpreterException('FUNCTION NOT IMPLEMENTED');
+    _skipSpaces();
+
+    // If no argument, close all files
+    if (_textPointer >= _currentLine.length ||
+        _getCurrentChar() == 0 ||
+        _getCurrentChar() == 58) {
+      try {
+        fileIO.closeAll();
+      } catch (e) {
+        if (e is FileIOException) {
+          throw InterpreterException(e.message);
+        }
+        rethrow;
+      }
+      return;
+    }
+
+    // Get logical file number
+    final logicalResult = expressionEvaluator.evaluateExpression(
+      _currentLine,
+      _textPointer,
+    );
+    _textPointer = logicalResult.endPosition;
+    if (logicalResult.value is! NumericValue) {
+      throw InterpreterException(
+        'TYPE MISMATCH ERROR - Logical file number must be numeric',
+      );
+    }
+    final logicalFile = (logicalResult.value as NumericValue).value.toInt();
+    if (logicalFile < 1 || logicalFile > 255) {
+      throw InterpreterException(
+        'ILLEGAL QUANTITY ERROR - Invalid logical file number',
+      );
+    }
+
+    // Close the file
+    try {
+      fileIO.close(logicalFile);
+    } catch (e) {
+      if (e is FileIOException) {
+        throw InterpreterException(e.message);
+      }
+      rethrow;
+    }
   }
 
   /// Reset interpreter to initial state

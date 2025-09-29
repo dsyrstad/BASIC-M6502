@@ -9,6 +9,7 @@ import '../../lib/memory/user_functions.dart';
 import '../../lib/memory/arrays.dart';
 import '../../lib/runtime/stack.dart';
 import '../../lib/io/screen.dart';
+import '../../lib/io/file_io.dart';
 import '../../lib/memory/values.dart';
 
 void main() {
@@ -22,6 +23,7 @@ void main() {
     late ProgramStorage programStorage;
     late RuntimeStack runtimeStack;
     late Screen screen;
+    late FileIOManager fileIO;
     late Interpreter interpreter;
 
     setUp(() {
@@ -39,6 +41,7 @@ void main() {
       programStorage = ProgramStorage(memory);
       runtimeStack = RuntimeStack(memory, variables);
       screen = Screen();
+      fileIO = FileIOManager();
       interpreter = Interpreter(
         memory,
         tokenizer,
@@ -49,6 +52,7 @@ void main() {
         screen,
         userFunctions,
         arrays,
+        fileIO,
       );
 
       variables.initialize(0x2000);

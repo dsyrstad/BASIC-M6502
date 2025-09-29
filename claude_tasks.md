@@ -324,19 +324,19 @@
 ## Additional Features
 
 ### Extended I/O
-- [ ] Implement OPEN statement
-- [ ] Implement CLOSE statement
-- [ ] Implement PRINT# statement
-- [ ] Implement INPUT# statement
-- [ ] Implement CMD statement
-- [ ] Support device numbers
+- [x] Implement OPEN statement
+- [x] Implement CLOSE statement
+- [x] Implement PRINT# statement
+- [x] Implement INPUT# statement
+- [x] Implement CMD statement
+- [x] Support device numbers
 
 ### System Integration
-- [ ] Implement SYS statement (simulated)
-- [ ] Implement USR function
-- [ ] Support machine code interface
-- [ ] Handle system calls
-- [ ] Write tests for system integration
+- [x] Implement SYS statement (simulated)
+- [x] Implement USR function
+- [x] Support machine code interface
+- [x] Handle system calls
+- [x] Write tests for system integration
 
 
 ### Example Programs
