@@ -39,7 +39,6 @@ class CommodoreChars {
     0x1D: 0x1D, // Cursor right
     0x1E: 0x1E, // Green
     0x1F: 0x1F, // Blue
-
     // Standard ASCII printable characters (32-127)
     0x20: 0x20, // Space
     0x21: 0x21, // !
@@ -105,7 +104,6 @@ class CommodoreChars {
     0x5D: 0x5D, // ]
     0x5E: 0x5E, // ^
     0x5F: 0x5F, // _
-
     // PETSCII graphics characters (96-127) - map to closest ASCII equivalent
     0x60: 0x60, // `
     0x61: 0x41, // Shifted A (displays as uppercase A)
@@ -134,14 +132,12 @@ class CommodoreChars {
     0x78: 0x58, // Shifted X
     0x79: 0x59, // Shifted Y
     0x7A: 0x5A, // Shifted Z
-
     // Graphics characters - map to ASCII approximations
     0x7B: 0x7B, // {
     0x7C: 0x7C, // |
     0x7D: 0x7D, // }
     0x7E: 0x7E, // ~
     0x7F: 0x7F, // DEL
-
     // Extended PETSCII characters (128-255)
     // Control characters with high bit set
     0x80: 0x80, //
@@ -160,7 +156,6 @@ class CommodoreChars {
     0x8D: 0x8D, // Shift+Return
     0x8E: 0x8E, // Shift out (uppercase)
     0x8F: 0x8F, //
-
     // More extended characters
     0x90: 0x90, // Black
     0x91: 0x91, // Cursor up
@@ -178,7 +173,6 @@ class CommodoreChars {
     0x9D: 0x9D, // Cursor left
     0x9E: 0x9E, // Yellow
     0x9F: 0x9F, // Cyan
-
     // PETSCII graphics and symbols (160-255)
     // For simplicity, map high characters to space or closest ASCII
     0xA0: 0x20, // Non-breaking space -> space
@@ -203,7 +197,6 @@ class CommodoreChars {
     0x0D: 0x0D, // Carriage return
     0x0E: 0x0E, // Shift out
     0x0F: 0x0F, // Shift in
-
     // Printable ASCII characters
     0x20: 0x20, // Space
     0x21: 0x21, // !
@@ -238,7 +231,6 @@ class CommodoreChars {
     0x3E: 0x3E, // >
     0x3F: 0x3F, // ?
     0x40: 0x40, // @
-
     // ASCII uppercase to PETSCII lowercase (Commodore's inverted case)
     0x41: 0x61, // A -> a
     0x42: 0x62, // B -> b
@@ -273,7 +265,6 @@ class CommodoreChars {
     0x5E: 0x5E, // ^
     0x5F: 0x5F, // _
     0x60: 0x60, // `
-
     // ASCII lowercase to PETSCII uppercase (Commodore's inverted case)
     0x61: 0x41, // a -> A
     0x62: 0x42, // b -> B
@@ -352,13 +343,15 @@ class CommodoreChars {
   /// Convert PETSCII string to ASCII string
   static String petsciiToAsciiString(List<int> petsciiBytes) {
     return String.fromCharCodes(
-      petsciiBytes.map((byte) => petsciiToAsciiChar(byte)).toList()
+      petsciiBytes.map((byte) => petsciiToAsciiChar(byte)).toList(),
     );
   }
 
   /// Convert ASCII string to PETSCII bytes
   static List<int> asciiToPetsciiBytes(String asciiString) {
-    return asciiString.codeUnits.map((char) => asciiToPetsciiChar(char)).toList();
+    return asciiString.codeUnits
+        .map((char) => asciiToPetsciiChar(char))
+        .toList();
   }
 
   /// Check if character is a PETSCII control character
@@ -379,49 +372,92 @@ class CommodoreChars {
   /// Get description of PETSCII control character
   static String getControlCharDescription(int petscii) {
     switch (petscii) {
-      case 0x00: return 'NULL';
-      case 0x05: return 'WHITE';
-      case 0x08: return 'BACKSPACE';
-      case 0x09: return 'TAB';
-      case 0x0A: return 'LINE FEED';
-      case 0x0D: return 'RETURN';
-      case 0x0E: return 'SHIFT OUT (LOWERCASE)';
-      case 0x11: return 'CURSOR DOWN';
-      case 0x12: return 'REVERSE ON';
-      case 0x13: return 'HOME';
-      case 0x14: return 'DELETE';
-      case 0x1C: return 'RED';
-      case 0x1D: return 'CURSOR RIGHT';
-      case 0x1E: return 'GREEN';
-      case 0x1F: return 'BLUE';
-      case 0x81: return 'ORANGE';
-      case 0x85: return 'F1';
-      case 0x86: return 'F3';
-      case 0x87: return 'F5';
-      case 0x88: return 'F7';
-      case 0x89: return 'F2';
-      case 0x8A: return 'F4';
-      case 0x8B: return 'F6';
-      case 0x8C: return 'F8';
-      case 0x8D: return 'SHIFT+RETURN';
-      case 0x8E: return 'SHIFT OUT (UPPERCASE)';
-      case 0x90: return 'BLACK';
-      case 0x91: return 'CURSOR UP';
-      case 0x92: return 'REVERSE OFF';
-      case 0x93: return 'CLEAR SCREEN';
-      case 0x94: return 'INSERT';
-      case 0x95: return 'BROWN';
-      case 0x96: return 'LIGHT RED';
-      case 0x97: return 'GRAY 1';
-      case 0x98: return 'GRAY 2';
-      case 0x99: return 'LIGHT GREEN';
-      case 0x9A: return 'LIGHT BLUE';
-      case 0x9B: return 'GRAY 3';
-      case 0x9C: return 'PURPLE';
-      case 0x9D: return 'CURSOR LEFT';
-      case 0x9E: return 'YELLOW';
-      case 0x9F: return 'CYAN';
-      default: return 'UNKNOWN(${petscii.toRadixString(16).toUpperCase()})';
+      case 0x00:
+        return 'NULL';
+      case 0x05:
+        return 'WHITE';
+      case 0x08:
+        return 'BACKSPACE';
+      case 0x09:
+        return 'TAB';
+      case 0x0A:
+        return 'LINE FEED';
+      case 0x0D:
+        return 'RETURN';
+      case 0x0E:
+        return 'SHIFT OUT (LOWERCASE)';
+      case 0x11:
+        return 'CURSOR DOWN';
+      case 0x12:
+        return 'REVERSE ON';
+      case 0x13:
+        return 'HOME';
+      case 0x14:
+        return 'DELETE';
+      case 0x1C:
+        return 'RED';
+      case 0x1D:
+        return 'CURSOR RIGHT';
+      case 0x1E:
+        return 'GREEN';
+      case 0x1F:
+        return 'BLUE';
+      case 0x81:
+        return 'ORANGE';
+      case 0x85:
+        return 'F1';
+      case 0x86:
+        return 'F3';
+      case 0x87:
+        return 'F5';
+      case 0x88:
+        return 'F7';
+      case 0x89:
+        return 'F2';
+      case 0x8A:
+        return 'F4';
+      case 0x8B:
+        return 'F6';
+      case 0x8C:
+        return 'F8';
+      case 0x8D:
+        return 'SHIFT+RETURN';
+      case 0x8E:
+        return 'SHIFT OUT (UPPERCASE)';
+      case 0x90:
+        return 'BLACK';
+      case 0x91:
+        return 'CURSOR UP';
+      case 0x92:
+        return 'REVERSE OFF';
+      case 0x93:
+        return 'CLEAR SCREEN';
+      case 0x94:
+        return 'INSERT';
+      case 0x95:
+        return 'BROWN';
+      case 0x96:
+        return 'LIGHT RED';
+      case 0x97:
+        return 'GRAY 1';
+      case 0x98:
+        return 'GRAY 2';
+      case 0x99:
+        return 'LIGHT GREEN';
+      case 0x9A:
+        return 'LIGHT BLUE';
+      case 0x9B:
+        return 'GRAY 3';
+      case 0x9C:
+        return 'PURPLE';
+      case 0x9D:
+        return 'CURSOR LEFT';
+      case 0x9E:
+        return 'YELLOW';
+      case 0x9F:
+        return 'CYAN';
+      default:
+        return 'UNKNOWN(${petscii.toRadixString(16).toUpperCase()})';
     }
   }
 }

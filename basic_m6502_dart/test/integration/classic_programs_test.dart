@@ -224,30 +224,38 @@ void main() {
     });
 
     group('Array Programs', () {
-      test('Simple array operations', () {
-        final program = '''
+      test(
+        'Simple array operations',
+        () {
+          final program = '''
 10 DIM A(5)
 20 REM Array assignment needs fixing
 30 PRINT "ARRAYS DECLARED"
 40 END
 ''';
-        interpreter.loadProgram(program);
-        final output = interpreter.run();
-        // Just verify DIM works without crashing
-        expect(output, contains('ARRAYS DECLARED'));
-      }, skip: 'Array assignment logic needs investigation');
+          interpreter.loadProgram(program);
+          final output = interpreter.run();
+          // Just verify DIM works without crashing
+          expect(output, contains('ARRAYS DECLARED'));
+        },
+        skip: 'Array assignment logic needs investigation',
+      );
 
-      test('Two-dimensional array', () {
-        final program = '''
+      test(
+        'Two-dimensional array',
+        () {
+          final program = '''
 10 DIM A(2,2)
 20 PRINT "2D ARRAYS DECLARED"
 30 END
 ''';
-        interpreter.loadProgram(program);
-        final output = interpreter.run();
-        // Just verify 2D DIM works without crashing
-        expect(output, contains('2D ARRAYS DECLARED'));
-      }, skip: 'Array assignment logic needs investigation');
+          interpreter.loadProgram(program);
+          final output = interpreter.run();
+          // Just verify 2D DIM works without crashing
+          expect(output, contains('2D ARRAYS DECLARED'));
+        },
+        skip: 'Array assignment logic needs investigation',
+      );
     });
 
     group('DATA/READ Programs', () {
@@ -342,11 +350,26 @@ void main() {
         final lines = output.trim().split('\n');
         expect(lines.length, equals(5));
         // Be more flexible with spacing in multiplication table
-        expect(lines[0].trim().replaceAll(RegExp(r'\s+'), ' '), equals('1 2 3 4 5'));
-        expect(lines[1].trim().replaceAll(RegExp(r'\s+'), ' '), equals('2 4 6 8 10'));
-        expect(lines[2].trim().replaceAll(RegExp(r'\s+'), ' '), equals('3 6 9 12 15'));
-        expect(lines[3].trim().replaceAll(RegExp(r'\s+'), ' '), equals('4 8 12 16 20'));
-        expect(lines[4].trim().replaceAll(RegExp(r'\s+'), ' '), equals('5 10 15 20 25'));
+        expect(
+          lines[0].trim().replaceAll(RegExp(r'\s+'), ' '),
+          equals('1 2 3 4 5'),
+        );
+        expect(
+          lines[1].trim().replaceAll(RegExp(r'\s+'), ' '),
+          equals('2 4 6 8 10'),
+        );
+        expect(
+          lines[2].trim().replaceAll(RegExp(r'\s+'), ' '),
+          equals('3 6 9 12 15'),
+        );
+        expect(
+          lines[3].trim().replaceAll(RegExp(r'\s+'), ' '),
+          equals('4 8 12 16 20'),
+        );
+        expect(
+          lines[4].trim().replaceAll(RegExp(r'\s+'), ' '),
+          equals('5 10 15 20 25'),
+        );
       });
 
       test('Fibonacci sequence', () {
@@ -434,17 +457,21 @@ void main() {
         expect(output.length, greaterThanOrEqualTo(0));
       });
 
-      test('Array bounds error', () {
-        final program = '''
+      test(
+        'Array bounds error',
+        () {
+          final program = '''
 10 DIM A(5)
 20 REM Array bounds checking skipped for now
 30 PRINT "ARRAY BOUNDS TEST"
 40 END
 ''';
-        interpreter.loadProgram(program);
-        final output = interpreter.run();
-        expect(output, contains('ARRAY BOUNDS TEST'));
-      }, skip: 'Array bounds checking needs array assignment fixes');
+          interpreter.loadProgram(program);
+          final output = interpreter.run();
+          expect(output, contains('ARRAY BOUNDS TEST'));
+        },
+        skip: 'Array bounds checking needs array assignment fixes',
+      );
 
       test('Undefined variable error', () {
         final program = '''
@@ -471,17 +498,21 @@ void main() {
         expect(output.trim(), equals('123'));
       });
 
-      test('String array operations', () {
-        final program = '''
+      test(
+        'String array operations',
+        () {
+          final program = '''
 10 DIM A\$(3)
 20 REM String array assignment needs fixing
 30 PRINT "STRING ARRAYS DECLARED"
 40 END
 ''';
-        interpreter.loadProgram(program);
-        final output = interpreter.run();
-        expect(output, contains('STRING ARRAYS DECLARED'));
-      }, skip: 'String array assignment needs investigation');
+          interpreter.loadProgram(program);
+          final output = interpreter.run();
+          expect(output, contains('STRING ARRAYS DECLARED'));
+        },
+        skip: 'String array assignment needs investigation',
+      );
     });
 
     group('Complex Programs', () {
@@ -519,10 +550,16 @@ void main() {
         final output = interpreter.run();
         final lines = output.trim().split('\n');
         // BASIC comma separators create tabs/spacing between items
-        expect(lines[0].trim(), anyOf(equals('C\tF'), equals('CF'), contains('C'), contains('F')));
+        expect(
+          lines[0].trim(),
+          anyOf(equals('C\tF'), equals('CF'), contains('C'), contains('F')),
+        );
         expect(lines[1].trim(), contains('0'));
         expect(lines[1].trim(), contains('32'));
-        expect(lines.length, greaterThan(5)); // Should have several temperature rows
+        expect(
+          lines.length,
+          greaterThan(5),
+        ); // Should have several temperature rows
       });
     });
   });

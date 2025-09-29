@@ -70,13 +70,19 @@ void main() {
       test('converts ASCII string to PETSCII bytes', () {
         final asciiString = 'HELLO';
         final result = CommodoreChars.asciiToPetsciiBytes(asciiString);
-        expect(result, equals([0x68, 0x65, 0x6C, 0x6C, 0x6F])); // Should be PETSCII lowercase
+        expect(
+          result,
+          equals([0x68, 0x65, 0x6C, 0x6C, 0x6F]),
+        ); // Should be PETSCII lowercase
       });
 
       test('converts mixed case string correctly', () {
         final asciiString = 'Hello123';
         final result = CommodoreChars.asciiToPetsciiBytes(asciiString);
-        expect(result, equals([0x68, 0x45, 0x4C, 0x4C, 0x4F, 0x31, 0x32, 0x33]));
+        expect(
+          result,
+          equals([0x68, 0x45, 0x4C, 0x4C, 0x4F, 0x31, 0x32, 0x33]),
+        );
       });
     });
 
@@ -110,11 +116,20 @@ void main() {
     group('Control character descriptions', () {
       test('provides correct descriptions for common control chars', () {
         expect(CommodoreChars.getControlCharDescription(0x00), equals('NULL'));
-        expect(CommodoreChars.getControlCharDescription(0x0D), equals('RETURN'));
+        expect(
+          CommodoreChars.getControlCharDescription(0x0D),
+          equals('RETURN'),
+        );
         expect(CommodoreChars.getControlCharDescription(0x13), equals('HOME'));
-        expect(CommodoreChars.getControlCharDescription(0x93), equals('CLEAR SCREEN'));
+        expect(
+          CommodoreChars.getControlCharDescription(0x93),
+          equals('CLEAR SCREEN'),
+        );
         expect(CommodoreChars.getControlCharDescription(0x1C), equals('RED'));
-        expect(CommodoreChars.getControlCharDescription(0x9E), equals('YELLOW'));
+        expect(
+          CommodoreChars.getControlCharDescription(0x9E),
+          equals('YELLOW'),
+        );
       });
 
       test('provides hex representation for unknown control chars', () {
@@ -160,7 +175,19 @@ void main() {
       });
 
       test('PETSCII to ASCII to PETSCII preserves bytes for basic chars', () {
-        final petsciiBytes = [0x48, 0x45, 0x4C, 0x4C, 0x4F, 0x20, 0x57, 0x4F, 0x52, 0x4C, 0x44];
+        final petsciiBytes = [
+          0x48,
+          0x45,
+          0x4C,
+          0x4C,
+          0x4F,
+          0x20,
+          0x57,
+          0x4F,
+          0x52,
+          0x4C,
+          0x44,
+        ];
         final asciiString = CommodoreChars.petsciiToAsciiString(petsciiBytes);
         final roundTrip = CommodoreChars.asciiToPetsciiBytes(asciiString);
 

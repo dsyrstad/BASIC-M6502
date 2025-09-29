@@ -321,12 +321,6 @@
 - [x] Write integration tests
 - [x] Port classic BASIC programs for testing
 
-### Example Programs
-- [ ] Create `examples/` directory
-- [ ] Port classic BASIC games
-- [ ] Include Commodore BASIC samples
-- [ ] Write program documentation
-
 ## Additional Features
 
 ### Extended I/O (if time permits)
@@ -343,6 +337,26 @@
 - [ ] Support machine code interface
 - [ ] Handle system calls
 - [ ] Write tests for system integration
+
+
+### Example Programs
+- [x] Create `examples/` directory
+- [x] Port classic BASIC games
+- [x] Include Commodore BASIC samples
+  - hello_world.bas - Classic first program
+  - guessing_game.bas - Number guessing game
+  - temperature_converter.bas - Temperature unit converter
+  - prime_numbers.bas - Prime number finder
+  - fibonacci.bas - Fibonacci sequence generator
+  - calculator.bas - Simple calculator
+  - bubble_sort.bas - Bubble sort demonstration
+  - string_demo.bas - String manipulation demo
+  - sine_wave.bas - Sine wave plotter
+  - multiplication_table.bas - Multiplication table generator
+  - factorial.bas - Factorial calculator
+  - quadratic_solver.bas - Quadratic equation solver
+  - statistics.bas - Array statistics calculator
+  - adventure.bas - Simple text adventure game
 
 
 ### Documentation
