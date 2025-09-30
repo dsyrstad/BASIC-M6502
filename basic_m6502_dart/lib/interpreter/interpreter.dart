@@ -2263,14 +2263,27 @@ class Interpreter {
       programStorage.clearProgram();
       variables.clearVariables();
 
+      // Detect if file is text or binary
+      // Text files will have line numbers at the start of lines and be printable ASCII
+      bool isTextFile = _detectTextFile(programData);
+
       // Import the new program
       try {
-        programStorage.importProgram(programData);
+        if (isTextFile) {
+          // Load as text file - parse line by line
+          _loadTextFile(programData);
+        } else {
+          // Load as binary tokenized file
+          programStorage.importProgram(programData);
+        }
         print('LOADED');
       } catch (e) {
         // Restore clean state if import fails
         programStorage.clearProgram();
         variables.clearVariables();
+        if (e is InterpreterException) {
+          rethrow;
+        }
         throw InterpreterException('BAD FORMAT - Invalid program file');
       }
     } on FileSystemException catch (e) {
@@ -2291,6 +2304,122 @@ class Interpreter {
         throw e;
       }
       throw InterpreterException('FILE ERROR - Cannot load from $filename: $e');
+    }
+  }
+
+  /// Detect if a file is a text BASIC file or binary tokenized format
+  bool _detectTextFile(List<int> data) {
+    if (data.isEmpty) return false;
+
+    // Check if file appears to be text:
+    // 1. Most bytes should be printable ASCII (32-126) or whitespace (9, 10, 13)
+    // 2. Should start with a digit (line number) or whitespace
+    // 3. Should not have the binary program format markers
+
+    // Check first few bytes for text patterns
+    int printableCount = 0;
+    int checksCount = 0;
+    for (int i = 0; i < data.length && i < 100; i++) {
+      int byte = data[i];
+      checksCount++;
+      if ((byte >= 32 && byte <= 126) ||
+          byte == 9 ||
+          byte == 10 ||
+          byte == 13) {
+        printableCount++;
+      }
+    }
+
+    // If more than 90% of checked bytes are printable, assume text
+    double printableRatio = printableCount / checksCount;
+    if (printableRatio < 0.9) {
+      return false; // Likely binary
+    }
+
+    // Additional check: text files should contain line numbers at start
+    // Try to parse as text to be sure
+    try {
+      String text = String.fromCharCodes(data);
+      // Check if first non-whitespace character is a digit
+      String trimmed = text.trimLeft();
+      if (trimmed.isEmpty) return false;
+      return trimmed[0].codeUnitAt(0) >= 48 &&
+          trimmed[0].codeUnitAt(0) <= 57; // 0-9
+    } catch (e) {
+      return false; // Not valid UTF-8, assume binary
+    }
+  }
+
+  /// Load a text BASIC file by parsing each line
+  void _loadTextFile(List<int> data) {
+    // Convert bytes to string
+    String text;
+    try {
+      text = String.fromCharCodes(data);
+    } catch (e) {
+      throw InterpreterException('BAD FORMAT - File is not valid text');
+    }
+
+    // Split into lines and process each one
+    final lines = text.split('\n');
+    for (final line in lines) {
+      final trimmedLine = line.trim();
+      // Skip empty lines and comments that don't have line numbers
+      if (trimmedLine.isEmpty) continue;
+      if (trimmedLine.startsWith('REM ') &&
+          !RegExp(r'^\d').hasMatch(trimmedLine)) {
+        continue;
+      }
+
+      // Parse and add the line to the program
+      // This uses the existing line entry logic
+      try {
+        // Save current state
+        final savedLine = _currentLine;
+        final savedPointer = _textPointer;
+        final savedLineNumber = _currentLineNumber;
+        final savedState = _state;
+
+        // Tokenize and process the line
+        _currentLine = tokenizer.tokenizeLine(trimmedLine);
+        _textPointer = 0;
+        _state = ExecutionState.immediate;
+
+        // Check if it's a numbered line (program entry)
+        _skipSpaces();
+        if (_textPointer < _currentLine.length &&
+            _getCurrentChar() >= 48 &&
+            _getCurrentChar() <= 57) {
+          // Parse line number
+          final lineNumber = _parseLineNumber();
+
+          // Rest of line is the program content
+          final contentStart = _textPointer;
+          final content = _currentLine.sublist(contentStart);
+
+          // Add or replace line in program
+          if (content.isEmpty || (content.length == 1 && content[0] == 0)) {
+            // Empty line - delete this line number
+            programStorage.deleteLine(lineNumber);
+          } else {
+            // Add/replace line
+            programStorage.storeLine(lineNumber, content);
+          }
+        }
+
+        // Restore state
+        _currentLine = savedLine;
+        _textPointer = savedPointer;
+        _currentLineNumber = savedLineNumber;
+        _state = savedState;
+      } catch (e) {
+        if (e is InterpreterException) {
+          rethrow;
+        }
+        throw InterpreterException(
+          'BAD FORMAT - Error parsing line: $trimmedLine',
+        );
+      }
     }
   }
 

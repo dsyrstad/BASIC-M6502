@@ -476,6 +476,12 @@ Loads a program from disk.
 LOAD "MYPROG.BAS"
 ```
 
+**Note**: LOAD automatically detects the file format. It can load:
+- Text files (`.bas`) with BASIC source code
+- Binary tokenized files (`.prg`) created by SAVE
+
+Text files should contain one BASIC line per text line, starting with a line number.
+
 #### SAVE
 Saves the current program to disk.
 
